@@ -1,0 +1,8 @@
+{
+  "name": "ff-roster-monitor",
+  "version": "1.0.0",
+  "description": "Live roster-management monitor for the James Cook Lovers Sleeper league",
+  "private": true,
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}

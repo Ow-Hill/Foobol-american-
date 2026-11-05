@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Roster Monitor · James Cook Lovers</title>
+  <meta name="theme-color" content="#0a0e13" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230a0e13'/%3E%3Cellipse cx='16' cy='16' rx='11' ry='6.5' transform='rotate(-35 16 16)' fill='%233ddc84'/%3E%3Cpath d='M10 22 22 10' stroke='%230a0e13' stroke-width='1.6'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><ellipse cx="16" cy="16" rx="11" ry="6.5" transform="rotate(-35 16 16)" fill="#3ddc84"/><path d="M10 22 22 10M14 14l2 2m0-5 2 2m-9 5 2 2" stroke="#0a0e13" stroke-width="1.5" fill="none"/></svg>
+        <div><b>Roster Monitor</b><span id="leagueName">James Cook Lovers</span></div>
+      </div>
+      <div class="top-mid" id="clocks"></div>
+      <div class="top-right">
+        <label class="viewas">Viewing <select id="teamSelect" aria-label="Team to view"></select></label>
+        <button class="btn" id="refresh" title="Pull fresh data from Sleeper and ESPN">↻ Refresh</button>
+        <span class="fresh" id="fresh"></span>
+      </div>
+    </header>
+    <nav class="nav" id="nav"></nav>
+    <main id="view" class="view" tabindex="-1"><div class="loading"><div class="spinner"></div><p>Pulling your roster from Sleeper…</p></div></main>
+  </div>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "leagueId": "1312204198166691840",
+  "username": "thisowenguy",
+  "defaultRosterId": 4,
+  "timeZone": "America/Toronto",
+  "port": 4321,
+  "tradeDeadlineWeek": 11,
+  "playoffWeeks": [15, 16, 17]
+}
