@@ -137,7 +137,7 @@ function buildNavOnce() {
     if (state.navOpen[slug] === undefined) state.navOpen[slug] = defaultOpen[slug] ?? false;
   }
 
-  nav.innerHTML = GROUPS.map((g) => {
+  nav.innerHTML = `<div class="drawer-head"><b>${esc(state.snap.league.name)}</b><span>${state.snap.meta.season} season</span><span class="dh-as"></span></div>` + GROUPS.map((g) => {
     const slug = groupSlug(g.section);
     const open = state.navOpen[slug];
     const groupId = `nav-group-${slug}`;
@@ -211,6 +211,8 @@ function renderChrome() {
   sel.innerHTML = snap.teams.map((t) => `<option value="${t.id}" ${t.id === state.rosterId ? 'selected' : ''}>${esc(t.owner)}${t.isMe ? ' (you)' : ''}</option>`).join('');
   buildNavOnce();
   updateNavBadges();
+  const dhAs = document.querySelector('#nav .drawer-head .dh-as');
+  if (dhAs) dhAs.textContent = 'Viewing as · ' + M.ownerName(M.me.id);
   $('#sleeperLink').href = 'https://sleeper.com/leagues/' + snap.meta.leagueId;
   const crit = M.problems().filter((p) => p.sev === 'critical').length;
   document.title = (crit ? `(${crit}) ` : '') + 'Roster Monitor · ' + snap.league.name;
@@ -319,6 +321,39 @@ $('#teamSelect').addEventListener('change', (e) => {
   rebuild();
 });
 window.addEventListener('hashchange', onRoute);
+
+// ---------- mobile drawer ----------
+const mqDesktop = window.matchMedia('(min-width: 980px)');
+function setDrawer(open, { noFocus = false } = {}) {
+  const nav = $('#nav');
+  const bd = $('#navBackdrop');
+  const btn = $('#menuBtn');
+  nav.classList.toggle('open', open);
+  bd.hidden = !open;
+  btn.setAttribute('aria-expanded', String(open));
+  btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  document.body.classList.toggle('drawer-open', open);
+  if (!noFocus) {
+    if (open) nav.querySelector('a')?.focus();
+    else btn.focus();
+  }
+}
+const drawerOpen = () => $('#nav').classList.contains('open');
+$('#menuBtn').addEventListener('click', () => setDrawer(!drawerOpen()));
+$('#navBackdrop').addEventListener('click', () => setDrawer(false, { noFocus: false }));
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && drawerOpen()) setDrawer(false);
+});
+// close the drawer when a nav link is chosen; keep focus from landing in the hidden panel
+$('#nav').addEventListener('click', (e) => {
+  if (e.target.closest('a') && drawerOpen()) {
+    setDrawer(false, { noFocus: true });
+    $('#view').focus({ preventScroll: true });
+  }
+});
+mqDesktop.addEventListener('change', () => {
+  if (mqDesktop.matches && drawerOpen()) setDrawer(false, { noFocus: true });
+});
 
 state.route = routeFromHash();
 load();
