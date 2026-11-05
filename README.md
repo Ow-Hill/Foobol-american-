@@ -38,7 +38,7 @@ Nothing is deployed. The app only runs on the machine that starts it:
 | Waivers | waiver-plan | Needs in priority order, bye look-ahead, tiered candidates with a named drop, K/DEF streams |
 | Trades | trade-lab | Deadline window, sell/buy market, two-team lineup math, three pitches + walk-away line |
 | Season | season-planner | Playoff odds, weekly review, lineup efficiency, deadline + playoff prep, `.ics` check-ins |
-| News | command-center | "Your players" ranks every report by lineup impact; other tabs carry ESPN articles, RotoWire notes and league moves, tagged by who owns each player |
+| News | command-center | "Your players" ranks every report by lineup impact; League, Wire and Rumours apply the same scoring to rivals, free agents and the last 5 days of speculation |
 
 ## Compete, share & plan
 

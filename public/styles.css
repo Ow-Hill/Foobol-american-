@@ -217,6 +217,24 @@ select { background: var(--panel); border: 1px solid var(--line2); border-radius
 .pn-dir.better { color: var(--green); font-weight: 700; }
 .pn-reps { color: var(--dim); }
 .pn-more { color: var(--dim); font-size: 11.5px; padding: 6px 2px 0; }
+
+/* League / wire / rumour ranked lists */
+.pn-cats { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 16px 8px; }
+.pn-cats .tab { font-size: 11.5px; padding: 3px 9px; }
+.pn-rank-list { list-style: none; margin: 0; padding: 0 16px 12px; display: flex; flex-direction: column; gap: 8px; }
+.pn-rank { padding: 9px 11px; border: 1px solid var(--line); border-radius: 9px; background: var(--bg2); }
+.pn-rank-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pn-rank-head .pn-id { flex: 1 1 260px; }
+.pn-rank-head .pn-score { margin-left: auto; }
+.pn-owner { font-size: 11px; color: var(--muted); }
+.pn-rank .pn-item-meta { margin-top: 4px; }
+.pn-rank .pn-item-title { margin-top: 4px; }
+.pn-moves-wrap { margin: 2px 16px 10px; padding: 9px 11px; border: 1px dashed var(--line2); border-radius: 9px; background: var(--panel); }
+.pn-moves-h { font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); font-weight: 700; margin-bottom: 6px; }
+.pn-moves { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; }
+.pn-moves li { display: flex; align-items: baseline; gap: 7px; }
+.pn-moves .pn-when { margin-left: auto; white-space: nowrap; }
+.pn-mine-move { color: var(--green); }
 .chip-tier { background: #1b2a3a; color: var(--blue); }
 .chip-spec { background: #3a2a12; color: var(--amber); }
 .chip-prac-DNP { background: #3a1414; color: #ff9c9c; }
@@ -246,6 +264,10 @@ select { background: var(--panel); border: 1px solid var(--line2); border-radius
   .pn-head { grid-template-columns: 1fr auto; row-gap: 4px; }
   .pn-trend, .pn-when { grid-column: 1; }
   .pn-chev { grid-row: 1; grid-column: 2; }
+  .pn-rank-head .pn-id { flex-basis: 100%; }
+  .pn-rank-head .pn-score { margin-left: 0; }
+  .pn-moves li { flex-wrap: wrap; }
+  .pn-moves .pn-when { margin-left: 0; }
 }
 .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
 .tab { padding: 6px 12px; border-radius: 99px; border: 1px solid var(--line2); background: transparent; cursor: pointer; font-weight: 600; font-size: 13px; color: var(--muted); }
