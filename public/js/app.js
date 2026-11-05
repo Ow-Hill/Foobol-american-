@@ -22,29 +22,29 @@ import * as managers from './views/managers.js';
 import * as draft from './views/draft.js';
 
 const ROUTES = [
-  { section: 'Manage' },
+  { section: 'This week' },
   { id: 'briefing', label: 'Briefing', ico: '◉', mod: briefing },
   { id: 'lineup', label: 'Lineup', ico: '▤', mod: lineup },
   { id: 'injuries', label: 'Injuries', ico: '✚', mod: injuries },
   { id: 'waivers', label: 'Waivers', ico: '⇄', mod: waivers },
-  { id: 'trades', label: 'Trade lab', ico: '⇋', mod: trades },
-  { id: 'season', label: 'Season', ico: '◔', mod: season },
   { id: 'news', label: 'News', ico: '≣', mod: news },
-  { section: 'Compete' },
-  { id: 'values', label: 'Values & start/sit', ico: '⚖', mod: values },
+  { section: 'Make moves' },
+  { id: 'trades', label: 'Trade lab', ico: '⇋', mod: trades },
   { id: 'finder', label: 'Trade finder', ico: '⌕', mod: finder },
+  { id: 'values', label: 'Values & start/sit', ico: '⚖', mod: values },
+  { section: 'Season' },
+  { id: 'season', label: 'Season', ico: '◔', mod: season },
   { id: 'path', label: 'Playoff path', ico: '⛳', mod: path },
-  { section: 'Share & remember' },
-  { id: 'report', label: 'Weekly report', ico: '✎', mod: report },
-  { id: 'historian', label: 'League historian', ico: '⌛', mod: historian },
-  { id: 'recap', label: 'Video recaps', ico: '▶', mod: recap },
   { id: 'rate', label: 'Rate my team', ico: '★', mod: rate },
+  { id: 'turning', label: 'Turning points', ico: '↯', mod: turning },
+  { id: 'draft', label: 'Draft plan', ico: '✦', mod: draft },
+  { section: 'League' },
+  { id: 'report', label: 'Weekly report', ico: '✎', mod: report },
+  { id: 'recap', label: 'Video recaps', ico: '▶', mod: recap },
+  { id: 'historian', label: 'League historian', ico: '⌛', mod: historian },
   { id: 'rivalry', label: 'Rivalry reports', ico: '⚔', mod: rivalry },
   { id: 'story', label: 'League story', ico: '❡', mod: story },
-  { section: 'Plan ahead' },
-  { id: 'turning', label: 'Turning points', ico: '↯', mod: turning },
   { id: 'managers', label: 'Manager profiles', ico: '☺', mod: managers },
-  { id: 'draft', label: 'Draft plan', ico: '✦', mod: draft },
 ];
 const PAGES = ROUTES.filter((r) => r.id);
 
@@ -130,8 +130,8 @@ function buildNavOnce() {
   const nav = $('#nav');
   nav.setAttribute('aria-label', 'Main');
 
-  // Default: first two groups open, rest collapsed
-  const defaultOpen = { manage: true, compete: true };
+  // Default: the two working groups open, season/league collapsed
+  const defaultOpen = { 'this-week': true, 'make-moves': true };
   for (const g of GROUPS) {
     const slug = groupSlug(g.section);
     if (state.navOpen[slug] === undefined) state.navOpen[slug] = defaultOpen[slug] ?? false;
