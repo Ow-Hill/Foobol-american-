@@ -120,6 +120,17 @@ export function bucketOf(score) {
   return 'background';
 }
 
+// One build per model: Briefing, News and the decision engine all share it.
+const memo = new WeakMap();
+export function playerNewsFor(M) {
+  let res = memo.get(M);
+  if (!res) {
+    res = buildPlayerNews(M);
+    memo.set(M, res);
+  }
+  return res;
+}
+
 // ---------- main ----------
 export function buildPlayerNews(M) {
   const snap = M.snap;
@@ -276,7 +287,7 @@ function newsAdverse(M, byPid, pid) {
   return list.some((x) => !x.dupe && (x.practice === 'DNP' || x.status === 'Out' || x.status === 'IR'));
 }
 
-function bestFallback(M, slot, exclude, byPid) {
+export function healthiestFallback(M, slot, exclude, byPid) {
   const ex = [...exclude];
   for (let i = 0; i < 4; i++) {
     const fb = M.fallbackFor(slot, ex);
@@ -289,7 +300,7 @@ function bestFallback(M, slot, exclude, byPid) {
 
 function myImpact(M, pid, spot, byPid) {
   if (spot.where === 'starter') {
-    const fb = bestFallback(M, spot.slot, [pid], byPid);
+    const fb = healthiestFallback(M, spot.slot, [pid], byPid);
     const slack = fb != null ? Math.max(0, (M.val(pid) || 0) - M.val(fb)) : null;
     return { where: 'starter', slot: spot.slot, fallback: fb, slack };
   }
@@ -305,14 +316,18 @@ function mySoWhat(M, p, spot, c, byPid) {
   }
   if (c.better) return { text: `Trending up — ${recheck.toLowerCase()}.`, link: 'lineup' };
   if (c.cats.includes('injury') && spot?.where === 'starter') {
-    const fb = bestFallback(M, spot.slot, [p.id], byPid);
+    const fb = healthiestFallback(M, spot.slot, [p.id], byPid);
     const loss = fb != null ? Math.max(0, (M.val(p.id) || 0) - M.val(fb)) : null;
     return {
-      text: fb != null ? `If he sits, ${M.P(fb).n} takes ${spot.slot} (−${loss != null ? loss.toFixed(1) : '?'} pts). ${recheck}.` : `If he sits, no healthy fallback for ${spot.slot} — claim one. ${recheck}.`,
+      text: fb != null
+        ? loss > 0
+          ? `If he sits, ${M.P(fb).n} takes ${spot.slot} (−${loss.toFixed(1)} pts). ${recheck}.`
+          : `If he sits, ${M.P(fb).n} takes ${spot.slot} with no projected drop-off. ${recheck}.`
+        : `If he sits, no healthy fallback for ${spot.slot} — claim one. ${recheck}.`,
       link: 'lineup',
     };
   }
-  if (c.practice === 'DNP') return { text: `DNP. A headline alone can't flip the start/sit — ${recheck.toLowerCase()}.`, link: 'injuries' };
+  if (c.practice === 'DNP') return { text: `DNP. One report alone can't flip the start/sit — ${recheck.toLowerCase()}.`, link: 'injuries' };
   if (c.cats.includes('trade')) {
     const d = M.acceptBy ? Math.round((M.acceptBy - M.now) / 86400000) : null;
     return { text: d != null && d >= 0 ? `League deadline in ${d}d — check the sell window.` : 'Check the trade ledger.', link: 'finder' };

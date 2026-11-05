@@ -32,13 +32,13 @@ Nothing is deployed. The app only runs on the machine that starts it:
 
 | Page | Skill it follows | What it does |
 | --- | --- | --- |
-| Briefing | command-center | Hard problems first, this week's matchup, clocks, roster news, league wire |
+| Briefing | command-center | Ranked decision brief (act / this week / watch) with evidence, hard problems, this week's matchup, clocks, roster news, league wire |
 | Lineup | lineup-call | Best legal lineup, Clear / Lean / Toss-up calls, tiebreak order, conditional calls |
 | Injuries | injury-triage | Sleeper vs ESPN labels with times, most-severe-wins rule, league IR rules, IR lock, next man up |
 | Waivers | waiver-plan | Needs in priority order, bye look-ahead, tiered candidates with a named drop, K/DEF streams |
 | Trades | trade-lab | Deadline window, sell/buy market, two-team lineup math, three pitches + walk-away line |
 | Season | season-planner | Playoff odds, weekly review, lineup efficiency, deadline + playoff prep, `.ics` check-ins |
-| News | command-center | ESPN articles + RotoWire notes + league moves, tagged by who owns each player |
+| News | command-center | "Your players" ranks every report by lineup impact; other tabs carry ESPN articles, RotoWire notes and league moves, tagged by who owns each player |
 
 ## Compete, share & plan
 
@@ -58,6 +58,14 @@ Nothing is deployed. The app only runs on the machine that starts it:
 | Draft plan | Slot explorer, keeper candidates, draft steals and misses, round-by-round value, undervalued players |
 
 History comes from walking the league's `previous_league_id` chain (currently 2025 and 2026).
+
+## Decision engine
+
+The Briefing opens with a ranked decision brief (`public/js/decision.js`): `act` / `this-week` /
+`watch`, each with evidence, risk, a deadline and a deterministic confidence score. Health beats
+models — a player whose latest report is DNP/Out/IR is never recommended, and never named as the
+fallback. The same contract is documented for agent use in
+`skills/ff-decision-engine/SKILL.md`, with thresholds and worked examples beside it.
 
 ## Data
 

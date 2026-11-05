@@ -1,7 +1,7 @@
 import { esc, ago, fmtDayTime } from '../util.js';
 import { buildFeed } from '../newsfeed.js';
 import { card } from '../ui.js';
-import { buildPlayerNews } from '../playernews.js';
+import { playerNewsFor } from '../playernews.js';
 
 const KIND = { article: 'Article', note: 'Player note', wire: 'League move' };
 
@@ -14,16 +14,8 @@ const BUCKETS = [
 
 const CAT_LABEL = { injury: 'Injury', practice: 'Practice', trade: 'Trade', depth: 'Role', suspension: 'Suspension', performance: 'Performance' };
 
-// The engine is pure for a given model; reuse the result across tab clicks.
-const engineCache = new WeakMap();
-function engineFor(M) {
-  let res = engineCache.get(M);
-  if (!res) {
-    res = buildPlayerNews(M);
-    engineCache.set(M, res);
-  }
-  return res;
-}
+// The engine is pure for a given model and memoised in playernews.js.
+const engineFor = playerNewsFor;
 
 export function feedItem(M, it) {
   const owners = it.pids
