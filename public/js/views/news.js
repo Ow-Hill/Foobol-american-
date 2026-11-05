@@ -144,6 +144,7 @@ function leagueMoves(M) {
 }
 
 function rankedPanel(M, tab, cat, rows) {
+  const flags = engineFor(M).flags;
   const shown = rows.slice(0, tab === 'league' ? 24 : tab === 'rumours' ? 40 : 30);
   const title = tab === 'league' ? 'League' : tab === 'wire' ? 'Wire' : 'Rumours';
   const sub =
@@ -152,15 +153,18 @@ function rankedPanel(M, tab, cat, rows) {
       : tab === 'wire'
         ? `Unrostered players · ${rows.length} notable report${rows.length === 1 ? '' : 's'}`
         : `Speculation from the last 5 days · ${rows.length} report${rows.length === 1 ? '' : 's'}`;
-  const banner =
+  const degrade = feedBanner(flags, tab);
+  const rumourBanner =
     tab === 'rumours'
-      ? `<div class="callout warn" style="margin:0 0 12px"><b>Speculation, not a status change</b>Rumours can raise a flag. They cannot flip a start or sit, or count as a confirmed report.</div>`
+      ? `<div class="callout warn"><b>Speculation, not a status change</b>Rumours can raise a flag. They cannot flip a start or sit, or count as a confirmed report.</div>`
       : '';
-  const cats = `<div class="pn-cats">${CATS.map(([k, l]) => `<button class="tab ${cat === k ? 'active' : ''}" data-news-cat="${k}">${l}</button>`).join('')}</div>`;
+  const banner = degrade || rumourBanner ? `<div class="pn-banners">${degrade}${rumourBanner}</div>` : '';
+  const cats = `<div class="pn-cats" role="group" aria-label="Filter by category">${CATS.map(([k, l]) => `<button class="tab ${cat === k ? 'active' : ''}" data-news-cat="${k}" aria-pressed="${cat === k}">${l}</button>`).join('')}</div>`;
   const moves = tab === 'league' ? leagueMoves(M) : '';
+  const emptyText = tab === 'rumours' && flags.disabled ? 'No rumours without headline search. Turn news.search back on in config.json.' : 'No reports match this filter.';
   const list = shown.length
     ? `<ul class="pn-rank-list">${shown.map((r) => rankRow(M, r.it, r.score, r.bucket, tab)).join('')}</ul>`
-    : '<p class="empty" style="padding:12px 16px">No reports match this filter.</p>';
+    : `<p class="empty" style="padding:12px 16px">${esc(emptyText)}</p>`;
   const more = rows.length > shown.length ? `<p class="pn-more" style="padding:8px 16px 12px">Showing the top ${shown.length} of ${rows.length} — narrow it with a category.</p>` : '';
   const note = {
     league: "A rival's injury only matters here if it changes a matchup, a trade or the wire. Background items are hidden.",
@@ -197,16 +201,25 @@ function playerRow(M, row, open) {
   </li>`;
 }
 
+// One banner for every tab: a missing or stale headline feed changes what the
+// page can claim, not just what the "Your players" tab shows.
+function feedBanner(flags, tab) {
+  if (flags.disabled) {
+    return `<div class="callout">Headline search is off, so this tab shows RotoWire notes and ESPN articles only.${
+      tab === 'rumours' ? ' Rumours need headlines and will be empty.' : ''
+    } Turn it back on in <code>config.json</code> (<code>news.search</code>).</div>`;
+  }
+  if (flags.degraded) {
+    return `<div class="callout warn">Some headlines couldn't be refreshed. Cached headlines are shown, and older reports are marked so nothing looks newer than it is.</div>`;
+  }
+  return '';
+}
+
 function minePanel(M, openPid) {
   const res = engineFor(M);
   const PN = M.snap.playerNews || {};
   const flags = res.flags;
-  let banner = '';
-  if (flags.disabled) {
-    banner = `<div class="callout">Headline search is off, so this tab shows RotoWire notes and ESPN articles only. Turn it back on in <code>config.json</code> (<code>news.search</code>).</div>`;
-  } else if (flags.degraded) {
-    banner = `<div class="callout warn">Some headlines couldn't be refreshed. Cached headlines are shown, and older reports are marked so nothing looks newer than it is.</div>`;
-  }
+  const banner = feedBanner(flags, 'mine');
   const fresh = PN.freshAt ? `Headlines refreshed ${esc(ago(PN.freshAt, M.now))}` : 'No headline refresh yet';
   const groups = BUCKETS.map(([key, label]) => {
     const rows = res.players.filter((r) => r.bucket === key);
@@ -269,7 +282,7 @@ export function render(M, ctx) {
     <div class="page-h"><div><h1>News</h1><p>Every report is filtered through your roster, your league and this week's matchups, then ranked by what it would change.</p></div></div>
     <div class="tabs" role="tablist">${tabs.map((t) => `<button class="tab ${t[0] === ui.tab ? 'active' : ''}" data-news-tab="${t[0]}" role="tab" aria-selected="${t[0] === ui.tab}">${t[1]}<small>${t[2]}</small></button>`).join('')}
       <span style="flex:1"></span>
-      ${ranked[ui.tab] ? '' : ['all', 'article', 'note', 'wire'].map((k) => `<button class="tab ${ui.kind === k ? 'active' : ''}" data-news-kind="${k}">${k === 'all' ? 'Everything' : k === 'wire' ? 'League moves' : KIND[k] + 's'}</button>`).join('')}
+      ${ranked[ui.tab] ? '' : ['all', 'article', 'note', 'wire'].map((k) => `<button class="tab ${ui.kind === k ? 'active' : ''}" data-news-kind="${k}" aria-pressed="${ui.kind === k}">${k === 'all' ? 'Everything' : k === 'wire' ? 'League moves' : KIND[k] + 's'}</button>`).join('')}
     </div>
     ${body}`;
 }

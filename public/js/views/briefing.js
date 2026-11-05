@@ -19,7 +19,13 @@ function decisionEvidence(M, d) {
 }
 
 function decisionCard(M, brief) {
-  if (!brief.decisions.length) return card('Decision brief', '<p class="empty">No decisions this week — the roster is legal and healthy.</p>');
+  const pn = M.snap.playerNews || {};
+  const banner = pn.disabled
+    ? '<div class="callout" style="margin-bottom:10px">Headline search is off — this brief uses RotoWire notes and ESPN articles only.</div>'
+    : pn.degraded
+      ? '<div class="callout warn" style="margin-bottom:10px">Some headlines could not be refreshed; cached evidence is shown and confidence is lower.</div>'
+      : '';
+  if (!brief.decisions.length) return card('Decision brief', `${banner}<p class="empty">No decisions this week — the roster is legal and healthy.</p>`);
   const item = (d) => `<li class="dec dec-${d.priority}">
     <div class="dec-meta"><span class="chip chip-${d.priority === 'act' ? 'red' : d.priority === 'this-week' ? 'amber' : 'blue'}">${PRIORITY_LABEL[d.priority]}</span><span class="chip">${KIND_LABEL[d.kind] || d.kind}</span><span class="dec-conf" title="${esc(d.guardrails.join(' '))}">${d.confidence}% confident</span></div>
     <div class="dec-title">${esc(d.title)}</div>
@@ -32,7 +38,7 @@ function decisionCard(M, brief) {
   const rest = brief.decisions.slice(3);
   return card(
     'Decision brief',
-    `<ul class="dec-list">${head.map(item).join('')}</ul>${rest.length ? `<details class="dec-more"><summary>${rest.length} more decision${rest.length > 1 ? 's' : ''}</summary><ul class="dec-list">${rest.map(item).join('')}</ul></details>` : ''}`,
+    `${banner}<ul class="dec-list">${head.map(item).join('')}</ul>${rest.length ? `<details class="dec-more"><summary>${rest.length} more decision${rest.length > 1 ? 's' : ''}</summary><ul class="dec-list">${rest.map(item).join('')}</ul></details>` : ''}`,
     { sub: `${brief.summary.act} act · ${brief.summary.thisWeek} this week · ${brief.summary.watch} watch · evidence, not commands`, right: `<button class="btn btn-ghost" data-go="news">All evidence</button>` }
   );
 }
