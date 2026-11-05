@@ -48,7 +48,29 @@ const ROUTES = [
 ];
 const PAGES = ROUTES.filter((r) => r.id);
 
-const state = { hist: null, HM: null, histAt: 0, snap: null, M: null, rosterId: null, route: 'briefing', ui: {}, loading: false, lastFetch: 0, navBuilt: false };
+// Group routes by section for collapsible nav
+const GROUPS = [];
+let currentGroup = null;
+for (const r of ROUTES) {
+  if (r.section) {
+    currentGroup = { section: r.section, items: [] };
+    GROUPS.push(currentGroup);
+  } else if (currentGroup) {
+    currentGroup.items.push(r);
+  }
+}
+
+// Nav collapse state from localStorage
+function loadNavState() {
+  try {
+    return JSON.parse(localStorage.getItem('nav.open') || '{}');
+  } catch { return {}; }
+}
+function saveNavState(open) {
+  try { localStorage.setItem('nav.open', JSON.stringify(open)); } catch {}
+}
+
+const state = { hist: null, HM: null, histAt: 0, snap: null, M: null, rosterId: null, route: 'briefing', ui: {}, loading: false, lastFetch: 0, navBuilt: false, navOpen: loadNavState() };
 const $ = (s) => document.querySelector(s);
 const viewEl = $('#view');
 
@@ -99,14 +121,49 @@ function rebuild() {
   renderView();
 }
 
+function groupSlug(section) {
+  return section.toLowerCase().replace(/[^a-z]+/g, '-');
+}
+
 function buildNavOnce() {
   if (state.navBuilt) return;
   const nav = $('#nav');
-  nav.innerHTML =
-    ROUTES.map((r) => {
-      if (r.section) return `<h4>${r.section}</h4>`;
-      return `<a href="#/${r.id}" data-route="${r.id}"><span class="ico">${r.ico}</span><span class="lbl">${r.label}</span><span class="badge" data-badge="${r.id}"></span></a>`;
-    }).join('') + `<div class="foot">Advice only. Every move is made in the Sleeper app.<br /><a href="https://sleeper.com/leagues/${state.snap.meta.leagueId}" target="_blank" rel="noopener">Open league in Sleeper ↗</a></div>`;
+  nav.setAttribute('aria-label', 'Main');
+
+  // Default: first two groups open, rest collapsed
+  const defaultOpen = { manage: true, compete: true };
+  for (const g of GROUPS) {
+    const slug = groupSlug(g.section);
+    if (state.navOpen[slug] === undefined) state.navOpen[slug] = defaultOpen[slug] ?? false;
+  }
+
+  nav.innerHTML = GROUPS.map((g) => {
+    const slug = groupSlug(g.section);
+    const open = state.navOpen[slug];
+    const groupId = `nav-group-${slug}`;
+    return `
+      <button class="nav-group" aria-expanded="${open}" aria-controls="${groupId}" data-group="${slug}">
+        <span class="nav-group-label">${g.section}</span>
+        <span class="nav-group-meta"><span class="nav-group-count">${g.items.length}</span><span class="nav-group-badge" data-group-badge="${slug}"></span><span class="chev">›</span></span>
+      </button>
+      <div class="nav-items ${open ? '' : 'collapsed'}" id="${groupId}" data-group-items="${slug}">
+        ${g.items.map((r) => `<a href="#/${r.id}" data-route="${r.id}" title="${r.label}"><span class="ico">${r.ico}</span><span class="lbl">${r.label}</span><span class="badge" data-badge="${r.id}"></span></a>`).join('')}
+      </div>`;
+  }).join('') + `<div class="foot">Advice only.</div>`;
+
+  // Group toggle handler
+  nav.addEventListener('click', (e) => {
+    const btn = e.target.closest('.nav-group');
+    if (!btn) return;
+    const slug = btn.dataset.group;
+    const items = nav.querySelector(`[data-group-items="${slug}"]`);
+    const open = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', !open);
+    items.classList.toggle('collapsed', open);
+    state.navOpen[slug] = !open;
+    saveNavState(state.navOpen);
+  });
+
   state.navBuilt = true;
 }
 
@@ -120,14 +177,31 @@ function updateNavBadges() {
 
   const badges = { briefing: crit || warn, lineup: hardSwaps, injuries: injBad };
   const amberIds = new Set(crit ? [] : ['briefing']);
+  const badgeMeaning = { briefing: 'problems need attention', lineup: 'hard lineup swaps', injuries: 'players need an injury check' };
 
-  document.querySelectorAll('#nav .badge').forEach((el) => {
+  // Update individual link badges + fold the count into the accessible name
+  document.querySelectorAll('#nav .badge[data-badge]').forEach((el) => {
     const id = el.dataset.badge;
     const n = badges[id] || 0;
     el.textContent = n || '';
     el.classList.toggle('amber', amberIds.has(id) && n);
     el.classList.toggle('show', !!n);
+    const link = el.closest('a');
+    const lbl = link.querySelector('.lbl')?.textContent || '';
+    link.setAttribute('aria-label', n ? `${lbl}, ${n} ${badgeMeaning[id] || 'alerts'}` : lbl);
   });
+
+  // Update group rolled-up badges (sum of badges in that group)
+  for (const g of GROUPS) {
+    const slug = groupSlug(g.section);
+    const groupBadgeEl = document.querySelector(`[data-group-badge="${slug}"]`);
+    if (!groupBadgeEl) continue;
+    const total = g.items.reduce((sum, r) => sum + (badges[r.id] || 0), 0);
+    const hasAmber = g.items.some((r) => amberIds.has(r.id) && badges[r.id]);
+    groupBadgeEl.textContent = total || '';
+    groupBadgeEl.classList.toggle('show', total > 0);
+    groupBadgeEl.classList.toggle('amber', hasAmber && !crit);
+  }
 }
 
 function renderChrome() {
@@ -137,17 +211,34 @@ function renderChrome() {
   sel.innerHTML = snap.teams.map((t) => `<option value="${t.id}" ${t.id === state.rosterId ? 'selected' : ''}>${esc(t.owner)}${t.isMe ? ' (you)' : ''}</option>`).join('');
   buildNavOnce();
   updateNavBadges();
+  $('#sleeperLink').href = 'https://sleeper.com/leagues/' + snap.meta.leagueId;
   const crit = M.problems().filter((p) => p.sev === 'critical').length;
   document.title = (crit ? `(${crit}) ` : '') + 'Roster Monitor · ' + snap.league.name;
   tick();
 }
 
 function updateNavActive() {
+  let activeGroup = null;
   document.querySelectorAll('#nav a').forEach((a) => {
     const isActive = a.dataset.route === state.route;
     a.classList.toggle('active', isActive);
     a.setAttribute('aria-current', isActive ? 'page' : '');
+    if (isActive) {
+      const items = a.closest('.nav-items');
+      if (items) activeGroup = items.dataset.groupItems;
+    }
   });
+  // The group containing the current page is always open
+  if (activeGroup && state.navBuilt) {
+    const btn = document.querySelector(`.nav-group[data-group="${activeGroup}"]`);
+    const items = document.querySelector(`.nav-items[data-group-items="${activeGroup}"]`);
+    if (btn && items && btn.getAttribute('aria-expanded') === 'false') {
+      btn.setAttribute('aria-expanded', 'true');
+      items.classList.remove('collapsed');
+      state.navOpen[activeGroup] = true;
+      saveNavState(state.navOpen);
+    }
+  }
 }
 
 function renderView() {
