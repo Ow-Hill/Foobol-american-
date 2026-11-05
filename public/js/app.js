@@ -48,7 +48,7 @@ const ROUTES = [
 ];
 const PAGES = ROUTES.filter((r) => r.id);
 
-const state = { hist: null, HM: null, histAt: 0, snap: null, M: null, rosterId: null, route: 'briefing', ui: {}, loading: false, lastFetch: 0 };
+const state = { hist: null, HM: null, histAt: 0, snap: null, M: null, rosterId: null, route: 'briefing', ui: {}, loading: false, lastFetch: 0, navBuilt: false };
 const $ = (s) => document.querySelector(s);
 const viewEl = $('#view');
 
@@ -99,27 +99,55 @@ function rebuild() {
   renderView();
 }
 
+function buildNavOnce() {
+  if (state.navBuilt) return;
+  const nav = $('#nav');
+  nav.innerHTML =
+    ROUTES.map((r) => {
+      if (r.section) return `<h4>${r.section}</h4>`;
+      return `<a href="#/${r.id}" data-route="${r.id}"><span class="ico">${r.ico}</span><span class="lbl">${r.label}</span><span class="badge" data-badge="${r.id}"></span></a>`;
+    }).join('') + `<div class="foot">Advice only. Every move is made in the Sleeper app.<br /><a href="https://sleeper.com/leagues/${state.snap.meta.leagueId}" target="_blank" rel="noopener">Open league in Sleeper ↗</a></div>`;
+  state.navBuilt = true;
+}
+
+function updateNavBadges() {
+  const { M } = state;
+  const probs = M.problems();
+  const crit = probs.filter((p) => p.sev === 'critical').length;
+  const warn = probs.filter((p) => p.sev === 'warn').length;
+  const injBad = M.injuryRows().filter((r) => r.action.bad).length;
+  const hardSwaps = M.swaps().filter((s) => s.band === 'hard').length;
+
+  const badges = { briefing: crit || warn, lineup: hardSwaps, injuries: injBad };
+  const amberIds = new Set(crit ? [] : ['briefing']);
+
+  document.querySelectorAll('#nav .badge').forEach((el) => {
+    const id = el.dataset.badge;
+    const n = badges[id] || 0;
+    el.textContent = n || '';
+    el.classList.toggle('amber', amberIds.has(id) && n);
+    el.classList.toggle('show', !!n);
+  });
+}
+
 function renderChrome() {
   const { snap, M } = state;
   $('#leagueName').textContent = snap.league.name + ' · ' + snap.meta.season;
   const sel = $('#teamSelect');
   sel.innerHTML = snap.teams.map((t) => `<option value="${t.id}" ${t.id === state.rosterId ? 'selected' : ''}>${esc(t.owner)}${t.isMe ? ' (you)' : ''}</option>`).join('');
-  const probs = M.problems();
-  const crit = probs.filter((p) => p.sev === 'critical').length;
-  const warn = probs.filter((p) => p.sev === 'warn').length;
-  const injBad = M.injuryRows().filter((r) => r.action.bad).length;
-  const badge = (n, amber) => (n ? `<span class="badge ${amber ? 'amber' : ''}">${n}</span>` : '');
-  $('#nav').innerHTML =
-    ROUTES.map((r) => {
-      if (r.section) return `<h4>${r.section}</h4>`;
-      let b = '';
-      if (r.id === 'briefing') b = badge(crit || warn, !crit);
-      if (r.id === 'lineup') b = badge(M.swaps().filter((s) => s.band === 'hard').length || '', false);
-      if (r.id === 'injuries') b = badge(injBad, false);
-      return `<a href="#/${r.id}" data-route="${r.id}" class="${r.id === state.route ? 'active' : ''}"><span class="ico">${r.ico}</span>${r.label}${b}</a>`;
-    }).join('') + `<div class="foot">Advice only. Every move is made in the Sleeper app.<br /><a href="https://sleeper.com/leagues/${snap.meta.leagueId}" target="_blank" rel="noopener">Open league in Sleeper ↗</a></div>`;
+  buildNavOnce();
+  updateNavBadges();
+  const crit = M.problems().filter((p) => p.sev === 'critical').length;
   document.title = (crit ? `(${crit}) ` : '') + 'Roster Monitor · ' + snap.league.name;
   tick();
+}
+
+function updateNavActive() {
+  document.querySelectorAll('#nav a').forEach((a) => {
+    const isActive = a.dataset.route === state.route;
+    a.classList.toggle('active', isActive);
+    a.setAttribute('aria-current', isActive ? 'page' : '');
+  });
 }
 
 function renderView() {
@@ -129,7 +157,7 @@ function renderView() {
   const ctx = { state, ui: state.ui, rerender: renderView, go, HM: state.HM };
   viewEl.innerHTML = route.mod.render(M, ctx);
   route.mod.mount?.(viewEl, M, ctx);
-  document.querySelectorAll('#nav a').forEach((a) => a.classList.toggle('active', a.dataset.route === state.route));
+  updateNavActive();
   document.querySelector('#nav a.active')?.scrollIntoView({ block: 'nearest' });
   window.scrollTo(0, scroll);
 }

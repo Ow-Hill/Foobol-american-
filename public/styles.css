@@ -48,7 +48,8 @@ select { background: var(--panel); border: 1px solid var(--line2); border-radius
 .nav a:hover { background: var(--panel); color: var(--text); }
 .nav a.active { background: var(--panel2); color: var(--text); box-shadow: inset 2px 0 0 var(--green); }
 .nav .ico { width: 18px; text-align: center; opacity: .9; }
-.nav .badge { margin-left: auto; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; background: var(--red); color: #1a0505; }
+.nav .badge { margin-left: auto; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; background: var(--red); color: #1a0505; display: none; }
+.nav .badge.show { display: inline-block; }
 .nav .badge.amber { background: var(--amber); }
 .nav .foot { margin-top: auto; font-size: 11.5px; color: var(--dim); padding: 10px 12px; line-height: 1.5; }
 
