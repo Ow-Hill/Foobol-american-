@@ -180,6 +180,55 @@ select { background: var(--panel); border: 1px solid var(--line2); border-radius
 .feed li.rival { box-shadow: inset 3px 0 0 #4b6a8c; }
 .feed details summary { cursor: pointer; color: var(--blue); font-size: 12px; margin-top: 2px; }
 .feed details p { margin-top: 6px; color: var(--muted); font-size: 13.5px; }
+
+/* Player news: bucket rows with an expandable report drawer */
+.pn-groups { list-style: none; margin: 0; padding: 0; }
+.pn-group { list-style: none; }
+.pn-group-h { display: flex; align-items: center; gap: 8px; padding: 10px 16px 6px; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); font-weight: 700; border-bottom: 1px solid #172230; background: var(--panel); }
+.pn-group-h .n { font-family: var(--mono); font-size: 10.5px; color: var(--dim); }
+.pn-list { list-style: none; margin: 0; padding: 0; }
+.pn-row { border-bottom: 1px solid #172230; }
+.pn-row:last-child { border-bottom: 0; }
+.pn-row.pn-act { box-shadow: inset 3px 0 0 var(--red); }
+.pn-row.pn-week { box-shadow: inset 3px 0 0 var(--amber); }
+.pn-row.pn-watch { box-shadow: inset 3px 0 0 var(--blue); }
+.pn-head { display: grid; grid-template-columns: minmax(0, 1.5fr) auto auto auto auto auto; gap: 10px; align-items: center; width: 100%; padding: 11px 16px; background: none; border: 0; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.pn-head:hover { background: var(--panel); }
+.pn-head:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
+.pn-id { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.pn-nm { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pn-where, .pn-when { font-size: 11.5px; color: var(--dim); white-space: nowrap; }
+.pn-trend { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+.pn-score { font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 99px; white-space: nowrap; }
+.pn-score.act { background: var(--red); color: #1a0505; }
+.pn-score.week { background: var(--amber); color: #1a0f00; }
+.pn-score.watch { background: #24405c; color: #cfe2f5; }
+.pn-score.background { background: var(--panel2); color: var(--dim); }
+.pn-chev { color: var(--dim); font-size: 11px; width: 10px; text-align: center; }
+.pn-body { padding: 2px 16px 14px; }
+.pn-sowhat { margin: 6px 0 10px; padding: 9px 12px; border-left: 2px solid var(--green); background: var(--panel); color: var(--text); font-size: 13.5px; border-radius: 0 8px 8px 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pn-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.pn-item { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg2); }
+.pn-item.posture-speculative { border-style: dashed; border-color: #4b3a17; }
+.pn-item-meta { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; font-size: 11px; color: var(--dim); }
+.pn-item-title { font-weight: 600; font-size: 13.5px; margin-top: 3px; }
+.pn-item-text { color: var(--muted); font-size: 13px; margin-top: 3px; }
+.pn-dir.worse { color: var(--red); font-weight: 700; }
+.pn-dir.better { color: var(--green); font-weight: 700; }
+.pn-reps { color: var(--dim); }
+.pn-more { color: var(--dim); font-size: 11.5px; padding: 6px 2px 0; }
+.chip-tier { background: #1b2a3a; color: var(--blue); }
+.chip-spec { background: #3a2a12; color: var(--amber); }
+.chip-prac-DNP { background: #3a1414; color: #ff9c9c; }
+.chip-prac-LP { background: #3a2a12; color: var(--amber); }
+.chip-prac-FP { background: #12301f; color: var(--green); }
+.chip-prac-EST { background: #1b2a3a; color: var(--blue); }
+.btn-xs { padding: 2px 8px; font-size: 11.5px; min-height: 0; }
+@media (max-width: 700px) {
+  .pn-head { grid-template-columns: 1fr auto; row-gap: 4px; }
+  .pn-trend, .pn-when { grid-column: 1; }
+  .pn-chev { grid-row: 1; grid-column: 2; }
+}
 .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
 .tab { padding: 6px 12px; border-radius: 99px; border: 1px solid var(--line2); background: transparent; cursor: pointer; font-weight: 600; font-size: 13px; color: var(--muted); }
 .tab.active { background: var(--green); color: #07140d; border-color: var(--green); }
