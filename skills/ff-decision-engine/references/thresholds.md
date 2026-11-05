@@ -159,6 +159,10 @@ outranks a bye-week waiver note at the same priority.
 
 Clamp to **20–95**. Deterministic: no random jitter, no model output.
 
+**Speculation gate:** if every evidence item is speculative and the candidate's priority is
+`act`, it is downgraded to `this-week` *before* confidence is computed. The confidence formula
+still applies the −20 speculation penalty, so the result cannot masquerade as a confirmed call.
+
 ## 8. Candidate gates
 
 ### 8.1 Hard problems → `act`
