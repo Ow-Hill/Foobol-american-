@@ -5,5 +5,9 @@
   "timeZone": "America/Toronto",
   "port": 4321,
   "tradeDeadlineWeek": 11,
-  "playoffWeeks": [15, 16, 17]
+  "playoffWeeks": [15, 16, 17],
+  "news": {
+    "search": true,
+    "note": "Google News RSS headlines per player. Set false to disable (falls back to notes + ESPN articles). Headline + source + link only, disk-cached 10 min."
+  }
 }
