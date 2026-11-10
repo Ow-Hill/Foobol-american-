@@ -38,7 +38,7 @@ Nothing is deployed. The app only runs on the machine that starts it:
 | Waivers | waiver-plan | Needs in priority order, bye look-ahead, tiered candidates with a named drop, K/DEF streams |
 | Trades | trade-lab | Deadline window, sell/buy market, two-team lineup math, three pitches + walk-away line |
 | Season | season-planner | Playoff odds, weekly review, lineup efficiency, deadline + playoff prep, `.ics` check-ins |
-| News | command-center | "Your players" ranks every report by lineup impact; League, Wire and Rumours apply the same scoring to rivals, free agents and the last 5 days of speculation |
+| News | command-center | Player search + "Your players" ranks every report by lineup impact; League, Wire and Rumours apply the same scoring to rivals, free agents and the last 5 days of speculation |
 
 ## Compete, share & plan
 
@@ -66,6 +66,22 @@ The Briefing opens with a ranked decision brief (`public/js/decision.js`): `act`
 models — a player whose latest report is DNP/Out/IR is never recommended, and never named as the
 fallback. The same contract is documented for agent use in
 `skills/ff-decision-engine/SKILL.md`, with thresholds and worked examples beside it.
+
+## Player news search
+
+The News page has a search box (or press `/`) that ranks **your roster → league rosters → free
+agents**. Picking a player opens the report drawer with cached RotoWire notes, ESPN articles and
+Google News headlines. If a player is outside the scanned set, **Refresh headlines** fetches that
+one player on demand (`/api/news?pid=…`, rate-limited) and classifies the result without rebuilding
+the snapshot.
+
+`lib/playernews.js` searches one exact name at a time (`"<name>" NFL when:7d`), with extra
+nickname queries for team defenses. It normalises apostrophes, hyphens, initials and suffixes, so
+`Ja'Marr Chase`, `A.J. Brown`, `Amon-Ra St. Brown` and `Chicago Bears` all match their own
+headlines. Cached per player with a 3/10/30-minute TTL, stale-on-failure, one HTTP retry on
+429/5xx, and per-player failure backoff. Cross-player story ids stop one headline appearing under
+three different players in League, Wire or Rumours. The full contract is in
+`skills/ff-news-search/SKILL.md`.
 
 ## Data
 

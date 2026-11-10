@@ -244,6 +244,30 @@ select { background: var(--panel); border: 1px solid var(--line2); border-radius
 .chip-prac-EST { background: #1b2a3a; color: var(--blue); }
 .btn-xs { padding: 2px 8px; font-size: 11.5px; min-height: 0; }
 
+/* Player search + on-demand lookup */
+.pn-search { margin: 0 0 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.pn-search label { display: block; font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--dim); font-weight: 700; margin-bottom: 6px; }
+.pn-search-box { position: relative; display: flex; align-items: center; }
+.pn-search-box input { width: 100%; padding: 9px 34px 9px 11px; border: 1px solid var(--line2); border-radius: 8px; background: var(--bg2); color: var(--text); font: inherit; font-size: 14px; }
+.pn-search-box input:focus { outline: 2px solid var(--green); outline-offset: -1px; border-color: transparent; }
+.pn-search-kbd { position: absolute; right: 10px; font-family: var(--mono); font-size: 11px; color: var(--dim); border: 1px solid var(--line2); border-radius: 4px; padding: 1px 6px; background: var(--bg); pointer-events: none; }
+.pn-search-list { list-style: none; margin: 6px 0 0; padding: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.pn-search-list li { margin: 0; }
+.pn-search-opt { display: grid; grid-template-columns: minmax(0, 1.6fr) auto auto; gap: 10px; align-items: center; width: 100%; padding: 8px 10px; border: 0; border-bottom: 1px solid #172230; background: var(--bg2); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.pn-search-list li:last-child .pn-search-opt { border-bottom: 0; }
+.pn-search-opt:hover, .pn-search-opt.active { background: var(--panel2); }
+.pn-search-opt:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
+.pn-search-opt .tm { font-size: 11px; color: var(--dim); white-space: nowrap; }
+.pn-search-opt .pn-owner { justify-self: end; }
+.pn-search-empty { margin: 8px 0 0; color: var(--dim); font-size: 12.5px; }
+.pn-search-hint { margin: 7px 0 0; color: var(--dim); font-size: 11.5px; }
+.pn-lookup { margin: 0 0 12px; }
+@media (max-width: 520px) {
+  .pn-search-opt { grid-template-columns: minmax(0, 1fr) auto; }
+  .pn-search-opt .pn-owner { grid-column: 2; }
+  .pn-search-kbd { display: none; }
+}
+
 /* Decision brief: ranked, evidence-backed calls */
 .dec-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .dec { padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg2); }

@@ -6,6 +6,7 @@ const cfg = require('./config.json');
 const S = require('./lib/sources');
 const { buildSnapshot } = require('./lib/snapshot');
 const { buildHistory } = require('./lib/history');
+const { playerNews: fetchPlayerNews } = require('./lib/playernews');
 
 const PUBLIC = path.join(__dirname, 'public');
 const MIME = {
@@ -24,6 +25,8 @@ let inflight = null;
 let hist = null;
 let histAt = 0;
 let histInflight = null;
+const newsHits = new Map();
+let newsWindow = [];
 
 async function getSnapshot(force) {
   if (force && Date.now() - lastForce > 15000) {
@@ -70,6 +73,23 @@ const server = http.createServer(async (req, res) => {
         if (!hist) await histInflight;
       }
       return send(req, res, 200, JSON.stringify(hist), MIME['.json']);
+    }
+    if (url.pathname === '/api/news') {
+      const pid = url.searchParams.get('pid');
+      const s = snap || (await getSnapshot());
+      const p = s?.players?.[pid];
+      if (!p) return send(req, res, 404, JSON.stringify({ error: 'Unknown player' }), MIME['.json']);
+      const now = Date.now();
+      const last = newsHits.get(pid) || 0;
+      newsWindow = newsWindow.filter((t) => now - t < 60000);
+      if (now - last < 5000 || newsWindow.length >= 30) {
+        return send(req, res, 429, JSON.stringify({ error: 'News lookup is rate limited. Try again in a few seconds.' }), MIME['.json']);
+      }
+      newsHits.set(pid, now);
+      newsWindow.push(now);
+      const r = await fetchPlayerNews([{ id: pid, n: p.n, pos: p.pos, team: p.team, hot: true }], { force: true });
+      const items = (r.items || []).filter((x) => x.pid === pid);
+      return send(req, res, 200, JSON.stringify({ pid, items, diag: r.diag, perPlayer: r.perPlayer }), MIME['.json']);
     }
     if (url.pathname === '/api/health') return send(req, res, 200, JSON.stringify({ ok: true, snapshotAgeMs: snap ? Date.now() - snapAt : null }), MIME['.json']);
 

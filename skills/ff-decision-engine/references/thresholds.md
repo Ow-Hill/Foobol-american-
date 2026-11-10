@@ -10,9 +10,10 @@ code. Values verified against the Week 9 snapshot, 2026-11-05.
 | --- | --- |
 | Evidence window | 7 days (604,800,000 ms) |
 | Per-player evidence shown in a decision | 2 newest non-duplicate items |
-| Google News cache | 10 minutes, disk-backed, stale-on-failure |
+| Google News cache | 3 min hot / 10 min roster / 30 min wire, disk-backed, stale-on-failure |
 | Snapshot cache | 45 seconds, stale-while-rebuild |
-| Headline fetch | one query per player, headline + source + link only |
+| Headline fetch | one exact-name query per player (`when:7d`) plus DEF nickname queries; headline + source + link only |
+| Story dedupe | one `storyId` per headline cluster (72h, ≥3 shared tokens, Jaccard ≥0.7); League/Wire/Rumours show one row |
 | Degraded flag | set when `news.search` is off or a refresh partially failed |
 
 Never present a cached headline as newer than its timestamp. If the feed is degraded, say so

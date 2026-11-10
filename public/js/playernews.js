@@ -154,7 +154,22 @@ export function buildPlayerNews(M) {
   for (const g of PN.items || []) {
     const t = g.time || 0;
     if (!t || now - t > winMs) continue;
-    raw.push({ id: g.id, kind: 'search', pid: g.pid, time: t, src: g.src || 'Google News', title: g.title, text: '', url: g.url, detail: null });
+    const meta = PN.perPlayer?.[g.pid] || null;
+    raw.push({
+      id: g.id,
+      kind: 'search',
+      pid: g.pid,
+      time: t,
+      src: g.src || 'Google News',
+      domain: g.domain || null,
+      storyId: g.storyId || null,
+      alsoPids: g.alsoPids || [],
+      stale: !!meta?.stale,
+      title: g.title,
+      text: '',
+      url: g.url,
+      detail: null,
+    });
   }
 
   // ---- classify ----
@@ -270,6 +285,7 @@ export function buildPlayerNews(M) {
       trend: notes.map((x) => ({ t: x.time, v: x.practice })),
       flagged: visible.some((x) => x.practice === 'DNP' || x.status === 'Out' || x.status === 'IR'),
       sinceMs: visible.length ? now - Math.max(...visible.map((x) => x.time)) : null,
+      stale: !!PN.perPlayer?.[pid]?.stale,
       impact,
       action: impact && spot?.where === 'starter' ? 'lineup' : bucket === 'act' || bucket === 'week' ? 'injuries' : 'news',
     });
@@ -422,4 +438,48 @@ function nextManFA(M, pid) {
   const p = M.P(pid);
   if (p.own == null || p.effSev < 2) return false;
   return M.nextManUp(pid).some((c) => c.own == null);
+}
+
+// On-demand lookup: classify a single player's freshly fetched headlines without
+// rebuilding the whole snapshot. Same fields the News rows expect.
+export function lookupItems(M, pid, raw) {
+  const p = M.P(pid);
+  const isMine = p.own === M.me.id;
+  const spot = isMine ? myRosterSpot(M, pid) : null;
+  return (raw || [])
+    .map((g) => {
+      const c = classify(g.title || '', '', 'search', null);
+      return {
+        id: g.id || 'l' + (g.time || 0) + (g.title || ''),
+        kind: 'search',
+        pId: pid,
+        pid,
+        time: g.time || 0,
+        src: g.src || 'Google News',
+        domain: g.domain || null,
+        storyId: g.storyId || null,
+        alsoPids: g.alsoPids || [],
+        title: g.title || '',
+        text: '',
+        url: g.url || null,
+        detail: null,
+        isMine,
+        spot,
+        urgency: URGENCY(kickoffHours(M, pid)),
+        cats: c.cats,
+        practice: c.practice,
+        status: c.status,
+        posture: c.posture,
+        better: c.better,
+        tier: tierOf(g.src),
+        headlineOnly: true,
+        reps: 1,
+        dupe: false,
+        soWhat: null,
+        action: null,
+        direction: 'flat',
+      };
+    })
+    .filter((x) => x.time)
+    .sort((a, b) => b.time - a.time);
 }
