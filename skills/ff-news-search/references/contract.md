@@ -41,9 +41,16 @@ NFD → strip diacritics → lowercase → remove ' and ’ → remove . → hyp
    - middle tokens are allowed (`Amon-Ra St. Brown`).
 
 After the name match, `relevant(title, player)` requires an NFL/fantasy/status cue (`nfl`,
-`football`, `fantasy`, `injury`, `practice`, `trade`, `week 9`, `touchdown`, `field goal`, etc.) or
-one of the player’s team aliases (`MIA` → `miami`, `dolphins`). Name-only lifestyle stories are
-dropped.
+`football`, `fantasy`, `injury`, `practice`, `trade`, `week 9`, `touchdown`, `field goal`, `bye`,
+etc.) or one of the player’s team aliases (`MIA` → `miami`, `dolphins`). Generic words that occur
+in every sport (`play`, `out`, `game`, `season`, `return`, `points`, `pass`) are not cues.
+Name-only lifestyle stories are dropped.
+
+`nameConflict(title, player)` runs first and rejects a same-name player: the words directly before
+the name are another NFL team (`Jaguars' Josh Allen`, `Jaguars LB Josh Allen`) or a defensive
+position for an offensive player (`edge rusher Josh Allen`), and the headline never names the
+player's own team. A team elsewhere in the headline (`Chiefs reunite with Tyreek Hill`) does not
+count.
 
 Test table (also in `test/news-search.test.js`):
 
@@ -60,6 +67,9 @@ Test table (also in `test/news-search.test.js`):
 | `Chicago Bears` DEF | `Bears defense dominates` | true |
 | `Chicago Bears` DEF | `CHI D/ST forces turnovers` | true |
 | `Chicago Bears` DEF | `Chicago Bears offense struggles` | false |
+| `Josh Allen` QB BUF | `Jaguars' Josh Allen records two sacks` | false (relevant) |
+| `Josh Allen` QB BUF | `Josh Allen throws 3 TDs vs Dolphins` | true (relevant) |
+| `Tyreek Hill` WR MIA | `Chiefs reunite with Tyreek Hill? Fantasy outlook` | true (relevant) |
 
 ## 3. Cache states
 
@@ -90,14 +100,20 @@ drawer still shows the story.
 
 `GET /api/news?pid=<player id>`
 
-- Looks up the player in the current snapshot.
+- Looks up the player in the current snapshot, then in the full Sleeper player list, so any NFL
+  player can be fetched.
+- A single-player lookup never prunes the cache file (only a full scan knows who is followed).
+
+`GET /api/players?q=<3+ letters>` searches every NFL skill player by name (8 results) for the
+"Search all NFL players" button when the snapshot has fewer than 4 matches.
 - Calls `playerNews([{ id, n, pos, team, hot: true }], { force: true })`.
 - Returns `{ pid, items, diag, perPlayer }`.
 - Rate limit: 5 seconds per player, 30 requests per minute globally. 429 body:
   `{ "error": "News lookup is rate limited. Try again in a few seconds." }`.
 
 Client: `lookupItems(M, pid, raw)` classifies the fetched headlines with the same regex and tier
-rules as the snapshot path, then the lookup panel merges them with cached notes/articles.
+rules as the snapshot path, scores them with the same profiles, adds the "so what" for your own
+players, then the lookup panel merges them with cached notes/articles.
 
 ## 6. Copy rules
 
@@ -105,4 +121,33 @@ rules as the snapshot path, then the lookup panel merges them with cached notes/
 - Never describe an article body; only the headline + source + link.
 - Always show the publisher domain when available (`sports.yahoo.com`), not just “Google News”.
 - Say “stale” when the player’s cache is older than its TTL.
-- Say “not scanned” when a player is outside the roster + hot-name set; offer the lookup instead.
+- Say “not scanned” when a player is outside the scan set (below); offer the lookup instead.
+- Label ripple rows “Estimate” with their confidence; never call one a projection.
+
+## 7. Scan set (`lib/snapshot.js`)
+
+In order, deduped, capped at 65 names:
+
+1. My roster and IR (`hot` for starters).
+2. This week's opponent's starters.
+3. NFL teammates of my starters: QB1, RB1–RB2, every WR slot's #1, TE1 (`cold`).
+4. Sleeper trending adds (top 20) and drops (top 8) that are **free agents in this league** (`cold`).
+
+Every depth ≤ 3 skill player on my roster's NFL teams is also added to the snapshot's player set,
+so teammate news resolves, is searchable and can carry a ripple.
+
+## 8. Relevance profiles (`public/js/playernews.js`)
+
+| Tab | Weights |
+| --- | --- |
+| Your players | roster .12 · impact .28 · urgency .12 · severity .36 · league .07 · tier .05 |
+| League | opponent .30 · impact .20 · urgency .10 · severity .25 · league .10 · tier .05 |
+| Wire | impact .30 · opportunity .35 · availability .10 · urgency .10 · league .10 · tier .05 |
+
+- **opponent**: 1 when the player starts against me this week, 0.5 on that roster's bench.
+- **Wire impact**: `M.addImpact(pid)` (lineup points he would add) / 5, capped at 1.
+- **opportunity**: high for a promotion, activation or positive ripple; 0.05 for his own Out/IR/DNP.
+- **availability**: 1 when a ripple says a starter ahead of him is out.
+- Ripple rows are capped at 74 under every profile, so an estimate never reaches “Act now”.
+
+See `ripple.md` for the ripple rules.

@@ -12,7 +12,7 @@ const BUCKETS = [
   ['background', 'Background'],
 ];
 
-const CAT_LABEL = { injury: 'Injury', practice: 'Practice', trade: 'Trade', depth: 'Role', suspension: 'Suspension', performance: 'Performance' };
+const CAT_LABEL = { injury: 'Injury', practice: 'Practice', trade: 'Trade', depth: 'Role', suspension: 'Suspension', performance: 'Performance', ripple: 'Teammate' };
 
 const RUMOUR_MS = 5 * 86400000;
 const CATS = [
@@ -22,6 +22,7 @@ const CATS = [
   ['trade', 'Trade'],
   ['depth', 'Role'],
   ['suspension', 'Suspension'],
+  ['ripple', 'Teammate'],
 ];
 
 // The engine is pure for a given model and memoised in playernews.js.
@@ -62,13 +63,14 @@ function practiceChip(v) {
 
 function itemMeta(M, i) {
   const bits = [];
-  bits.push(`<span class="chip">${i.kind === 'note' ? 'RotoWire note' : i.kind === 'article' ? 'ESPN' : 'Headline'}</span>`);
+  bits.push(`<span class="chip">${i.kind === 'note' ? 'RotoWire note' : i.kind === 'article' ? 'ESPN' : i.kind === 'ripple' ? 'Ripple' : 'Headline'}</span>`);
   if (i.tier === 1) bits.push('<span class="chip chip-tier">Tier 1</span>');
   else if (i.tier === 2) bits.push('<span class="chip chip-tier">Tier 2</span>');
   if (i.practice) bits.push(practiceChip(i.practice));
   if (i.status) bits.push(`<span class="chip ${i.status === 'Out' || i.status === 'IR' ? 'chip-red' : i.status === 'Doubtful' ? 'chip-amber' : 'chip-blue'}">${esc(i.status)}</span>`);
   for (const c of i.cats) if (c !== 'practice' && c !== 'injury') bits.push(`<span class="chip">${esc(CAT_LABEL[c] || c)}</span>`);
   if (i.posture === 'speculative') bits.push('<span class="chip chip-spec">Speculative</span>');
+  if (i.posture === 'estimate') bits.push(`<span class="chip chip-spec" title="Estimated from recent usage and the depth chart${i.ripple?.observed ? ', checked against games he played without the teammate' : ''}">Estimate${i.ripple ? ` · ${esc(i.ripple.conf)}` : ''}</span>`);
   if (i.direction === 'worse') bits.push('<span class="pn-dir worse">↓ worse</span>');
   else if (i.direction === 'better') bits.push('<span class="pn-dir better">↑ better</span>');
   const srcHost = String(i.src || '').toLowerCase().replace(/^www\./, '');
@@ -179,8 +181,8 @@ function rankedPanel(M, tab, cat, rows) {
     : `<p class="empty" style="padding:12px 16px">${esc(emptyText)}</p>`;
   const more = rows.length > shown.length ? `<p class="pn-more" style="padding:8px 16px 12px">Showing the top ${shown.length} of ${rows.length} — narrow it with a category.</p>` : '';
   const note = {
-    league: "A rival's injury only matters here if it changes a matchup, a trade or the wire. Background items are hidden.",
-    wire: 'Wire relevance weights lineup upgrade, availability (next man up), urgency, severity and source tier. Rolling waivers: claims process Tuesday.',
+    league: `A rival's news ranks highest when he starts against you this week${M.opp ? ` (${M.ownerName(M.opp.id)})` : ''}, then by whether it changes a trade or the wire. Background items are hidden.`,
+    wire: `Wire relevance weights how much he would add to your lineup and whether his path to playing time just opened (a starter ahead of him is out, a promotion), not his own injuries. Rolling waivers: claims process ${M.waiverDayName()}.`,
     rumours: 'Only reports from the last 5 days. Speculation is discounted; official news appears in League or on the player himself.',
   }[tab];
   return `${banner}${card(title, `${cats}${moves}${list}${more}`, { cls: 'flush', sub })}<p class="source">${note}</p>`;
@@ -211,19 +213,30 @@ function searchCard(M, ui) {
         )
         .join('')}</ul>`
     : q.trim()
-      ? `<p class="pn-search-empty">No player matches “${esc(q.trim())}”.</p>`
+      ? `<p class="pn-search-empty">No player in this league's snapshot matches “${esc(q.trim())}”.</p>`
       : '';
+  // Depth players who just got a role are often outside the snapshot: search every NFL player.
+  const wide = ui.wide && ui.wide.q === q.trim() ? ui.wide.rows.filter((x) => !rows.some((r) => r.id === x.id)) : [];
+  const wideList = wide.length
+    ? `<ul class="pn-search-list" aria-label="All NFL players">${wide
+        .map((p) => `<li><button type="button" class="pn-search-opt" data-pn-pick="${esc(p.id)}" data-pn-extra="${esc(JSON.stringify(p))}"><span class="pn-nm">${esc(p.n)}</span><span class="tm">${esc(p.pos || '?')}${p.team ? ` · ${esc(p.team)}` : ''}</span><span class="pn-owner"><span class="chip">Not in snapshot</span></span></button></li>`)
+        .join('')}</ul>`
+    : '';
+  const wideBtn = q.trim().length >= 3 && rows.length < 4 && !(ui.wide && ui.wide.q === q.trim())
+    ? `<p class="pn-search-empty"><button type="button" class="btn btn-ghost btn-xs" data-pn-wide="1">Search all NFL players</button></p>`
+    : ui.wide && ui.wide.q === q.trim() && !wide.length && !rows.length ? `<p class="pn-search-empty">No NFL player matches either.</p>` : '';
   const activeId = rows.length ? `pn-opt-${rows[active].id}` : '';
   return `<div class="pn-search" role="search">
     <label for="pn-q">Search player news</label>
     <div class="pn-search-box"><input id="pn-q" type="search" value="${esc(q)}" placeholder="Player name — e.g. Ja'Marr Chase" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="${rows.length > 0}" aria-controls="pn-search-results" aria-activedescendant="${esc(activeId)}" aria-autocomplete="list"><span class="pn-search-kbd" aria-hidden="true">/</span></div>
-    ${list}
-    <p class="pn-search-hint">Searches cached headlines for your roster, league and trending names. Pick a player to open the report; fetch on demand if it is not cached.</p>
+    ${list}${wideList}${wideBtn}
+    <p class="pn-search-hint">Searches cached headlines for your roster, your opponent, your starters' NFL teammates and trending free agents. Pick a player to open the report; fetch on demand if it is not cached.</p>
   </div>`;
 }
 
 function lookupPanel(M, ui, pid) {
-  const p = M.P(pid);
+  const base = M.P(pid);
+  const p = base.missing && ui.extra?.[pid] ? { ...base, ...ui.extra[pid] } : base;
   const res = engineFor(M);
   const cached = (res.byPid.get(pid) || []).filter((x) => !x.dupe);
   const fetched = ui.lookup?.[pid];
@@ -236,7 +249,7 @@ function lookupPanel(M, ui, pid) {
     ? `<ul class="pn-items">${items.slice(0, 12).map((i) => itemRow(M, i)).join('')}</ul>`
     : fetching
       ? '<p class="empty">Searching Google News…</p>'
-      : `<p class="empty">No cached headlines for ${esc(p.n)}. Headlines are fetched for your roster and trending names, not every player. <button class="btn btn-ghost btn-xs" data-pn-fetch="${esc(pid)}">Search Google News now</button></p>`;
+      : `<p class="empty">No cached headlines for ${esc(p.n)}. Headlines are fetched for your roster, this week's opponent, your starters' NFL teammates and trending free agents, not every player. <button class="btn btn-ghost btn-xs" data-pn-fetch="${esc(pid)}">Search Google News now</button></p>`;
   const web = `https://news.google.com/search?q=${encodeURIComponent(`"${p.n}" NFL`)}`;
   const close = `<button class="btn btn-ghost btn-xs" data-pn-close="1" style="float:right">Close</button>`;
   const refresh = !fetching && items.length ? ` · <button class="btn btn-ghost btn-xs" data-pn-fetch="${esc(pid)}">Refresh headlines</button>` : '';
@@ -245,6 +258,13 @@ function lookupPanel(M, ui, pid) {
     `${close}${error}${body}<p class="source">${items.length ? `${items.length} headline${items.length === 1 ? '' : 's'} · Google News RSS · headline + source + link only` : 'Player lookup'}${refresh} · <a href="${esc(web)}" target="_blank" rel="noopener">Open Google News ↗</a></p>`,
     { cls: 'flush', sub: 'Player lookup' }
   )}</div>`;
+}
+
+function rippleBadge(row) {
+  const r = row.ripple || [];
+  if (!r.length) return '';
+  const e = r[0];
+  return `<span class="pn-dir ${e.dir === 'up' ? 'better' : 'worse'}" title="${esc(e.why)}">${e.dir === 'up' ? '↑' : '↓'} teammate</span>`;
 }
 
 function playerRow(M, row, open) {
@@ -260,7 +280,7 @@ function playerRow(M, row, open) {
     : `<p class="empty" style="padding:8px 0">No reports in the last 7 days. Check Sunday inactives before kickoff.</p>`;
   return `<li class="pn-row pn-${row.bucket}">
     <button class="pn-head" data-pn-open="${esc(row.pid)}" aria-expanded="${open ? 'true' : 'false'}" aria-controls="pn-body-${esc(row.pid)}">
-      <span class="pn-id"><span class="pos pos-${esc((p.pos || 'x').toLowerCase())}">${esc(p.pos || '?')}</span><span class="pn-nm">${esc(p.n)}</span>${p.team ? `<span class="tm">${esc(p.team)}</span>` : ''}</span>
+      <span class="pn-id"><span class="pos pos-${esc((p.pos || 'x').toLowerCase())}">${esc(p.pos || '?')}</span><span class="pn-nm">${esc(p.n)}</span>${p.team ? `<span class="tm">${esc(p.team)}</span>` : ''}${rippleBadge(row)}</span>
       <span class="pn-where">${esc(where)}</span>
       ${trendText(row)}
       ${score}
@@ -311,7 +331,7 @@ function minePanel(M, openPid) {
       panel,
       { cls: 'flush', sub: `Ranked by what it means for your lineup this week · ${fresh} · ${coverage}` }
     )}
-    <p class="source">Headlines come from Google News RSS (headline + source + link only). Practice reports and status changes are read from RotoWire notes as published by ESPN. A worse-news label always wins until a dated report says otherwise; speculative items never flip a start or sit on their own.</p>`;
+    <p class="source">Headlines come from Google News RSS (headline + source + link only). Practice reports and status changes are read from RotoWire notes as published by ESPN. <b>Teammate</b> rows are ripple estimates: when a teammate is out, returns or is traded, his targets and carries are spread by current usage and the depth chart, or by games played without him when there are any. A worse-news label always wins until a dated report says otherwise; speculative items and estimates never flip a start or sit on their own.</p>`;
 }
 
 export function render(M, ctx) {
@@ -339,7 +359,7 @@ export function render(M, ctx) {
     ['league', 'League', ranked.league.length],
     ['wire', 'Wire', ranked.wire.length],
     ['rumours', 'Rumours', ranked.rumours.length],
-    ['team', 'Your NFL teams', feed.filter((i) => i.rel === 'team').filter(kindOk).length],
+    ['team', 'Your NFL teams', feed.filter((i) => i.rel === 'team' || i.teamHit).filter(kindOk).length],
     ['all', 'All NFL', feed.filter(kindOk).length],
   ];
 
@@ -349,7 +369,7 @@ export function render(M, ctx) {
   } else if (ranked[ui.tab]) {
     body = rankedPanel(M, ui.tab, ui.cat, ranked[ui.tab]);
   } else {
-    const filter = ui.tab === 'team' ? (i) => i.rel === 'team' : () => true;
+    const filter = ui.tab === 'team' ? (i) => i.rel === 'team' || !!i.teamHit : () => true;
     const rows = feed.filter(filter).filter(kindOk);
     const title = ui.tab === 'team' ? 'Your NFL teams' : 'All NFL';
     body = card(
@@ -434,8 +454,27 @@ export function mount(root, M, ctx) {
       }
     });
   }
+  root.querySelectorAll('[data-pn-wide]').forEach((b) =>
+    b.addEventListener('click', async () => {
+      const q = (ui.q || '').trim();
+      try {
+        const res = await fetch('/api/players?q=' + encodeURIComponent(q));
+        const data = await res.json().catch(() => ({}));
+        ui.wide = { q, rows: res.ok ? data.players || [] : [] };
+      } catch {
+        ui.wide = { q, rows: [] };
+      }
+      ui.searchFocus = true;
+      ctx.rerender();
+    })
+  );
   root.querySelectorAll('[data-pn-pick]').forEach((b) =>
     b.addEventListener('click', () => {
+      if (b.dataset.pnExtra) {
+        try {
+          (ui.extra ||= {})[b.dataset.pnPick] = JSON.parse(b.dataset.pnExtra);
+        } catch {}
+      }
       ui.sel = b.dataset.pnPick;
       ui.q = '';
       ui.active = 0;

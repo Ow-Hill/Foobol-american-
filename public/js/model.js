@@ -91,9 +91,9 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     const game = gameFor(p.team, W);
     const bye = isBye(p.team, W);
     const effSev = sevOf(eff);
-    const hist = p.hist || [];
-    const pts = hist.map((h) => h.pts);
-    const snps = hist.filter((h) => h.snp != null).map((h) => h.snp);
+    const ph = p.hist || []; // not `hist`: that would shadow the history argument used above
+    const pts = ph.map((h) => h.pts);
+    const snps = ph.filter((h) => h.snp != null).map((h) => h.snp);
     const last3 = pts.slice(-3);
     const recent = pts.slice(-6);
     const info = {
@@ -356,7 +356,7 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       if (!irAllowed(p.sl)) {
         out.push({ sev: 'critical', tab: 'injuries', pid, title: `${p.n} is on IR but tagged ${p.sl || 'healthy'}`, body: 'Sleeper locks all your adds and claims until he is moved off IR. Move him to the bench (or drop him) before claiming anyone.' });
       } else if (p.es && !irAllowed(p.es) && p.es !== p.sl) {
-        out.push({ sev: 'warn', tab: 'injuries', pid, title: `${p.n}: ESPN shows ${p.es}, Sleeper still shows ${p.sl}`, body: 'If Sleeper upgrades him, your claims lock. Check Tuesday before waivers.' });
+        out.push({ sev: 'warn', tab: 'injuries', pid, title: `${p.n}: ESPN shows ${p.es}, Sleeper still shows ${p.sl}`, body: `If Sleeper upgrades him, your claims lock. Check ${waiverDayName()} before waivers.` });
       }
     }
 
@@ -428,7 +428,7 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       }
       const checks = [];
       if (where === 'ir') {
-        checks.push('Tuesday before waivers — an upgrade off IR would lock your claims');
+        checks.push(`${waiverDayName()} before waivers — an upgrade off IR would lock your claims`);
       } else if (p.game && p.game.state === 'pre') {
         const kickMs = new Date(p.game.date).getTime();
         const wd = new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: snap.meta.tz }).format(new Date(now));
@@ -603,6 +603,13 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     const wd = dayIdx[new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: snap.meta.tz }).format(new Date(now))];
     const add = (target - wd + 7) % 7 || 7;
     return now + add * 86400000;
+  }
+  function waiverDayName() {
+    try {
+      return new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone: snap.meta.tz }).format(new Date(nextWaiverRun()));
+    } catch {
+      return 'waiver day';
+    }
   }
 
   // ---------- league-wide position medians ----------
@@ -953,9 +960,9 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     P, val, solve, lineup, canStartNow, slotEligible,
     posture, margin, myOpt, oppOpt,
     swaps, startSit, tiebreakFor: tiebreak, problems, injuryRows, fallbackFor, nextManUp, irAllowed,
-    sim, runSim, tradeOdds, winProb, profiles, odds, waiverPlan, lookahead, marketFor, evalTrade, tradeLog, picksOwned,
+    addImpact, sim, runSim, tradeOdds, winProb, profiles, odds, waiverPlan, lookahead, marketFor, evalTrade, tradeLog, picksOwned,
     reviewWeek, efficiency, wireItems, optimalPast,
-    deadlineAt, acceptBy, deadlinePassed, deadlineWeek: dl, nextWaiverRun,
+    deadlineAt, acceptBy, deadlinePassed, deadlineWeek: dl, nextWaiverRun, waiverDayName,
     ownerName, chipOwner, lastName, gameFor, isBye, weekScores, posMedian, profile, dayLabel, kick,
   };
   let _V = null;

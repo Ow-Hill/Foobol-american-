@@ -3,7 +3,10 @@
 The current engine is deterministic and local-first. These are the next changes in priority order.
 Each item names the file, the acceptance test, and the risk.
 
-## P5.1 — Same-name disambiguation
+## P5.1 — Same-name disambiguation — done
+
+Shipped as `nameConflict` in `lib/playernews.js` (adjacent other-team alias or defensive position
+word, no own-team alias). No team-qualified query was needed. Tests in `test/news-search.test.js`.
 
 **Problem:** `Josh Allen` matches the Bills QB and the Jaguars edge rusher. `A.J. Brown` and other
 common names can collide with college or other-sport coverage.

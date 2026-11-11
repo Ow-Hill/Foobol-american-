@@ -427,3 +427,4 @@ canvas.recap.vertical { max-width: 380px; }
   .dec-more > summary { display: none !important; }
   .dec-more:not([open]) > .dec-list { display: flex !important; }
 }
+.pn-id .pn-dir { font-size: 11px; white-space: nowrap; }

@@ -287,7 +287,7 @@ function tick() {
     clocks.push({ label: `Next lineup lock · ${mine[0].team} ${g.home ? 'vs' : '@'} ${g.opp}`, value: countdown(ms), sub: fmtKick(g.date), cls: ms < 3 * 3600000 ? 'urgent' : ms < 24 * 3600000 ? 'soon' : '', tip: `${same} of your players` });
   }
   const wv = M.nextWaiverRun();
-  clocks.push({ label: 'Waivers process', value: countdown(wv - now), sub: 'Tuesday', cls: '' });
+  clocks.push({ label: 'Waivers process', value: countdown(wv - now), sub: M.waiverDayName(), cls: '' });
   if (M.deadlineAt && !M.deadlinePassed) {
     const ms = M.acceptBy - now;
     clocks.push({ label: `Trade deadline (Wk ${M.deadlineWeek}) · accept by`, value: countdown(ms), sub: fmtDayTime(M.acceptBy), cls: ms < 24 * 3600000 ? 'urgent' : ms < 4 * 86400000 ? 'soon' : '' });

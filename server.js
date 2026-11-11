@@ -77,7 +77,9 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/api/news') {
       const pid = url.searchParams.get('pid');
       const s = snap || (await getSnapshot());
-      const p = s?.players?.[pid];
+      // Any NFL player can be looked up, not only the snapshot's set: a backup who just got
+      // the job is exactly who you search for.
+      const p = s?.players?.[pid] || (pid ? (await S.slimPlayers().catch(() => ({})))[pid] : null);
       if (!p) return send(req, res, 404, JSON.stringify({ error: 'Unknown player' }), MIME['.json']);
       const now = Date.now();
       const last = newsHits.get(pid) || 0;
@@ -90,6 +92,17 @@ const server = http.createServer(async (req, res) => {
       const r = await fetchPlayerNews([{ id: pid, n: p.n, pos: p.pos, team: p.team, hot: true }], { force: true });
       const items = (r.items || []).filter((x) => x.pid === pid);
       return send(req, res, 200, JSON.stringify({ pid, items, diag: r.diag, perPlayer: r.perPlayer }), MIME['.json']);
+    }
+    if (url.pathname === '/api/players') {
+      const q = String(url.searchParams.get('q') || '').trim().toLowerCase();
+      if (q.length < 3) return send(req, res, 400, JSON.stringify({ error: 'Type at least 3 letters' }), MIME['.json']);
+      const slim = await S.slimPlayers();
+      const players = Object.values(slim)
+        .filter((p) => p.n && p.n.toLowerCase().includes(q))
+        .sort((a, b) => (a.team ? 0 : 1) - (b.team ? 0 : 1) || (a.rank ?? 1e9) - (b.rank ?? 1e9))
+        .slice(0, 8)
+        .map((p) => ({ id: p.id, n: p.n, pos: p.pos, team: p.team }));
+      return send(req, res, 200, JSON.stringify({ players }), MIME['.json']);
     }
     if (url.pathname === '/api/health') return send(req, res, 200, JSON.stringify({ ok: true, snapshotAgeMs: snap ? Date.now() - snapAt : null }), MIME['.json']);
 

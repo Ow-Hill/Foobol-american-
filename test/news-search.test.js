@@ -87,3 +87,19 @@ test('different players with similar injury wording are not merged', () => {
   attachStories(items);
   assert.notEqual(items[0].storyId, items[1].storyId);
 });
+
+test('same-name collisions are rejected, stories about the player are kept', () => {
+  const qb = { n: 'Josh Allen', pos: 'QB', team: 'BUF' };
+  assert.equal(relevant("Jaguars' Josh Allen records two sacks", qb), false);
+  assert.equal(relevant('Edge rusher Josh Allen fined for hit', qb), false);
+  assert.equal(relevant('Bills QB Josh Allen limited in practice', qb), true);
+  assert.equal(relevant('Josh Allen throws 3 TDs vs Dolphins', qb), true);
+  const wr = { n: 'Tyreek Hill', pos: 'WR', team: 'MIA' };
+  assert.equal(relevant('Chiefs reunite with Tyreek Hill? Fantasy outlook', wr), true);
+});
+
+test('generic words alone no longer pass the NFL filter', () => {
+  const qb = { n: 'Josh Allen', pos: 'QB', team: 'BUF' };
+  assert.equal(relevant('Josh Allen and Hailee Steinfeld out at the Grammys', qb), false);
+  assert.equal(relevant('Josh Allen returns after the bye', qb), true);
+});

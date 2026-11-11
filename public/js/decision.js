@@ -61,7 +61,7 @@ function confidenceOf(d, newsFlags) {
   const ev = d.evidence || [];
   if (ev.some((e) => e.kind === 'note')) c += 15;
   if (new Set(ev.map((e) => e.src).filter(Boolean)).size >= 2) c += 10;
-  const speculativeOnly = ev.length > 0 && ev.every((e) => e.posture === 'speculative');
+  const speculativeOnly = ev.length > 0 && ev.every((e) => e.posture === 'speculative' || e.posture === 'estimate');
   if (speculativeOnly) c -= 20;
   if (newsFlags && (newsFlags.degraded || newsFlags.disabled)) c -= 10;
   if (d.priority === 'act') c += 5;
@@ -76,6 +76,9 @@ function baseGuardrails(d) {
   if (d.kind === 'trade') g.push('A deal is not made until it is accepted and clears review in Sleeper.');
   if ((d.evidence || []).length && (d.evidence || []).every((e) => e.posture === 'speculative')) {
     g.push('Speculative report — this can raise a flag but cannot flip a start or sit on its own.');
+  }
+  if ((d.evidence || []).some((e) => e.posture === 'estimate')) {
+    g.push('Teammate ripple is an estimate from usage and depth charts — it cannot flip a start or sit on its own.');
   }
   return g;
 }
@@ -92,9 +95,9 @@ export function buildDecisions(M, news = null) {
   const add = (d) => {
     if (seen.has(d.id)) return;
     seen.add(d.id);
-    // Speculation can raise a flag but never carries an act-level decision on its own.
+    // Speculation and ripple estimates can raise a flag but never carry an act-level decision on their own.
     const ev = d.evidence || [];
-    if (ev.length && ev.every((e) => e.posture === 'speculative') && d.priority === 'act') {
+    if (ev.length && ev.every((e) => e.posture === 'speculative' || e.posture === 'estimate') && d.priority === 'act') {
       d.priority = 'this-week';
     }
     d.confidence = confidenceOf(d, newsFlags);
@@ -182,7 +185,7 @@ export function buildDecisions(M, news = null) {
       because: [`Priority ${n.pri} on this week's needs.`, `Waiver priority: #${plan.wp ?? '—'} (rolling).`],
       evidence: [],
       risk: 'A claim can be beaten by a higher-priority manager in a rolling system.',
-      deadline: { label: 'Waivers process Tuesday', at: M.nextWaiverRun() },
+      deadline: { label: `Waivers process ${M.waiverDayName()}`, at: M.nextWaiverRun() },
       action: { label: 'Waivers', route: 'waivers' },
       players: [],
       basis: 'projection',
@@ -198,7 +201,7 @@ export function buildDecisions(M, news = null) {
       because: [`Tier 1 add on the wire.`, c.p.own == null ? 'Unrostered.' : 'Currently rostered.'],
       evidence: evidenceFor(byPid, c.id),
       risk: 'Bench points are free in this league only if he cracks the lineup; a stash can cost priority.',
-      deadline: { label: 'Waivers process Tuesday', at: M.nextWaiverRun() },
+      deadline: { label: `Waivers process ${M.waiverDayName()}`, at: M.nextWaiverRun() },
       action: { label: 'Waivers', route: 'waivers' },
       players: [c.id],
       basis: 'projection',
@@ -256,6 +259,29 @@ export function buildDecisions(M, news = null) {
         deadline: null,
         action: { label: 'News', route: 'news' },
         players: [r.pid],
+        basis: 'news',
+      });
+    }
+
+    // Teammate ripple: an injury, return or trade elsewhere on his NFL team moves his volume.
+    const ripples = news.players
+      .filter((r) => r.spot && r.spot.where !== 'ir' && (r.ripple || []).length && !out.some((d) => d.players.includes(r.pid)))
+      .filter((r) => r.ripple[0].mag >= 0.4)
+      .slice(0, 2);
+    for (const r of ripples) {
+      const e = r.ripple[0];
+      add({
+        id: `ripple-${r.pid}-${e.src}`,
+        kind: 'monitor',
+        priority: r.spot.where === 'starter' && e.dir === 'down' ? 'this-week' : 'watch',
+        title: `${r.p.n}: teammate news ${e.dir === 'up' ? 'grows' : 'cuts into'} his role`,
+        verdict: e.why,
+        because: r.ripple.slice(0, 3).map((x) => x.why),
+        evidence: evidenceFor(byPid, r.pid).filter((x) => x.posture === 'estimate').concat(evidenceFor(byPid, e.src)).slice(0, 3),
+        risk: 'Ripple is an estimate from recent usage and the depth chart, not a projection. Targets are earned, not inherited.',
+        deadline: null,
+        action: { label: r.spot.where === 'starter' || e.dir === 'up' ? 'Lineup' : 'News', route: r.spot.where === 'starter' || e.dir === 'up' ? 'lineup' : 'news' },
+        players: [r.pid, e.src],
         basis: 'news',
       });
     }

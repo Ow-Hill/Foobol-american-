@@ -38,7 +38,7 @@ Nothing is deployed. The app only runs on the machine that starts it:
 | Waivers | waiver-plan | Needs in priority order, bye look-ahead, tiered candidates with a named drop, K/DEF streams |
 | Trades | trade-lab | Deadline window, sell/buy market, two-team lineup math, three pitches + walk-away line |
 | Season | season-planner | Playoff odds, weekly review, lineup efficiency, deadline + playoff prep, `.ics` check-ins |
-| News | command-center | Player search + "Your players" ranks every report by lineup impact; League, Wire and Rumours apply the same scoring to rivals, free agents and the last 5 days of speculation |
+| News | command-center | Player search + "Your players" ranks every report by lineup impact; League ranks rivals by whether they start against you this week; Wire ranks free agents by lineup gain and opened-up playing time; Rumours holds the last 5 days of speculation; **Teammate** rows estimate how injuries, returns and trades move other players' targets and carries |
 
 ## Compete, share & plan
 
@@ -82,6 +82,22 @@ headlines. Cached per player with a 3/10/30-minute TTL, stale-on-failure, one HT
 429/5xx, and per-player failure backoff. Cross-player story ids stop one headline appearing under
 three different players in League, Wire or Rumours. The full contract is in
 `skills/ff-news-search/SKILL.md`.
+
+The scan covers your roster, this week's opponent's starters, your starters' NFL teammates (QB,
+backfield, WR room, TE1) and trending free agents in this league, capped at 65 names. Same-name
+players (`Josh Allen` the QB vs the edge rusher) are rejected when the headline ties the name to
+another team or to the defense. **Search all NFL players** finds anyone in Sleeper's player list
+when the snapshot has no match.
+
+## Teammate ripple
+
+`public/js/ripple.js` estimates who gains or loses when a teammate is out, returns or is traded:
+vacated targets go to the other pass catchers by share (with a bump for the next man up), carries
+go mostly to the handcuff, a QB injury downgrades every pass catcher (the top target least), and a
+returning starter takes back what the fill-ins gained. When the team has already played without
+him this season, the observed with/without split is used instead. Rows are labelled **Estimate**,
+capped below "Act now", and never flip a start/sit on their own. Rules and sources:
+`skills/ff-news-search/references/ripple.md`.
 
 ## Data
 
