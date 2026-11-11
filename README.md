@@ -109,3 +109,40 @@ The Flaim / Down Field / StatsDeck / Scout-Squad connectors in the skills aren't
 The Lineup, Injuries, Waivers and Trades pages each have a **Copy second-opinion prompt** button that
 hands the findings to those connectors. Playoff odds are this site's own simulation (not Down Field's).
 Official inactives and weather are not checked.
+
+## How this was built — agentic coding
+
+This repo was built in pair-programming sessions with an AI coding agent. The human set the goal,
+league context, ff-* rules and product calls; the agent inspected live data, wrote the engines and
+tests, ran the app in a browser, and documented the contracts. The app itself is deterministic — no
+LLM runs at request time.
+
+### Prompt history
+
+| Date | Prompt / request | Result |
+| --- | --- | --- |
+| 2026-11-05 | Build the James Cook Lovers Sleeper dashboard following the six ff-* skills | 19-page dashboard, trade finder, live data (`716ab8d`) |
+| 2026-11-05 | Improve navigation: collapsible groups, task sections, mobile drawer, persisted state | Nav P0–P3 (`0de05fb`…`a6f82f4`) |
+| 2026-11-05 | Add player news, deterministic ranking, League/Wire/Rumours, degraded/print states | News P0–P4 (`4e13f8d`…`1c3c99d`) |
+| 2026-11-09 | “plan on how to improve the search function” | Audited 1,078 headlines; named matcher, window, link, duplicate and 429 defects; phased plan |
+| 2026-11-09 | “Make the search function better, and make skills for the next itteration” | Search v2 + `ff-news-search` skill + tests (`f6d74c5`) |
+| 2026-11-09 | “save this to a git repo” | Committed to local `main`; no remote configured |
+| 2026-11-10 | “if i close the window will this still be saved” | Confirmed the commit persists on disk; server/UI state does not |
+| 2026-11-11 | “add a section that shows the history of prompts and how this was developed by agentic coding” | This section + `docs/agentic-development.md` |
+
+Earlier rows are reconstructed from the project record; the quoted prompts from 2026-11-09 onward
+are verbatim.
+
+### The loop
+
+1. **Plan first** — read the code, audit live data, quantify defects, propose phases. The search plan
+   named the exact bugs before any edit.
+2. **Skills as contracts** — every engine mirrors a skill; the dashboard is the source of truth when
+   prose and code disagree.
+3. **Deterministic engines** — regex, weights and thresholds; the same inputs produce the same output.
+4. **Small commits** — one concern per phase, so a bad phase can be reverted cleanly.
+5. **Verify live** — `npm test`, server restart, route sweep, console errors, 390/1440 overflow,
+   degraded/disabled states.
+6. **Leave a handoff** — README, skill contract, worked examples and a next-iteration backlog.
+
+Full log, commit map and the human/agent split: [`docs/agentic-development.md`](docs/agentic-development.md).
