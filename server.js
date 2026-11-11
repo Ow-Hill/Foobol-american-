@@ -18,6 +18,30 @@ const MIME = {
   '.ico': 'image/x-icon',
 };
 
+// Last good snapshot on disk: if Sleeper or ESPN is down at start-up, serve it with a
+// staleness banner instead of a blank site.
+const LAST_FILE = path.join(__dirname, 'data', 'snapshot-last.json');
+const LAST_EVERY = 5 * 60 * 1000;
+let lastSaved = 0;
+function saveLast(s) {
+  if (Date.now() - lastSaved < LAST_EVERY) return;
+  lastSaved = Date.now();
+  fs.promises
+    .mkdir(path.dirname(LAST_FILE), { recursive: true })
+    .then(() => fs.promises.writeFile(LAST_FILE + '.tmp', JSON.stringify(s)))
+    .then(() => fs.promises.rename(LAST_FILE + '.tmp', LAST_FILE))
+    .catch((e) => console.warn('Could not save last snapshot:', e.message));
+}
+async function loadLast(reason) {
+  try {
+    const s = JSON.parse(await fs.promises.readFile(LAST_FILE, 'utf8'));
+    s.meta = { ...s.meta, staleSince: s.meta.builtAt, staleReason: reason };
+    return s;
+  } catch {
+    return null;
+  }
+}
+
 let lastForce = 0;
 let snap = null;
 let snapAt = 0;
@@ -40,7 +64,25 @@ async function getSnapshot(force) {
     .then((s) => {
       snap = s;
       snapAt = Date.now();
+      saveLast(s);
       return s;
+    })
+    .catch(async (err) => {
+      const reason = /fetch failed|ENOTFOUND|ECONNRE|ETIMEDOUT|abort/i.test(String(err.message || err))
+        ? 'Sleeper or ESPN did not answer'
+        : String(err.message || err);
+      if (snap) {
+        // Keep serving what we have; mark it stale so the page says so.
+        snap.meta = { ...snap.meta, staleSince: snap.meta.staleSince || snap.meta.builtAt, staleReason: reason };
+        snapAt = Date.now(); // retry the live build after the normal 45s
+        return snap;
+      }
+      const last = await loadLast(reason);
+      if (!last) throw err;
+      console.warn('Live build failed, serving last saved snapshot:', err.message);
+      snap = last;
+      snapAt = Date.now();
+      return last;
     })
     .finally(() => (inflight = null));
   if (snap) return snap; // serve stale while rebuilding

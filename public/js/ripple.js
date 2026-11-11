@@ -63,7 +63,7 @@ const CONF_DOWN = { clear: 'lean', lean: 'toss', toss: 'toss' };
 // players: snapshot players (id -> {id,n,pos,team,depth,inj,hist,tchg,prevTeam,...})
 // opts.P: optional status resolver (pid -> {eff, effSev}); defaults to the Sleeper tag
 // opts.W: current week; opts.now; opts.isBye(team, wk); opts.better: Set of pids with
-// dated "activated / cleared" news
+// dated "activated / cleared" news; opts.lines: { team: { open, now } } implied totals
 export function buildRipple(players, opts = {}) {
   const now = opts.now ?? Date.now();
   const W = opts.W ?? 1;
@@ -208,6 +208,27 @@ export function buildRipple(players, opts = {}) {
       push({
         kind: 'trade-in', src: src.id, pid: q.id, dir: 'down', tgt: r1(tgt), att: r1(att), conf: 'toss',
         why: `${src.n} traded to ${src.team} — competes with ${q.n} for ${src.pos === 'RB' ? 'touches' : 'targets'} (estimate)`,
+      });
+    }
+  }
+
+  // Line movement: the betting market reprices a team when it learns something (often a QB or
+  // line injury before it is reported). A 2.5-point move in the team's implied total since the
+  // week opened moves every player with a role on that offense a little, as a low-confidence flag.
+  for (const [team, ln] of Object.entries(opts.lines || {})) {
+    if (!ln || ln.open == null || ln.now == null || isBye(team, W)) continue;
+    const d = ln.now - ln.open;
+    if (Math.abs(d) < 2.5) continue;
+    const dir = d < 0 ? 'down' : 'up';
+    events.push({ kind: 'line-move', src: team, team, label: `${ln.open} → ${ln.now}` });
+    for (const q of byTeam[team] || []) {
+      if (!healthy(q)) continue;
+      const u = use(q);
+      const role = q.pos === 'QB' ? (q.depth ?? 9) <= 1 : q.pos === 'RB' ? u.att + u.tgt >= 8 : u.tgt >= 4;
+      if (!role) continue;
+      push({
+        kind: 'line-move', src: team, pid: q.id, dir, pct: dir === 'down' ? -0.1 : 0.1, conf: 'toss',
+        why: `${team} implied total ${dir === 'down' ? 'fell' : 'rose'} ${r1(ln.open)} → ${r1(ln.now)} since the week opened — the market expects ${dir === 'down' ? 'less' : 'more'} scoring (estimate)`,
       });
     }
   }

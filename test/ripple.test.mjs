@@ -99,6 +99,15 @@ test('Trade: new team same-position players lose share, old team gains', () => {
   assert.equal(of(r, 'mia2').find((e) => e.kind === 'trade-out').dir, 'up');
 });
 
+test('Line movement: a 3-point drop flags the offense, a 1-point wiggle does not', () => {
+  const r = buildRipple(team(), { W: 6, lines: { BUF: { open: 27.5, now: 24.5 }, MIA: { open: 21, now: 22 } } });
+  const ev = r.effects.filter((e) => e.kind === 'line-move');
+  assert.ok(ev.length >= 4);
+  assert.ok(ev.every((e) => e.dir === 'down' && e.conf === 'toss'));
+  assert.ok(of(r, 'wr1').some((e) => e.kind === 'line-move'));
+  assert.ok(!of(r, 'qb2').some((e) => e.kind === 'line-move'), 'backup without a role is not flagged');
+});
+
 test('Teams on bye produce no events', () => {
   const r = buildRipple(team({ wr1: { inj: 'Out' } }), { W: 6, isBye: (t) => t === 'BUF' });
   assert.equal(r.effects.length, 0);

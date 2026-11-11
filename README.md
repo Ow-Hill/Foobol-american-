@@ -24,9 +24,9 @@ Nothing is deployed. The app only runs on the machine that starts it:
 | Same Wi-Fi | `http://<your-lan-ip>:4321` — the server binds all interfaces |
 | Public internet | **No** — no domain, no tunnel, no cloud host |
 
-* There is no database and no persisted state: every page is rebuilt from live Sleeper/ESPN calls with short in-memory caching. `data/` holds only a player-list cache and is git-ignored.
+* There is no database. Every page is rebuilt from live Sleeper/ESPN calls with short in-memory caching. `data/` (git-ignored) holds the player-list cache, the headline cache, a 7-day status-change log (`status-log.json`), each team's opening Vegas total, and the last good snapshot (`snapshot-last.json`). If Sleeper or ESPN is down, the site serves that snapshot with a "Showing saved data from …" banner instead of going blank.
 * If the `node server.js` process stops, the site is down. Nothing restarts it on boot.
-* To expose it: either run a tunnel (`cloudflared tunnel --url http://localhost:4321` or `ngrok http 4321`) for a temporary shareable URL, or deploy to any Node host and start it with `node server.js`. `config.json` currently holds the port, so a host that assigns `PORT` needs that read from `process.env.PORT` first.
+* To expose it: either run a tunnel (`cloudflared tunnel --url http://localhost:4321` or `ngrok http 4321`) for a temporary shareable URL, or deploy to any Node host and start it with `node server.js`. The server uses `PORT` when the host sets it, otherwise the port in `config.json`.
 
 ## What's on each page
 
@@ -80,7 +80,14 @@ nickname queries for team defenses. It normalises apostrophes, hyphens, initials
 `Ja'Marr Chase`, `A.J. Brown`, `Amon-Ra St. Brown` and `Chicago Bears` all match their own
 headlines. Cached per player with a 3/10/30-minute TTL, stale-on-failure, one HTTP retry on
 429/5xx, and per-player failure backoff. Cross-player story ids stop one headline appearing under
-three different players in League, Wire or Rumours. The full contract is in
+three different players in League, Wire or Rumours. Refresh timing follows the football clock:
+every 2 minutes in the 2 hours before kickoff (inactives), 5 minutes during games, on game eve and
+in the Wed–Fri practice-report window, 15 minutes after games, 30 minutes on quiet days.
+
+Each snapshot is diffed against the last one: changes to a player's Sleeper tag, ESPN status, depth
+order (top two only) and team are logged with the time they were first seen and shown as **Status
+change** rows ("Sleeper status: Questionable → Out"). Health checks use the latest dated status, so
+a player cleared on Friday is no longer treated as out because of Wednesday's report. The full contract is in
 `skills/ff-news-search/SKILL.md`.
 
 The scan covers your roster, this week's opponent's starters, your starters' NFL teammates (QB,
@@ -94,7 +101,8 @@ when the snapshot has no match.
 `public/js/ripple.js` estimates who gains or loses when a teammate is out, returns or is traded:
 vacated targets go to the other pass catchers by share (with a bump for the next man up), carries
 go mostly to the handcuff, a QB injury downgrades every pass catcher (the top target least), and a
-returning starter takes back what the fill-ins gained. When the team has already played without
+returning starter takes back what the fill-ins gained, and a team whose Vegas implied total moves
+2.5+ points since the week opened is flagged (the market often knows first). When the team has already played without
 him this season, the observed with/without split is used instead. Rows are labelled **Estimate**,
 capped below "Act now", and never flip a start/sit on their own. Rules and sources:
 `skills/ff-news-search/references/ripple.md`.

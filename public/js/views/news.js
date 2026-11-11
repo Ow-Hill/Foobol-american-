@@ -63,7 +63,7 @@ function practiceChip(v) {
 
 function itemMeta(M, i) {
   const bits = [];
-  bits.push(`<span class="chip">${i.kind === 'note' ? 'RotoWire note' : i.kind === 'article' ? 'ESPN' : i.kind === 'ripple' ? 'Ripple' : 'Headline'}</span>`);
+  bits.push(`<span class="chip">${i.kind === 'note' ? 'RotoWire note' : i.kind === 'article' ? 'ESPN' : i.kind === 'ripple' ? 'Ripple' : i.kind === 'change' ? 'Status change' : 'Headline'}</span>`);
   if (i.tier === 1) bits.push('<span class="chip chip-tier">Tier 1</span>');
   else if (i.tier === 2) bits.push('<span class="chip chip-tier">Tier 2</span>');
   if (i.practice) bits.push(practiceChip(i.practice));

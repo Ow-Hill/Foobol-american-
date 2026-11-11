@@ -248,7 +248,11 @@ function renderView() {
   const route = PAGES.find((r) => r.id === state.route);
   const scroll = window.scrollY;
   const ctx = { state, ui: state.ui, rerender: renderView, go, HM: state.HM };
-  viewEl.innerHTML = route.mod.render(M, ctx);
+  const meta = state.snap.meta;
+  const stale = meta.staleSince
+    ? `<div class="callout warn" role="status" style="margin-bottom:14px"><b>Showing saved data from ${esc(ago(meta.staleSince, Date.now()))}</b>Live league data could not be loaded (${esc(meta.staleReason || 'source unavailable')}). Statuses, lineups and news may have changed since — refresh before acting.</div>`
+    : '';
+  viewEl.innerHTML = stale + route.mod.render(M, ctx);
   route.mod.mount?.(viewEl, M, ctx);
   updateNavActive();
   document.querySelector('#nav a.active')?.scrollIntoView({ block: 'nearest' });

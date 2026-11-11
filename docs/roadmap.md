@@ -6,6 +6,16 @@ the files, how to know it worked, and the risk. Items marked **verify** depend o
 endpoint that has to be confirmed against a live response first; this was planned without live
 access to Sleeper or ESPN.
 
+## Status
+
+| Item | State |
+| --- | --- |
+| R1 status-change log | **Done** — `lib/snapshot.js` `statusLog`, `data/status-log.json`, `snapshot.changes`; "Status change" items in News; latest dated status decides health checks |
+| R2 game-time refresh | **Done** — `ttlFor(p, now)` in `lib/playernews.js` (2 min inactives, 5 min in-game/game eve/practice window, 15 min post-game, 30 min quiet) |
+| R3 last-known-good snapshot | **Done** — `server.js` saves every 5 min, serves it with a banner when the live build fails |
+| R4 ripple v2 | **Line movement done** (`line-move` event; opening totals in the status log). Calibration, defensive and OL injuries still open |
+| R5 tests + CI | **Done** — `test/model.test.mjs` (solver, swaps, start/sit, fallbacks, waiver drops, sim, waiver day), `.github/workflows/test.yml` |
+
 ## Now (1–2 sessions each, highest leverage)
 
 ### R1. Status-change log: the most reliable news signal

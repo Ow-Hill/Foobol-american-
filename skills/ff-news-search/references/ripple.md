@@ -13,6 +13,7 @@ a start/sit on its own.
 | --- | --- | --- |
 | `out` | Effective status Doubtful or worse (Sleeper/ESPN, most severe wins) and a real role: QB1, RB with 8+ carries+targets/g, WR/TE with 4+ targets/g | team on bye; he already missed the team's last two games (teammates' recent usage has absorbed it) |
 | `return` | Missed the team's last game, now untagged (or a dated "activated / cleared" report), had a role before | no game without him to measure from |
+| `line-move` | The team's Vegas implied total moved ≥ 2.5 points from its first sighting this week (`snapshot.lines`) | team on bye; players without a role |
 | `trade-in` / `trade-out` | Sleeper `team_changed_at` within 21 days; previous team from `data/team-seen.json` | — |
 
 Recent usage = average targets and carries over his last 3 games played, from league history.
@@ -27,6 +28,7 @@ Recent usage = average targets and carries over his last 3 games played, from le
 | Return | Each teammate who gained volume in games without him gives it back (`down`) |
 | Traded in | Same-position players on the new team `down` by half his volume × their share |
 | Traded away | His old team is treated as `out` |
+| Line move | Every player with a role on that offense ±10%, always `toss` |
 
 **Observed beats heuristic.** When this season has games where the team played without the source
 player, the teammate's real with/without split replaces the share formula (`observed: true`).
@@ -51,6 +53,9 @@ These encode the fantasy roster-management consensus:
 
 ## Limits
 
-- No offensive-line or defensive injuries: the snapshot carries skill positions only.
+- No offensive-line or defensive injuries yet: the snapshot carries skill positions only (roadmap R4).
+- The "opening" total is the first one the server saw this week (kept across restarts in
+  `data/status-log.json`). If the server was not running when lines opened, moves before that are
+  missed.
 - No scheme or QB-quality adjustment beyond the QB-out rule.
 - Usage comes from league-scored history (targets, carries, snap share), not routes or air yards.

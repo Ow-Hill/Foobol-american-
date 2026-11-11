@@ -52,8 +52,9 @@ function playoffSlate(M) {
 function icsFor(M) {
   const base = new Date(M.now);
   const dayIdx = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  const wDay = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][M.L.settings.waiver_day_of_week ?? 2];
   const items = [
-    ['Roster Monitor: waiver preview', 'Tue', 19, 0, 'Open the Waivers tab — what to claim before waivers process.'],
+    ['Roster Monitor: waiver preview', wDay, 19, 0, 'Open the Waivers tab — what to claim before waivers process.'],
     ['Roster Monitor: weekly recap', 'Tue', 9, 0, 'Open the Season tab — weekly review and lineup-efficiency audit.'],
     ['Roster Monitor: trade ideas', 'Wed', 19, 0, 'Open the Trades tab — ideas for your weakest starting spot.', true],
     ['Roster Monitor: Thursday lineup check', 'Thu', 17, 0, 'Open the Lineup tab before Thursday night football — only change what needs changing.'],
@@ -112,7 +113,7 @@ export function render(M, ctx) {
   const checkins = table(
     ['Check-in', 'When (your time zone)', 'What to do'],
     [
-      ['Waiver preview', 'Tuesday evening', 'Open Waivers — decide what to claim before waivers process'],
+      ['Waiver preview', `${M.waiverDayName()} evening`, 'Open Waivers — decide what to claim before waivers process'],
       ['Lineup check', 'Thursday before TNF · Sunday ~11:00', 'Open Lineup — only change what needs changing'],
       ['Injury watch', 'Sunday ~11:45', 'Open Injuries — check starters before the 1 PM games'],
       ['Weekly recap', 'Tuesday morning', 'Open Season — weekly review + lineup-efficiency audit'],

@@ -188,9 +188,18 @@ export function buildPlayerNews(M) {
     });
   }
 
+  // Status changes from the snapshot's diff log: dated, confirmed events.
+  for (const [pid, list] of Object.entries(snap.changes || {})) {
+    for (const ch of list) {
+      if (!ch.at || now - ch.at > winMs) continue;
+      const item = changeItem(pid, ch);
+      if (item) raw.push(item);
+    }
+  }
+
   // ---- classify ----
   for (const r of raw) {
-    const c = classify(r.title, r.text, r.kind, r.detail && r.detail.status);
+    const c = r.pre || classify(r.title, r.text, r.kind, r.detail && r.detail.status);
     const p = M.P(r.pid);
     const isMine = p.own === M.me.id;
     const spot = isMine ? myRosterSpot(M, r.pid) : null;
@@ -270,7 +279,7 @@ export function buildPlayerNews(M) {
 
   // ---- ripple: teammate injuries, returns and trades move other players' volume ----
   const betterPids = new Set(out.items.filter((x) => x.better && x.posture !== 'speculative').map((x) => x.pId));
-  const ripple = buildRipple(snap.players, { P: M.P, W: M.W, now, isBye: M.isBye, better: betterPids });
+  const ripple = buildRipple(snap.players, { P: M.P, W: M.W, now, isBye: M.isBye, better: betterPids, lines: snap.lines });
   out.ripple = ripple;
   for (const e of ripple.effects) {
     if (!snap.players[e.pid]) continue;
@@ -320,7 +329,7 @@ export function buildPlayerNews(M) {
       top,
       items: visible,
       trend: notes.map((x) => ({ t: x.time, v: x.practice })),
-      flagged: visible.some((x) => x.practice === 'DNP' || x.status === 'Out' || x.status === 'IR'),
+      flagged: latestAdverse(out.byPid, pid),
       sinceMs: visible.length ? now - Math.max(...visible.map((x) => x.time)) : null,
       stale: !!PN.perPlayer?.[pid]?.stale,
       impact,
@@ -333,6 +342,42 @@ export function buildPlayerNews(M) {
 }
 
 // ---------- helpers ----------
+const STATUS_WORD = (v) => v || 'no tag';
+const SEV_OF = (v) => STATUS_RANK[canon(v)] || 0;
+
+// A logged status change as a news item. Its classification is exact, not regex-read.
+function changeItem(pid, ch) {
+  const base = { id: `c${pid}-${ch.field}-${ch.at}`, kind: 'change', pid, time: ch.at, text: '', url: null, detail: null, change: ch };
+  if (ch.field === 'inj' || ch.field === 'es') {
+    const to = canon(ch.to);
+    const better = SEV_OF(ch.to) < SEV_OF(ch.from);
+    return {
+      ...base,
+      src: ch.field === 'inj' ? 'Sleeper' : 'ESPN',
+      title: `${ch.field === 'inj' ? 'Sleeper' : 'ESPN'} status: ${STATUS_WORD(ch.from)} → ${STATUS_WORD(ch.to)}`,
+      pre: { cats: ['injury'], practice: null, status: to, posture: 'confirmed', better, roleDir: null },
+    };
+  }
+  if (ch.field === 'depth') {
+    const up = ch.to != null && (ch.from == null || ch.to < ch.from);
+    return {
+      ...base,
+      src: 'Sleeper depth chart',
+      title: `Depth chart: ${ch.from != null ? '#' + ch.from : 'unlisted'} → ${ch.to != null ? '#' + ch.to : 'unlisted'}`,
+      pre: { cats: ['depth'], practice: null, status: null, posture: 'confirmed', better: false, roleDir: up ? 'up' : 'down' },
+    };
+  }
+  if (ch.field === 'team') {
+    return {
+      ...base,
+      src: 'Sleeper',
+      title: `Team: ${ch.from || 'free agent'} → ${ch.to || 'free agent'}`,
+      pre: { cats: ['trade'], practice: null, status: null, posture: 'confirmed', better: false, roleDir: null },
+    };
+  }
+  return null;
+}
+
 function rippleItem(M, e, time) {
   const p = M.P(e.pid);
   const isMine = p.own === M.me.id;
@@ -377,11 +422,22 @@ function rippleSoWhat(e, spot) {
 }
 
 // Health beats models: skip fallbacks whose own news says he can't go.
+// The latest dated report that carries a status or practice line decides, so a player who was
+// Out on Wednesday and cleared on Friday is not still treated as out. Speculation and ripple
+// estimates never count.
+export function latestAdverse(byPid, pid) {
+  const list = (byPid.get(pid) || [])
+    .filter((x) => !x.dupe && x.posture !== 'speculative' && x.posture !== 'estimate')
+    .filter((x) => x.practice || x.status || x.kind === 'change' || x.better)
+    .sort((a, b) => b.time - a.time);
+  const last = list[0];
+  return !!last && !last.better && (last.practice === 'DNP' || last.status === 'Out' || last.status === 'IR');
+}
+
 function newsAdverse(M, byPid, pid) {
   const p = M.P(pid);
   if (p.avail === 'out' || p.avail === 'bye') return true;
-  const list = byPid.get(pid) || [];
-  return list.some((x) => !x.dupe && (x.practice === 'DNP' || x.status === 'Out' || x.status === 'IR'));
+  return latestAdverse(byPid, pid);
 }
 
 export function healthiestFallback(M, slot, exclude, byPid) {

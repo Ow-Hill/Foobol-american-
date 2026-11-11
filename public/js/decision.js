@@ -2,7 +2,7 @@
 // decisions with one stable contract. Shared by the UI (Decision brief) and the
 // ff-decision-engine skill, so the agent and the page always agree.
 // Deterministic: every verdict comes from model numbers or a dated report. No model calls.
-import { healthiestFallback } from './playernews.js';
+import { healthiestFallback, latestAdverse } from './playernews.js';
 import { fmtDayTime } from './util.js';
 
 export const DECISION_CONTRACT = {
@@ -53,7 +53,7 @@ function evidenceFor(byPid, pid, extra = []) {  const list = (byPid.get(pid) || 
 // Health guard: a player whose latest dated report says DNP/Out/IR cannot be
 // recommended as an incoming starter, no matter what the projection says.
 function newsAdverse(byPid, pid) {
-  return (byPid.get(pid) || []).some((x) => !x.dupe && (x.practice === 'DNP' || x.status === 'Out' || x.status === 'IR'));
+  return latestAdverse(byPid, pid);
 }
 
 function confidenceOf(d, newsFlags) {
