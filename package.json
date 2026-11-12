@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "description": "Live roster-management monitor for the James Cook Lovers Sleeper league",
   "private": true,
-  "scripts": { "start": "node server.js", "test": "node --test" },
-  "engines": { "node": ">=18" }
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test",
+    "backtest": "NODE_USE_ENV_PROXY=1 NODE_NO_WARNINGS=1 node backtest/run.mjs current --fetch"
+  },
+  "engines": {
+    "node": ">=18"
+  }
 }
