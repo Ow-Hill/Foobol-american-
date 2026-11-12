@@ -165,7 +165,7 @@ test('refresh timing follows the football clock', async () => {
   assert.equal(ttlFor({ hot: true }, Date.now()), 3 * MIN, 'no kickoff known: flat TTL');
 });
 
-test('tiebreak: equal projections, the softer matchup vs position wins', () => {
+test('tiebreak: position matchup no longer decides (it won 50% in the backtest); a 4+ implied-total gap does', () => {
   const snap = league({
     w2: pl('w2', 'WR', 'DAL', 11), // now equal to w3 (11)
   });
@@ -188,6 +188,85 @@ test('tiebreak: equal projections, the softer matchup vs position wins', () => {
   const M = buildModel(snap, 1, Date.now());
   const ss = M.startSit('w2', 'w3');
   assert.equal(ss.band, 'toss');
-  assert.equal(ss.pick, 'w2');
-  assert.ok(ss.why.some((x) => /Position matchup/.test(x)), ss.why.join(' | '));
+  assert.ok(!ss.why.some((x) => /Position matchup/.test(x)), ss.why.join(' | '));
+  assert.ok(ss.why.some((x) => /No tiebreak separates/.test(x)), ss.why.join(' | '));
+  // a small gap in implied totals is not a reason either
+  snap.schedule[6].games[0].home.imp = 23;
+  snap.schedule[6].games[1].home.imp = 21;
+  assert.ok(!buildModel(snap, 1, Date.now()).startSit('w2', 'w3').why.some((x) => /Game environment/.test(x)));
+  // four points or more is
+  snap.schedule[6].games[0].home.imp = 27;
+  const big = buildModel(snap, 1, Date.now()).startSit('w2', 'w3');
+  assert.equal(big.pick, 'w2');
+  assert.ok(big.why.some((x) => /Game environment/.test(x)), big.why.join(' | '));
+});
+
+test('labels carry the measured win rate, with smaller cut-offs for K and DEF', () => {
+  const snap = league({
+    k1: pl('k1', 'K', 'BUF', 9.6), k2: pl('k2', 'K', 'KC', 8),
+    d1: pl('d1', 'DEF', 'DET', 9), d2: pl('d2', 'DEF', 'SF', 6.4),
+  });
+  const M = buildModel(snap, 1, Date.now());
+  const skill = M.startSit('w1', 'w3'); // 16 vs 11
+  assert.equal(skill.band, 'clear');
+  assert.ok(skill.rate >= 68 && skill.rate <= 70, String(skill.rate));
+  const lean = M.startSit('w2', 'w3'); // 14 vs 11
+  assert.equal(lean.band, 'lean');
+  assert.equal(lean.rate, 63);
+  assert.match(lean.why[0], /won 63% of the time/);
+  assert.equal(M.startSit('k1', 'k2').band, 'lean', 'a 1.6-point kicker gap is already a lean');
+  assert.equal(M.startSit('d1', 'd2').band, 'clear', 'a 2.6-point defense gap is a clear call');
+  assert.equal(M.startSit('qa', 'qb').band, 'clear'); // 20 vs 15 = 5
+  assert.equal(M.startSit('qa', 'x1').band, 'toss'); // 20 vs 22 = 2, under the QB lean line of 3
+});
+
+test('Questionable: discounted when he plays, chance to play from practice status, swap when you cannot wait', () => {
+  const soon = new Date(Date.now() + 2 * 86400e3).toISOString();
+  const later = new Date(Date.now() + 2 * 86400e3 + 8 * 3600e3).toISOString();
+  const snap = league({ r1: pl('r1', 'RB', 'DET', 18, { inj: 'Questionable', prac: 'Limited' }) });
+  // DET (r1) plays late; SF (r2, the fallback, on the bench) plays early
+  snap.schedule[6].games = [
+    { home: { t: 'DET' }, away: { t: 'T1' }, date: later, state: 'pre' },
+    { home: { t: 'SF' }, away: { t: 'T2' }, date: soon, state: 'pre' },
+  ];
+  snap.teams[0].starters = ['qa', 'r1', 'r4', 'w1', 'w2', 't1', 'w3', 'qb'];
+  const M = buildModel(snap, 1, Date.now());
+  assert.equal(M.P('r1').prac, 'LP');
+  assert.equal(M.P('r1').playChance, 0.68);
+  assert.ok(Math.abs(M.val('r1') - 18 * 0.91) < 1e-9, 'a Questionable player who plays scores about 91% of his projection');
+  const q = M.qCall('r1', 'RB');
+  assert.equal(q.fb, 'r2');
+  assert.equal(q.canWait, false, 'the fallback kicks off before inactives are out');
+  assert.equal(q.swapNow, true, '12 beats 16.4 x 68% = 11.1');
+  assert.ok(M.problems().some((x) => x.pid === 'r1' && /cannot wait/.test(x.body)));
+  // a full practice week changes the call
+  snap.players.r1.prac = 'Full';
+  const M2 = buildModel(snap, 1, Date.now());
+  assert.equal(M2.P('r1').playChance, 0.9);
+  assert.equal(M2.qCall('r1', 'RB').swapNow, false);
+  // a Questionable quarterback is a different animal
+  snap.players.qa.inj = 'Questionable';
+  assert.equal(buildModel(snap, 1, Date.now()).P('qa').playChance, 0.42);
+});
+
+test('win probability: projected lineups use the measured 48-point spread; averages are pulled toward the league', () => {
+  const M = buildModel(league(), 1, Date.now());
+  const p = M.winProb(1, 2, [120, 110]);
+  assert.ok(Math.abs(p - 0.5826) < 0.005, String(p)); // cdf(10 / 48)
+  const prof = M.profiles();
+  const means = [1, 2, 3, 4].map((id) => prof[id].mean);
+  const lm = means.reduce((s, x) => s + x, 0) / 4;
+  // raw team 1 average is 113 (weeks 1-5: 111..115); it must sit 40% closer to the league mean
+  assert.ok(Math.abs(prof[1].mean - lm) < Math.abs(113 - lm), 'shrunk toward the league mean');
+});
+
+test('next man up: recent work first, depth chart only as the tiebreak', () => {
+  const H = (att) => [1, 2, 3].map((w) => ({ w, pts: att, att, tgt: 0 }));
+  const snap = league({
+    r1: pl('r1', 'RB', 'DET', 18, { depth: 1 }),
+    n1: pl('n1', 'RB', 'DET', 3, { depth: 2, own: null, hist: H(2) }),
+    n2: pl('n2', 'RB', 'DET', 5, { depth: 3, own: null, hist: H(9) }),
+  });
+  const M = buildModel(snap, 1, Date.now());
+  assert.deepEqual(M.nextManUp('r1').map((x) => x.id), ['n2', 'n1']);
 });

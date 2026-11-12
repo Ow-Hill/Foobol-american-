@@ -337,6 +337,10 @@ export function e4() {
     questionableByInjury: Object.fromEntries(byGrp.map((x) => [x.k, { play: r3(x.play), prod: r3(x.prod), n: x.n }])),
     questionableByPosition: Object.fromEntries(byPos.map((x) => [x.k, { play: r3(x.play), prod: r3(x.prod), n: x.n }])),
     projBiasWhenPlayed: r2(projBias),
+    projBiasTrain: r2(mean(qPlayed.filter((r) => r.split === 'train').map((r) => r.pts - r.proj))),
+    projBiasTest: r2(mean(qPlayed.filter((r) => r.split === 'test').map((r) => r.pts - r.proj))),
+    projRatioTest: r3(sum(qPlayed.filter((r) => r.split === 'test').map((r) => r.pts)) / sum(qPlayed.filter((r) => r.split === 'test').map((r) => r.proj))),
+    projRatioTrain: r3(sum(qPlayed.filter((r) => r.split === 'train').map((r) => r.pts)) / sum(qPlayed.filter((r) => r.split === 'train').map((r) => r.proj))),
     satOutStillProjected: r3(keptProj),
     satOutAvgProjection: r2(sitProj),
   };
@@ -345,7 +349,7 @@ export function e4() {
     `Fantasy-relevant Questionable players played ${pct(Q.play)}% of the time and scored ${pct(Q.prod)}% of their own average when they did, so a Questionable tag is worth about ${pct(Q.ev)}% of a normal week. Doubtful: played ${pct(fit.status.Doubtful?.play)}%.`,
     `Practice status moves it a lot: ${byPrac.map((x) => `${x.k} ${pct(x.play)}% played`).join(', ')}.`,
     keptProj > 0.05 ? `${pct(keptProj)}% of Questionable players who then sat out still carried a projection (average ${r2(sitProj)} points).` : `None of the Questionable players who sat out still has a projection in Sleeper's stored numbers: the archive keeps the final pre-kickoff version, after inactives were announced. Any replay that uses it already "knows" who sat.`,
-    `When Questionable players did play, they scored ${r2(projBias)} points vs their projection on average.`,
+    `When Questionable players did play, they scored ${r2(projBias)} points vs their projection on average (${fit.projBiasTrain} in 2022-24, ${fit.projBiasTest} in 2025-26; ${pct(fit.projRatioTrain)}% and ${pct(fit.projRatioTest)}% of the projection).`,
   ];
   return {
     id: 'E4', title: 'What does an injury tag really mean?',

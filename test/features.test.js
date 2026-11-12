@@ -88,14 +88,14 @@ test('calibration: records this week, scores it after the games', async () => {
   const wk6 = await calibrate(players, 6, { file, now: NOW });
   assert.equal(wk6.total, 0, 'nothing scored before the games');
   const stored = JSON.parse(fs.readFileSync(file, 'utf8'));
-  assert.ok(Object.keys(stored['6']).length >= 2);
+  assert.equal(Object.keys(stored['6']).length, 1, 'only the next man up clears the bar under the refitted rule');
   // Week 6 is played: wr1 sat, wr2 saw 10 targets, te1 saw 3.
   players.wr2.hist.push({ w: 6, tgt: 10, att: 0, pts: 15 });
   players.te1.hist.push({ w: 6, tgt: 3, att: 0, pts: 4 });
   const wk7 = await calibrate(players, 7, { file, now: NOW + 7 * 86400e3 });
   const byPid = Object.fromEntries(wk7.rows.map((r) => [r.pid, r]));
   assert.equal(byPid.wr2.result, 'hit');
-  assert.equal(byPid.te1.result, 'miss');
-  assert.equal(wk7.byKind.out.n, 2);
-  assert.equal(wk7.hitRate, 0.5);
+  assert.ok(!byPid.te1, 'no estimate was made for the tight end');
+  assert.equal(wk7.byKind.out.n, 1);
+  assert.equal(wk7.hitRate, 1);
 });

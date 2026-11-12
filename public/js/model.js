@@ -3,9 +3,18 @@
 // league IR rules, rolling waivers, Week-11 deadline, advice only.
 import { avg, sum, quantile, clamp, fmtKick, setTz } from './util.js';
 import { buildValues } from './values.js';
-import { matchupFor } from './matchup.js';
+import { BANDS, gapGroup, gapWinRate, IMPLIED_GAP_MIN, playChance, playingHurt, WIN, NEXT_MAN_BY_WORK } from './fitted.js';
 
 const SEV = { IR: 5, PUP: 5, Sus: 5, NA: 4, DNR: 4, COV: 4, Out: 4, Doubtful: 3, Questionable: 2, Probable: 1 };
+// Practice participation as FP / LP / DNP, whatever the source calls it.
+export function normPrac(v) {
+  if (!v) return null;
+  const s = String(v).toLowerCase();
+  if (/^fp$|full/.test(s)) return 'FP';
+  if (/^lp$|limited/.test(s)) return 'LP';
+  if (/dnp|did not|none|out/.test(s)) return 'DNP';
+  return null;
+}
 const FLEX_ELIG = {
   FLEX: ['RB', 'WR', 'TE'],
   SUPER_FLEX: ['QB', 'RB', 'WR', 'TE'],
@@ -93,6 +102,7 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     const bye = isBye(p.team, W);
     const effSev = sevOf(eff);
     const ph = p.hist || []; // not `hist`: that would shadow the history argument used above
+    const prac = normPrac(p.off?.prac || p.prac);
     const pts = ph.map((h) => h.pts);
     const snps = ph.filter((h) => h.snp != null).map((h) => h.snp);
     const last3 = pts.slice(-3);
@@ -118,6 +128,10 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       gp: pts.length,
       floor: recent.length >= 3 ? quantile(recent, 0.25) : null,
       ceil: recent.length >= 3 ? quantile(recent, 0.75) : null,
+      prac,
+      // measured chance he plays and how he scores if he does (fitted.js, backtest E4)
+      playChance: bye ? 0 : playChance(p.pos, eff, prac),
+      hurtFactor: playingHurt(eff, prac),
       snpNow: snps.length ? snps[snps.length - 1] : null,
       snpTrend: snps.length >= 3 ? snps[snps.length - 1] - avg(snps.slice(-3, -1)) : null,
     };
@@ -131,7 +145,7 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     if (isBye(p.team, wk)) return 0;
     if (wk === W) {
       if (p.effSev >= 3) return 0;
-      return p.proj || 0;
+      return (p.proj || 0) * p.hurtFactor;
     }
     if (p.effSev >= 4 && p.eff === 'IR') return 0;
     if (wk === W + 1) return p.projNext ?? 0;
@@ -240,24 +254,17 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
         return { pick, reasons };
       }
     }
-    // 3. game environment
+    // 3. game environment: only a real gap in implied totals helped in the backtest (E3)
     const ia = A.game?.imp;
     const ib = B.game?.imp;
-    if (ia != null && ib != null && Math.abs(ia - ib) >= 1) {
+    if (ia != null && ib != null && Math.abs(ia - ib) >= IMPLIED_GAP_MIN) {
       const pick = ia > ib ? 'start' : 'bench';
-      reasons.push({ step: 'Game environment', pick, why: `higher implied team total (${ia.toFixed(1)} vs ${ib.toFixed(1)})` });
+      reasons.push({ step: 'Game environment', pick, why: `much higher implied team total (${ia.toFixed(1)} vs ${ib.toFixed(1)})` });
       return { pick, reasons };
     }
-    // 4. matchup vs position (points the opponent allowed to that position, last six weeks)
-    const ma = matchupFor({ P, snap }, a);
-    const mb = matchupFor({ P, snap }, b);
-    if (ma && mb && ma.of >= 8 && Math.abs(ma.rank - mb.rank) >= Math.round(ma.of / 4)) {
-      const pick = ma.rank < mb.rank ? 'start' : 'bench';
-      const w = pick === 'start' ? ma : mb;
-      reasons.push({ step: 'Position matchup', pick, why: `${w.opp} ${w.label} over the last ${buildWeeks()} weeks` });
-      return { pick, reasons };
-    }
-    // 5. kickoff
+    // (Position matchup was a step here. Across 36,000 toss-ups the softer matchup won 50.0%
+    // of the time, so it is shown on the Lineup page as information only.)
+    // 4. kickoff
     if (A.game && B.game && A.game.date !== B.game.date) {
       const pick = A.game.date > B.game.date ? 'start' : 'bench';
       reasons.push({ step: 'Kickoff', pick, why: 'later game keeps late-swap flexibility' });
@@ -266,16 +273,17 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     return { pick: 'start', reasons: [{ step: 'No tiebreak separates them', pick: 'start', why: 'keep the higher projection' }] };
   }
   const outPlayer = (id) => P(id);
-  const buildWeeks = () => Object.keys(snap.results || {}).length;
 
   function callFor(inn, outId, gap) {
     if (!outId) return { call: 'Fix', band: 'hard', note: 'Empty or illegal slot — fill it', tb: null };
     const o = P(outId);
     if (o.effSev >= 3 || o.avail === 'bye') return { call: 'Fix', band: 'hard', note: o.avail === 'bye' ? 'Starter is on bye' : `Starter is listed ${o.eff}`, tb: null };
-    if (gap >= 4) return { call: 'Clear', band: 'clear', note: 'Large projection gap', tb: null };
-    if (gap >= 2) return { call: 'Lean', band: 'lean', note: 'Moderate gap — one model only', tb: null };
+    const grp = gapGroup(P(inn).pos, o.pos);
+    const rate = Math.round(gapWinRate(gap, grp) * 100);
+    if (gap >= BANDS[grp].clear) return { call: 'Clear', band: 'clear', rate, note: `Large projection gap — an edge this size has won ${rate}% of the time`, tb: null };
+    if (gap >= BANDS[grp].lean) return { call: 'Lean', band: 'lean', rate, note: `Moderate gap — an edge this size has won ${rate}% of the time`, tb: null };
     const tb = tiebreak(inn, outId);
-    return { call: 'Toss-up', band: 'toss', note: tb.reasons[0].step + ': ' + tb.reasons[0].why, tb, keep: tb.pick === 'bench' };
+    return { call: 'Toss-up', band: 'toss', rate, note: tb.reasons[0].step + ': ' + tb.reasons[0].why, tb, keep: tb.pick === 'bench' };
   }
 
   // Head-to-head start/sit for any two players this week (health first, then gap, then the tiebreak order)
@@ -293,10 +301,12 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       const bad = P(pick === a ? b : a);
       return { pick, other: pick === a ? b : a, gap, band: 'clear', why: [`${bad.n} ${bad.avail === 'bye' ? 'is on bye' : 'is listed ' + bad.eff}`], tb: null };
     }
-    if (gap >= 4) return { pick: hi, other: lo, gap, band: 'clear', why: ['Large projection gap'], tb: null };
-    if (gap >= 2) return { pick: hi, other: lo, gap, band: 'lean', why: ['Moderate gap — one model only'], tb: null };
+    const grp = gapGroup(A.pos, B.pos);
+    const rate = Math.round(gapWinRate(gap, grp) * 100);
+    if (gap >= BANDS[grp].clear) return { pick: hi, other: lo, gap, band: 'clear', rate, why: [`Large projection gap — an edge this size has won ${rate}% of the time`], tb: null };
+    if (gap >= BANDS[grp].lean) return { pick: hi, other: lo, gap, band: 'lean', rate, why: [`Moderate gap — an edge this size has won ${rate}% of the time`], tb: null };
     const tb = tiebreak(hi, lo);
-    return { pick: tb.pick === 'start' ? hi : lo, other: tb.pick === 'start' ? lo : hi, gap, band: 'toss', why: tb.reasons.map((r) => r.step + ': ' + r.why), tb };
+    return { pick: tb.pick === 'start' ? hi : lo, other: tb.pick === 'start' ? lo : hi, gap, band: 'toss', rate, why: tb.reasons.map((r) => r.step + ': ' + r.why), tb };
   }
 
   // ---------- IR rules ----------
@@ -324,7 +334,21 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
   const dayLabel = (iso) => new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone: snap.meta.tz }).format(new Date(iso));
 
   // Fallback: health beats models, so a questionable fallback is discounted
-  const fbScore = (id) => val(id) * (P(id).avail === 'q' ? 0.75 : 1);
+  const fbScore = (id) => val(id) * P(id).playChance;
+  // What a Questionable starter is worth if you cannot wait for inactives, and whether you can.
+  function qCall(pid, slot) {
+    const p = P(pid);
+    const fb = fallbackFor(slot, [pid]);
+    const chance = p.playChance;
+    const ev = val(pid) * chance;
+    const fbp = fb ? P(fb) : null;
+    // inactives are published about 90 minutes before his kickoff
+    const inactivesAt = p.game ? new Date(p.game.date).getTime() - 90 * 60000 : null;
+    const fbKick = fbp?.game ? new Date(fbp.game.date).getTime() : null;
+    const canWait = !fb || fbKick == null || inactivesAt == null || fbKick >= inactivesAt;
+    const swapNow = !!fb && !canWait && val(fb) * fbp.playChance > ev;
+    return { pid, fb, chance, ev, canWait, swapNow, inactivesAt };
+  }
   function fallbackFor(slot, exclude = []) {
     return lineup(me).bench
       .filter((id) => !exclude.includes(id) && canStartNow(id) && slotEligible(slot, P(id).pos))
@@ -376,13 +400,14 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       if (p.avail === 'q') {
         const slot = slotNames[l.starters.indexOf(pid)];
         const fb = bestBench(slot, [pid]);
-        out.push({
-          sev: 'warn',
-          tab: 'injuries',
-          pid,
-          title: `${p.n} is questionable${p.body ? ` (${p.body.toLowerCase()})` : ''}`,
-          body: fb ? `Start him only if active; fallback is ${P(fb).n} (${val(fb).toFixed(1)}). Re-check at inactives${p.game ? ` (${dayLabel(p.game.date)}, 90 min before kickoff)` : ''}.` : 'No healthy fallback on the bench — see Waivers.',
-        });
+        const q = qCall(pid, slot);
+        const pc = Math.round(q.chance * 100);
+        const pracTxt = p.prac === 'FP' ? ' after a full practice' : p.prac === 'LP' ? ' after limited practice' : p.prac === 'DNP' ? ' after missing practice' : '';
+        let body;
+        if (!fb) body = `Players with this tag${pracTxt} have played ${pc}% of the time. No healthy fallback on the bench — see Waivers.`;
+        else if (q.swapNow) body = `${P(fb).n} plays before ${shortName(pid)}'s inactives are out, so you cannot wait. ${shortName(pid)} is worth about ${q.ev.toFixed(1)} (${val(pid).toFixed(1)} × ${pc}% chance to play); ${P(fb).n} projects ${val(fb).toFixed(1)}. Start ${P(fb).n} unless ${shortName(pid)} is confirmed active first.`;
+        else body = `Players with this tag${pracTxt} have played ${pc}% of the time. Start him only if active; fallback is ${P(fb).n} (${val(fb).toFixed(1)}). Re-check at inactives${p.game ? ` (${dayLabel(p.game.date)}, 90 min before kickoff)` : ''}.`;
+        out.push({ sev: q.swapNow ? 'critical' : 'warn', tab: 'injuries', pid, title: `${p.n} is questionable${p.body ? ` (${p.body.toLowerCase()})` : ''}`, body, chance: q.chance });
       }
     }
 
@@ -455,9 +480,14 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
   function nextManUp(pid) {
     const p = P(pid);
     if (!p.team) return [];
-    const list = Object.values(snap.players).filter((q) => q.team === p.team && q.pos === p.pos && q.id !== pid && (q.depth ?? 99) > (p.depth ?? 0) && canon(q.inj) !== 'IR');
+    const work = (q) => {
+      const h = (q.hist || []).slice(-3);
+      return h.length ? avg(h.map((x) => (x.att || 0) + (x.tgt || 0))) : 0;
+    };
+    const list = Object.values(snap.players).filter((q) => q.team === p.team && q.pos === p.pos && q.id !== pid && (NEXT_MAN_BY_WORK || (q.depth ?? 99) > (p.depth ?? 0)) && sevOf(canon(q.inj)) < 3);
     return list
-      .sort((a, b) => (a.depth ?? 99) - (b.depth ?? 99))
+      // recent work first (it named the right back more often than the depth chart, E9); depth chart breaks ties
+      .sort((a, b) => (NEXT_MAN_BY_WORK ? Math.round(work(b)) - Math.round(work(a)) : 0) || (a.depth ?? 99) - (b.depth ?? 99))
       .slice(0, 2)
       .map((q) => ({ id: q.id, n: q.n, depth: q.depth, own: q.own, ownerLabel: q.own == null ? 'Free agent' : q.own === me.id ? 'on your roster' : 'rostered by ' + ownerName(q.own) }));
   }
@@ -488,6 +518,10 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       const k = s.length;
       prof[t.id] = { mean, sd: Math.sqrt((k * v + 4 * poolSd ** 2) / (k + 4)) };
     }
+    // Raw averages overstate the gap between teams: the old numbers said 75% when the side won
+    // 59% (backtest E7). Pull each team toward the league mean.
+    const lm = avg(teams.map((t) => prof[t.id].mean));
+    for (const t of teams) prof[t.id].mean = lm + WIN.meanShrink * (prof[t.id].mean - lm);
     return (profCache = prof);
   }
   // P(team a beats team b) from each team's scoring profile (or explicit means)
@@ -495,7 +529,8 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     const p = profiles();
     const ma = mu ? mu[0] : p[a].mean;
     const mb = mu ? mu[1] : p[b].mean;
-    return cdf((ma - mb) / Math.sqrt(p[a].sd ** 2 + p[b].sd ** 2));
+    // with projected lineups, use the measured spread between projected and actual score gaps
+    return cdf((ma - mb) / (mu ? WIN.lineupSd : Math.sqrt(p[a].sd ** 2 + p[b].sd ** 2)));
   }
 
   // Monte Carlo of the rest of the season. force: [{rid, wk, win}] pins results. track: roster id to trace through the bracket.
@@ -970,7 +1005,7 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     snap, now, W, me, opp, teams, teamBy, L, slotNames, maxRoster, irSlots,
     P, val, solve, lineup, canStartNow, slotEligible,
     posture, margin, myOpt, oppOpt,
-    swaps, startSit, tiebreakFor: tiebreak, problems, injuryRows, fallbackFor, nextManUp, irAllowed,
+    swaps, startSit, tiebreakFor: tiebreak, qCall, problems, injuryRows, fallbackFor, nextManUp, irAllowed,
     addImpact, sim, runSim, tradeOdds, winProb, profiles, odds, waiverPlan, lookahead, marketFor, evalTrade, tradeLog, picksOwned,
     reviewWeek, efficiency, wireItems, optimalPast,
     deadlineAt, acceptBy, deadlinePassed, deadlineWeek: dl, nextWaiverRun, waiverDayName,

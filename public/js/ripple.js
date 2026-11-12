@@ -2,17 +2,17 @@
 // else on his NFL team gains or loses volume. Deterministic and labelled as an estimate:
 // a ripple can raise a flag or reorder a list, but never flips a start/sit on its own.
 //
-// Rules (fantasy roster-management consensus, see skills/ff-news-search/references/ripple.md):
-// - Vacated targets go to the remaining pass catchers roughly by their current share, with a
-//   bump for the next man up at the same position. Targets are not inherited evenly.
-// - A missing RB's carries mostly go to the next RB on the depth chart.
-// - A missing QB downgrades the whole passing game; the top target loses the least.
-// - A returning starter takes back what the fill-ins gained while he was out.
+// Rules, sized from the 2022-2026 backtest (docs/backtest-report.md, E5; constants in fitted.js):
+// - A missing RB's carries go partly to the remaining backs: the strongest, most reliable effect.
+// - A missing receiver's targets mostly do not land on any one teammate; estimates are small.
+// - A missing QB costs the secondary pass catchers about a tenth; the top target holds up.
+// - A returning RB takes back about 40% of what his fill-ins gained. Returning receivers show
+//   no measurable effect and produce no estimate.
 // - A player traded in competes with the same-position players already there; his old team
 //   loses him like an injury.
-// When this season has games with and without the source player, the observed split replaces
-// the share heuristic.
+// This-season games with and without the player are weighted in by how many there are.
 import { canon } from './model.js';
+import { RIPPLE, NEXT_MAN_BY_WORK } from './fitted.js';
 
 const SKILL = new Set(['QB', 'RB', 'WR', 'TE']);
 const PASS_CATCHERS = new Set(['WR', 'TE', 'RB']);
@@ -90,7 +90,9 @@ export function buildRipple(players, opts = {}) {
   const U = {};
   const use = (p) => (U[p.id] ||= usage(p));
   const healthy = (p) => status(p).sev < 3;
-  const depthSort = (a, b) => (a.depth ?? 99) - (b.depth ?? 99) || use(b).att + use(b).tgt - (use(a).att + use(a).tgt);
+  // Recent work first: it named the back who took over more often than the depth chart (E9).
+  const work = (q) => Math.round(use(q).att + use(q).tgt);
+  const depthSort = (a, b) => (NEXT_MAN_BY_WORK && (a.pos !== 'QB') ? work(b) - work(a) : 0) || (a.depth ?? 99) - (b.depth ?? 99) || use(b).att + use(b).tgt - (use(a).att + use(a).tgt);
 
   const effects = [];
   const events = [];
@@ -114,6 +116,18 @@ export function buildRipple(players, opts = {}) {
     return tw.length === 2 && tw.every((w) => !use(p).weeks.has(w));
   };
 
+  // Track record of each rule in the 2022-2026 backtest: [right direction, chance level].
+  const record = (key) => {
+    const h = RIPPLE.hit[key];
+    return h ? { hitRate: h[0], chance: h[1] } : {};
+  };
+  const recordText = (key) => {
+    const h = RIPPLE.hit[key];
+    return h ? ` Estimates like this have pointed the right way ${Math.round(h[0] * 100)}% of the time (${Math.round(h[1] * 100)}% by chance).` : '';
+  };
+  // One or two games without a player is thin evidence: lean on the share rule until there is more.
+  const blend = (heur, obs, key) => (obs ? heur + (obs[key] - heur) * (obs.n / (obs.n + RIPPLE.obsShrink)) : heur);
+
   function vacate(src, kind, label, baseConf, team = src.team) {
     const mates = (byTeam[team] || []).filter((q) => q.id !== src.id && healthy(q));
     const u = use(src);
@@ -123,12 +137,14 @@ export function buildRipple(players, opts = {}) {
 
     if (src.pos === 'QB') {
       const backup = mates.filter((q) => q.pos === 'QB').sort(depthSort)[0];
-      if (backup) push({ kind, src: src.id, pid: backup.id, dir: 'up', starts: true, conf: CONF_DOWN[baseConf], why: `${why0} — ${backup.n} in line to start at QB` });
+      if (backup) push({ kind, src: src.id, pid: backup.id, dir: 'up', starts: true, conf: 'lean', ...record('qb-backup'), why: `${why0} — ${backup.n} in line to start at QB` });
       const catchers = mates.filter((q) => PASS_CATCHERS.has(q.pos) && use(q).tgt >= 2);
       const top = catchers.reduce((a, b) => (use(b).tgt > (a ? use(a).tgt : -1) ? b : a), null);
       for (const q of catchers) {
-        const pct = q === top ? -0.1 : -0.2;
-        push({ kind, src: src.id, pid: q.id, dir: 'down', pct, conf: CONF_DOWN[baseConf], why: `${why0} — passing-game downgrade with ${backup ? backup.n : 'the backup'} at QB (~${Math.round(-pct * 100)}% less, estimate)` });
+        // the top target has held his scoring with a backup; the rest lost about a tenth
+        const pct = q === top ? RIPPLE.qb.top : RIPPLE.qb.rest;
+        if (!pct) continue;
+        push({ kind, src: src.id, pid: q.id, dir: 'down', pct, conf: 'toss', ...record('qb-catchers'), why: `${why0} — secondary pass catchers have scored about ${Math.round(-pct * 100)}% less with ${backup ? backup.n : 'a backup'} at QB (estimate; the top target usually holds up).${recordText('qb-catchers')}` });
       }
       return;
     }
@@ -139,23 +155,22 @@ export function buildRipple(players, opts = {}) {
       const next = rbs[0];
       const sumAtt = rbs.reduce((s, q) => s + use(q).att, 0);
       const sumTgt = rbs.reduce((s, q) => s + use(q).tgt, 0);
-      const w = rbs.map((q) => (sumAtt ? use(q).att / sumAtt : 1 / rbs.length) + (q === next ? 1 : 0));
-      const wSum = w.reduce((s, x) => s + x, 0);
-      rbs.forEach((q, i) => {
+      rbs.forEach((q) => {
         const obs = split(src, q, tw);
-        const att = obs ? obs.att : (u.att * w[i]) / wSum;
-        const tgt = obs ? obs.tgt : sumTgt ? (u.tgt * use(q).tgt) / sumTgt : i === 0 ? u.tgt : 0;
+        const share = sumAtt ? use(q).att / sumAtt : 1 / rbs.length;
+        const heurAtt = RIPPLE.rb.base + u.att * (RIPPLE.rb.share * share + (q === next ? RIPPLE.rb.next : 0));
+        const heurTgt = u.tgt * (RIPPLE.wr.share * (sumTgt ? use(q).tgt / sumTgt : 0) + (q === next ? RIPPLE.wr.next : 0));
+        const att = blend(heurAtt, obs, 'att');
+        const tgt = blend(heurTgt, obs, 'tgt');
         if (att <= 0 && tgt <= 0) return;
-        const conf = obs ? baseConf : CONF_DOWN[baseConf];
         push({
-          kind, src: src.id, pid: q.id, dir: 'up', att: r1(att), tgt: r1(tgt), conf, observed: !!obs,
-          why: `${why0} — ~+${r1(att)} carries${tgt >= 0.5 ? `, +${r1(tgt)} targets` : ''}/g for ${q.n}${obs ? ` (seen in ${obs.n} game${obs.n > 1 ? 's' : ''} without him)` : ' (estimate)'}`,
+          kind, src: src.id, pid: q.id, dir: 'up', att: r1(att), tgt: r1(Math.max(0, tgt)), conf: 'lean', observed: !!obs, ...record('rb-carries'),
+          why: `${why0} — ~+${r1(att)} carries${tgt >= 0.5 ? `, +${r1(tgt)} targets` : ''}/g for ${q.n}${obs ? ` (${obs.n} game${obs.n > 1 ? 's' : ''} without him this season, weighted in)` : ' (estimate)'}.${recordText('rb-carries')}`,
         });
       });
       return;
     }
 
-    // WR / TE: vacated targets
     const V = u.tgt;
     const catchers = mates.filter((q) => PASS_CATCHERS.has(q.pos));
     const sum = catchers.reduce((s, q) => s + use(q).tgt, 0);
@@ -163,35 +178,31 @@ export function buildRipple(players, opts = {}) {
       || mates.filter((q) => q.pos === src.pos).sort(depthSort)[0];
     for (const q of catchers) {
       const obs = split(src, q, tw);
-      let tgt;
-      if (obs) tgt = obs.tgt;
-      else {
-        tgt = sum ? (V * 0.75 * use(q).tgt) / sum : 0;
-        if (q === nextUp) tgt += V * 0.25;
-      }
+      const heur = V * (RIPPLE.wr.share * (sum ? use(q).tgt / sum : 0) + (q === nextUp ? RIPPLE.wr.next : 0));
+      const tgt = blend(heur, obs, 'tgt');
       if (tgt <= 0) continue;
-      const conf = obs ? baseConf : CONF_DOWN[baseConf];
       push({
-        kind, src: src.id, pid: q.id, dir: 'up', tgt: r1(tgt), conf, observed: !!obs,
-        why: `${why0} — ~+${r1(tgt)} targets/g for ${q.n}${q === nextUp && !obs ? ' (next man up)' : ''}${obs ? ` (seen in ${obs.n} game${obs.n > 1 ? 's' : ''} without him)` : ' (estimate)'}`,
+        kind, src: src.id, pid: q.id, dir: 'up', tgt: r1(tgt), conf: 'toss', observed: !!obs, ...record('wr-targets'),
+        why: `${why0} — ~+${r1(tgt)} targets/g for ${q.n}${q === nextUp ? ' (next man up)' : ''}${obs ? ` (${obs.n} game${obs.n > 1 ? 's' : ''} without him this season, weighted in)` : ' (estimate)'}. Vacated targets rarely land on one teammate.${recordText('wr-targets')}`,
       });
     }
   }
 
+  // Only a returning running back measurably took work back from his fill-ins; returning receivers
+  // and tight ends showed no effect on teammates' targets beyond chance.
   function returning(src) {
     const mates = (byTeam[src.team] || []).filter((q) => q.id !== src.id && healthy(q));
     const tw = teamWeeks[src.team] || new Set();
     events.push({ kind: 'return', src: src.id, team: src.team, label: 'returning' });
+    if (src.pos !== 'RB') return;
     for (const q of mates) {
-      if (src.pos === 'QB' ? q.pos !== 'QB' : !(q.pos === src.pos || (PASS_CATCHERS.has(src.pos) && PASS_CATCHERS.has(q.pos)))) continue;
+      if (q.pos !== 'RB') continue;
       const obs = split(src, q, tw);
-      if (!obs) continue;
-      const tgt = obs.tgt > 0.5 ? -obs.tgt : 0;
-      const att = obs.att > 1 ? -obs.att : 0;
-      if (!tgt && !att) continue;
+      if (!obs || obs.att <= 1) continue;
+      const att = -obs.att * RIPPLE.returnRb;
       push({
-        kind: 'return', src: src.id, pid: q.id, dir: 'down', tgt: r1(tgt), att: r1(att), conf: 'lean', observed: true,
-        why: `${src.n} returning — ${q.n} averaged ${att ? `+${r1(-att)} carries` : ''}${att && tgt ? ', ' : ''}${tgt ? `+${r1(-tgt)} targets` : ''}/g in ${obs.n} game${obs.n > 1 ? 's' : ''} without him`,
+        kind: 'return', src: src.id, pid: q.id, dir: 'down', tgt: 0, att: r1(att), conf: 'lean', observed: true, ...record('rb-return'),
+        why: `${src.n} returning — ${q.n} averaged +${r1(obs.att)} carries/g in ${obs.n} game${obs.n > 1 ? 's' : ''} without him; expect about ${r1(-att)} of them to go back.${recordText('rb-return')}`,
       });
     }
   }

@@ -28,59 +28,77 @@ function team(over = {}) {
 }
 const of = (r, pid) => r.byPid.get(pid) || [];
 
-test('WR1 out: vacated targets go to the other pass catchers, next man up gets the bump', () => {
+// The sizes below come from the 2022-2026 backtest (public/js/fitted.js RIPPLE), not from intuition.
+test('WR1 out: estimates are small and only the next man up clears the bar', () => {
   const r = buildRipple(team({ wr1: { inj: 'Out' } }), { W: 6 });
-  const wr2 = of(r, 'wr2')[0];
-  const te1 = of(r, 'te1')[0];
   const wr3 = of(r, 'wr3')[0];
-  assert.equal(wr2.dir, 'up');
-  assert.equal(te1.dir, 'up');
-  assert.ok(wr2.tgt > te1.tgt, 'larger current share inherits more');
-  assert.ok(wr3 && wr3.tgt >= 2, 'same-slot next man up gets the 25% bump');
+  assert.ok(wr3, 'same-slot next man up gets an estimate');
+  assert.equal(wr3.dir, 'up');
+  assert.ok(wr3.tgt >= 0.8 && wr3.tgt <= 1.3, `about one target a game, got ${wr3.tgt}`);
+  assert.equal(wr3.conf, 'toss', 'receiver estimates are never more than a toss-up');
+  assert.ok(!of(r, 'wr2').length && !of(r, 'te1').length, 'shares of the rest are too small to show');
   const total = r.effects.filter((e) => e.src === 'wr1').reduce((s, e) => s + (e.tgt || 0), 0);
-  assert.ok(Math.abs(total - 9) <= 1.2, `redistributed ~9 targets, got ${total}`);
+  assert.ok(total < 3, `most of the 9 vacated targets are not handed to anyone, got ${total}`);
   assert.ok(!of(r, 'wr1').length, 'no effect on the injured player himself');
 });
 
-test('RB1 out: the handcuff gets most of the carries', () => {
+test('RB1 out: the back with the most recent work gains about a third of the carries', () => {
   const r = buildRipple(team({ rb1: { inj: 'IR' } }), { W: 6 });
   const rb2 = of(r, 'rb2')[0];
-  const rb3 = of(r, 'rb3')[0];
   assert.equal(rb2.dir, 'up');
-  assert.ok(rb2.att > 9, `handcuff gets most of 15 carries, got ${rb2.att}`);
+  assert.ok(rb2.att >= 4.5 && rb2.att <= 6, `about 5 of 15 carries, got ${rb2.att}`);
+  assert.equal(rb2.conf, 'lean');
+  assert.ok(rb2.hitRate > rb2.chance, 'carries the rule\'s track record');
+  assert.match(rb2.why, /right way 67% of the time/);
+  const rb3 = of(r, 'rb3')[0];
   assert.ok(!rb3 || rb3.att < rb2.att);
 });
 
-test('QB out: backup starts, every pass catcher is downgraded, the top target least', () => {
+test('RB1 out: recent work beats the depth chart when they disagree', () => {
+  // depth chart lists rb3 second, but rb2 has been getting the work
+  const r = buildRipple(team({ rb1: { inj: 'Out' }, rb2: { depth: 3 }, rb3: { depth: 2 } }), { W: 6 });
+  assert.ok(of(r, 'rb2')[0].att > (of(r, 'rb3')[0]?.att || 0));
+});
+
+test('QB out: backup starts, the top target holds, the others lose about a tenth', () => {
   const r = buildRipple(team({ qb1: { inj: 'Out' } }), { W: 6 });
   assert.equal(of(r, 'qb2')[0].dir, 'up');
   assert.equal(of(r, 'qb2')[0].starts, true);
-  const wr1 = of(r, 'wr1')[0];
+  assert.ok(!of(r, 'wr1').length, 'no downgrade for the top target');
   const wr2 = of(r, 'wr2')[0];
-  assert.equal(wr1.dir, 'down');
   assert.equal(wr2.dir, 'down');
-  assert.ok(Math.abs(wr1.pct) < Math.abs(wr2.pct), 'alpha loses the least');
+  assert.equal(wr2.pct, -0.1);
+  assert.equal(wr2.conf, 'toss');
 });
 
-test('Observed with/without split replaces the heuristic', () => {
-  // WR1 missed week 3; WR2 saw 11 targets that week vs 6 otherwise.
+test('A single game without him is weighted in, not taken at face value', () => {
+  // WR1 missed week 3; WR2 saw 11 targets that week vs 6 otherwise (a +5 split from one game).
   const t = team({ wr1: { inj: 'Out', hist: H(5, 9, 0, [3]) } });
   t.wr2.hist = H(5, 6, 0).map((h) => (h.w === 3 ? { ...h, tgt: 11 } : h));
   const r = buildRipple(t, { W: 6 });
   const e = of(r, 'wr2')[0];
   assert.equal(e.observed, true);
-  assert.equal(e.tgt, 5);
+  assert.ok(e.tgt >= 1 && e.tgt <= 2, `one game moves the estimate a fifth of the way to +5, got ${e.tgt}`);
 });
 
-test('Star returns: the fill-in loses what he gained', () => {
-  // WR1 missed weeks 4-5 (team played), now healthy; WR2 got 10 targets in those games.
+test('Returning receiver: an event, but no estimate (no measurable effect on teammates)', () => {
   const t = team({ wr1: { hist: H(3, 9, 0) } });
   t.wr2.hist = H(5, 6, 0).map((h) => (h.w >= 4 ? { ...h, tgt: 10 } : h));
   const r = buildRipple(t, { W: 6 });
-  const e = of(r, 'wr2').find((x) => x.kind === 'return');
+  assert.ok(r.events.some((e) => e.kind === 'return' && e.src === 'wr1'));
+  assert.ok(!r.effects.some((e) => e.kind === 'return'));
+});
+
+test('Returning back: the fill-in gives back about 40% of what he gained', () => {
+  // RB1 missed weeks 4-5; RB2 carried 14 times in those games vs 5 before.
+  const t = team({ rb1: { hist: H(3, 3, 15) } });
+  t.rb2.hist = H(5, 1, 5).map((h) => (h.w >= 4 ? { ...h, att: 14 } : h));
+  const r = buildRipple(t, { W: 6 });
+  const e = of(r, 'rb2').find((x) => x.kind === 'return');
   assert.ok(e, 'return effect present');
   assert.equal(e.dir, 'down');
-  assert.equal(e.tgt, -4);
+  assert.equal(e.att, -3.6);
+  assert.equal(e.conf, 'lean');
 });
 
 test('Long-term absence is already priced into teammates usage', () => {
@@ -96,7 +114,7 @@ test('Trade: new team same-position players lose share, old team gains', () => {
   const r = buildRipple(t, { W: 6 });
   assert.equal(of(r, 'wr2').find((e) => e.kind === 'trade-in').dir, 'down');
   assert.equal(of(r, 'mia1').find((e) => e.kind === 'trade-out').dir, 'up');
-  assert.equal(of(r, 'mia2').find((e) => e.kind === 'trade-out').dir, 'up');
+  assert.ok(!of(r, 'mia2').some((e) => e.kind === 'trade-out'), 'the tight end\'s share is too small to show');
 });
 
 test('Line movement: a 3-point drop flags the offense, a 1-point wiggle does not', () => {
