@@ -8,8 +8,10 @@ export function oppCell(p, M = null) {
   const g = p.game;
   const imp = g.imp != null ? `<div class="dim" style="font-size:11.5px">team total ${g.imp.toFixed(1)}${g.spread ? ` · ${g.spread.fav === p.team ? 'fav' : 'dog'} ${g.spread.pts}` : ''}</div>` : '';
   const mu = M ? matchupFor(M, p.id) : null;
-  const muTxt = mu && mu.tier !== 'neutral'
-    ? `<div style="font-size:11.5px;color:var(${mu.tier === 'soft' ? '--green' : '--red'})" title="Average ${mu.avg.toFixed(1)} pts/g allowed to ${esc(p.pos)} over the last ${mu.games} games">${esc(mu.label)}</div>`
+  // Shown for quarterbacks only: in the 2022-2026 backtest the opponent's points allowed said
+  // something about QBs (and little beyond the projection) and nothing reliable about RB/WR/TE.
+  const muTxt = mu && mu.tier !== 'neutral' && p.pos === 'QB'
+    ? `<div class="dim" style="font-size:11.5px" title="Average ${mu.avg.toFixed(1)} pts/g allowed to ${esc(p.pos)} over the last ${mu.games} games. Information only: the projection already accounts for most of it.">${esc(mu.label)}</div>`
     : '';
   return `<span>${g.home ? 'vs' : '@'} ${esc(g.opp)}</span>${imp}${muTxt}`;
 }

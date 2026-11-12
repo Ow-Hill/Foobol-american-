@@ -16,6 +16,7 @@ access to Sleeper or ESPN.
 | R4 ripple v2 | **Line movement and calibration done** (`lib/calibration.js`, "How the teammate estimates did" card). Defensive and OL injuries still open (need ESPN position fields verified) |
 | R6 matchup strength | **Done** — `public/js/matchup.js`, Lineup opponent cell, "Position matchup" tiebreak step; last 6 weeks of results in `snapshot.results` |
 | R8 alerts | **Done** — `lib/alerts.js`, ntfy / Discord / Slack / JSON webhook, quiet hours, de-duplicated |
+| Backtest 2022-2026 | **Done** — `backtest/`, `docs/backtest-report.md`; every engine constant now measured (`public/js/fitted.js`); Track record page; official injury report as a source; trade values rebuilt. Unsolved items are listed at the end of the report |
 | R5 tests + CI | **Done** — `test/model.test.mjs` (solver, swaps, start/sit, fallbacks, waiver drops, sim, waiver day), `.github/workflows/test.yml` |
 
 ## Now (1–2 sessions each, highest leverage)

@@ -297,7 +297,7 @@ export function e11() {
     const beta = ols(tr.map(feats), tr.map((r) => r.o.ppg), 1e-4);
     const beta2 = ols(tr.map((r) => [r.ppg, r.xp]), tr.map((r) => r.o.ppg), 1e-4);
     fit.beta[pos] = { all: beta.map(r3), ppgXp: beta2.map(r3) };
-    const methods = [['Site value today (values.js)', (r) => r.site], ['Season average', (r) => r.ppg], ['Last 3 games', (r) => r.ppg3], ['This week\'s projection', (r) => r.proj], ['Usage-based expected points', (r) => r.xp], ['Half site value, half usage', (r) => 0.5 * r.site + 0.5 * r.xp], ['Season average + usage (fitted)', (r) => predict(beta2, [r.ppg, r.xp])], ['Fitted blend of all', (r) => predict(beta, feats(r))]];
+    const methods = [['Site value today (values.js)', (r) => r.site], ['Season average', (r) => r.ppg], ['Last 3 games', (r) => r.ppg3], ['This week\'s projection', (r) => r.proj], ['Volume-based expected points', (r) => r.xp], ['Half site value, half volume-based', (r) => 0.5 * r.site + 0.5 * r.xp], ['Season average + volume (fitted)', (r) => predict(beta2, [r.ppg, r.xp])], ['Fitted blend of all', (r) => predict(beta, feats(r))]];
     const wk = (set, f) => {
       const g = {};
       for (const r of set) (g[r.season + ':' + r.wk] ||= []).push(r);

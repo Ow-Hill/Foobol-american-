@@ -1,6 +1,8 @@
 import { esc, n1, signed, fmtDay, fmtDayTime, pct, countdown, ago } from '../util.js';
 import { card, table, playerName, statusChip, ownerChip, secondOpinionBtn, callBadge } from '../ui.js';
 
+import { evaluateDeal } from './finder.js';
+
 const POS_ORDER = { QB: 0, RB: 1, WR: 2, TE: 3, K: 4, DEF: 5 };
 
 function pickLabel(p) {
@@ -10,7 +12,14 @@ function pickLabel(p) {
 export function diligence(M, id) {
   const p = M.P(id);
   const bits = [];
-  if (p.eff) bits.push(`<span class="chip ${p.effSev >= 3 ? 'chip-red' : 'chip-amber'}">${esc(p.eff)}</span>`);
+  if (p.eff) {
+    // measured: share of the remaining games players with this status went on to play, and how they scored
+    const a = M.V.avail(id);
+    bits.push(`<span class="chip ${p.effSev >= 3 ? 'chip-red' : 'chip-amber'}" title="Players with this status delivered about ${Math.round(a * 100)}% of a healthy player's rest-of-season points (2022-2025)">${esc(p.eff)} · worth ~${Math.round(a * 100)}% of healthy</span>`);
+  }
+  const sig = M.V.signal(id);
+  if (sig && sig.tag === 'Sell') bits.push(`<span class="chip chip-amber" title="${esc(sig.why)}">running hot: ${n1(sig.last4)}/g, volume supports ${n1(sig.usage)}</span>`);
+  if (sig && sig.tag === 'Buy') bits.push(`<span class="chip chip-fa" title="${esc(sig.why)}">buy low: ${n1(sig.last4)}/g, volume supports ${n1(sig.usage)}</span>`);
   const byeWeeks = [M.W + 1, M.W + 2].filter((wk) => M.isBye(p.team, wk));
   if (byeWeeks.length) bits.push(`<span class="chip chip-bye">bye wk ${byeWeeks.join(', ')}</span>`);
   const po = M.snap.meta.playoffWeeks.filter((wk) => M.isBye(p.team, wk));
@@ -123,10 +132,16 @@ export function render(M, ctx) {
     const ev = M.evalTrade(partner.id, give, get);
     const pitches = buildPitches(M, partner, give, get, ev);
     const theirOdds = o[partner.id];
+    // One answer for both trade pages: the rest-of-season lineup, not this week's alone.
+    const deal = evaluateDeal(M, partner, give, get);
+    ev.theirs.week = ev.theirs.delta;
+    ev.theirs.delta = deal.dThem;
     const expect = ev.theirs.delta >= 0.5 ? ['good', 'Plausible yes', `${esc(partner.owner)}'s best lineup improves by ${n1(ev.theirs.delta)} pts.`] : ev.theirs.delta > -0.5 ? ['warn', 'Neutral for them', 'Their lineup barely moves — the pitch has to win on need or future value.'] : ev.theirs.delta > -3 || theirOdds.playoff < 0.3 ? ['warn', 'Needs a reason to say yes', `${esc(partner.owner)}'s best lineup drops ${n1(-ev.theirs.delta)} pts${theirOdds.playoff < 0.3 ? ' — but they are a likely seller, so picks may matter more to them.' : '.'}`] : ['bad', 'Expect a no', `${esc(partner.owner)}'s best lineup drops ${n1(-ev.theirs.delta)} pts and they are still in the race.`];
     const both = (ids) => (ids.length ? `<ul style="list-style:none;margin:0;padding:0">${ids.map((id) => `<li style="margin-bottom:6px">${playerName(M, id, { status: false })}<div style="margin-top:2px">${diligence(M, id) || '<span class="dim" style="font-size:12px">no health, bye or usage flags</span>'}</div></li>`).join('')}</ul>` : '<span class="dim">nothing selected</span>');
     evalHtml = `
       <div class="grid g2" style="margin-top:12px">
+        <div class="kpi"><small>Your lineup, rest of season</small><b class="${deal.rosMe >= 0 ? 'pos-num' : 'neg-num'}">${signed(deal.rosMe)} pts</b><span>${signed(deal.dMe)} a week in a typical week · playoff weeks weighted by your ${pct(M.V.playoffChance(M.me.id))} chance of playing in them</span></div>
+        <div class="kpi"><small>${esc(partner.owner)}'s lineup, rest of season</small><b class="${deal.rosThem >= 0 ? 'pos-num' : 'neg-num'}">${signed(deal.rosThem)} pts</b><span>${signed(deal.dThem)} a week · weighted by their ${pct(M.V.playoffChance(partner.id))} playoff chance</span></div>
         <div class="kpi"><small>Your best lineup (this week)</small><b>${n1(ev.mine.before)} → ${n1(ev.mine.after)}</b><span class="${ev.mine.delta >= 0 ? 'pos-num' : 'neg-num'}">${signed(ev.mine.delta)} pts · roster ${ev.rosterAfter}/${ev.rosterMax}${ev.rosterAfter > ev.rosterMax ? ' — over the limit, a drop is required' : ''}</span></div>
         <div class="kpi"><small>${esc(partner.owner)}'s best lineup</small><b>${n1(ev.theirs.before)} → ${n1(ev.theirs.after)}</b><span class="${ev.theirs.delta >= 0 ? 'pos-num' : 'neg-num'}">${signed(ev.theirs.delta)} pts · playoff odds ${pct(theirOdds.playoff)}</span></div>
       </div>

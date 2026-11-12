@@ -1,6 +1,7 @@
 import { esc, n1, n0, signed, pct, clamp } from '../util.js';
 import { card, table, playerName, secondOpinionBtn, statusChip } from '../ui.js';
 import { diligence, pickList } from './trades.js';
+import { TRADE_BALANCE } from '../fitted.js';
 
 const POS4 = ['QB', 'RB', 'WR', 'TE'];
 const MAX_SIDE = 3;
@@ -39,12 +40,17 @@ export function evaluateDeal(M, partner, give, get, horizon = 'now') {
   const base = (t) => (M._fb ||= {})[t.id] ||= { typ: V.lineup(t), ros: V.rosLineup(t) };
   const bm = base(me);
   const bt = base(partner);
-  const myAfter = V.lineup(me, get, give.concat(dm.ids));
-  const thAfter = V.lineup(partner, give, get.concat(dt.ids));
+  // A side that sends more players than it gets back opens a roster spot: credit it with the
+  // best free agent it could add, the same way the other side is charged its forced drop.
+  const bestFa = (M._bestFa ||= V.rows.filter((r) => POS4.includes(r.pos) && M.P(r.pid).own == null && M.P(r.pid).avail !== 'out').slice(0, 2).map((r) => r.pid));
+  const faMe = give.length > get.length && bestFa[0] ? [bestFa[0]] : [];
+  const faThem = get.length > give.length && bestFa[0] ? [bestFa[faMe.length ? 1 : 0] || bestFa[0]] : [];
+  const myAfter = V.lineup(me, get.concat(faMe), give.concat(dm.ids));
+  const thAfter = V.lineup(partner, give.concat(faThem), get.concat(dt.ids));
   const dMe = myAfter.total - bm.typ.total;
   const dThem = thAfter.total - bt.typ.total;
-  const rosMe = V.rosLineup(me, get, give.concat(dm.ids)) - bm.ros;
-  const rosThem = V.rosLineup(partner, give, get.concat(dt.ids)) - bt.ros;
+  const rosMe = V.rosLineup(me, get.concat(faMe), give.concat(dm.ids)) - bm.ros;
+  const rosThem = V.rosLineup(partner, give.concat(faThem), get.concat(dt.ids)) - bt.ros;
   const changes = (before, after) =>
     after.slots
       .map((s, i) => ({ slot: s.slot, inn: s.pid, out: before.slots[i].pid, gain: s.v - before.slots[i].v }))
@@ -57,12 +63,19 @@ export function evaluateDeal(M, partner, give, get, horizon = 'now') {
     if (p.avail === 'out' || (p.eff && p.effSev >= 3)) flags.push(`${p.n} is ${p.eff}`);
     if (M.snap.meta.playoffWeeks.some((wk) => M.isBye(p.team, wk))) flags.push(`${p.n} has a playoff-week bye`);
   }
-  return { partner, give, get, gv, rv, bal, dMe, dThem, rosMe, rosThem, dropsMe: dm.ids, dropsThem: dt.ids, dropOk: dm.ok && dt.ok, changesMe: changes(bm.typ, myAfter), changesThem: changes(bt.typ, thAfter), flags, rosterAfter: me.players.length - give.length + get.length - dm.ids.length };
+  return { partner, give, get, gv, rv, bal, dMe, dThem, rosMe, rosThem, faMe, faThem, dropsMe: dm.ids, dropsThem: dt.ids, dropOk: dm.ok && dt.ok, changesMe: changes(bm.typ, myAfter), changesThem: changes(bt.typ, thAfter), flags, rosterAfter: me.players.length - give.length + get.length - dm.ids.length };
 }
 
 // ---------- rough acceptance likelihood (heuristic, not a prediction) ----------
+// Value balance is judged against what this league has actually accepted (backtest E13): the
+// median accepted deal had the smaller side at 45% of the larger, so imbalance only starts to
+// cost once it is past what managers here routinely agree to.
+const overpay = (d) => (d.bal > 0 ? 1 - d.gv / Math.max(d.rv, 0.01) : 0); // how far my side falls short of theirs
+const vetoRisk = (d) => d.bal > 0 && d.gv / Math.max(d.rv, 0.01) < TRADE_BALANCE.p25 * 0.6 && d.dThem < 0;
 function accept(M, d, odds, tradeCounts) {
-  let a = 50 + 9 * clamp(d.dThem, -3, 3) - d.bal * 55;
+  const short = overpay(d);
+  const typical = 1 - TRADE_BALANCE.p75; // within the most even quarter of accepted deals: no penalty
+  let a = 50 + 9 * clamp(d.dThem, -3, 3) - Math.max(0, short - typical) * 40 + (d.bal < 0 ? Math.min(10, -d.bal * 25) : 0);
   if (odds) a += clamp(odds.them.playoff * 100, -10, 10) * 1.2;
   const o = M.odds()[d.partner.id].playoff;
   if (o < 0.3 && d.bal < 0.05) a += 4;
@@ -156,12 +169,14 @@ function search(M, o, tradeCounts) {
     const score = 0.5 * d.dMe + 0.5 * (d.rosMe / wTotal) + 0.6 * Math.max(d.dThem, 0) - 1.5 * Math.max(-d.dThem, 0) - 3 * Math.abs(d.bal) - 0.6 * d.dropsMe.length - (d.dropOk ? 0 : 99);
     return { ...d, score, acc0: accept(M, d, null, tradeCounts) };
   }).filter((d) => d.dropOk && d.rosMe > -2);
-  const sorter = { best: (a, b) => b.score - a.score, balanced: (a, b) => Math.abs(a.bal) - Math.abs(b.bal) || b.score - a.score, accept: (a, b) => b.acc0 - a.acc0 || b.score - a.score }[o.sort];
+  // "Best" = the most title and playoff odds for you without costing the partner theirs.
+  for (const d of full) {
+    d.odds = M.tradeOdds(d.partner.id, d.dMe, d.dThem);
+    d.oddsScore = d.odds.me.title * 200 + d.odds.me.playoff * 100 - (d.odds.them.playoff < -0.01 ? 5 + -d.odds.them.playoff * 100 : 0) + 0.05 * d.score;
+  }
+  const sorter = { best: (a, b) => b.oddsScore - a.oddsScore, balanced: (a, b) => Math.abs(a.bal) - Math.abs(b.bal) || b.score - a.score, accept: (a, b) => b.acc0 - a.acc0 || b.score - a.score }[o.sort];
   full.sort(sorter);
-  const top = full.slice(0, 10).map((d) => {
-    const odds = M.tradeOdds(d.partner.id, d.dMe, d.dThem);
-    return { ...d, odds, acc: accept(M, d, odds, tradeCounts) };
-  });
+  const top = full.slice(0, 10).map((d) => ({ ...d, acc: accept(M, d, d.odds, tradeCounts) }));
   if (o.sort === 'accept') top.sort((a, b) => b.acc - a.acc || b.score - a.score);
   return { results: top, scanned: evals, kept: cands.length, stopped, diag, ms: Math.round(performance.now() - t0) };
 }
@@ -191,11 +206,12 @@ function balanceMeter(gv, rv) {
 }
 
 function verdict(d) {
-  const fair = Math.abs(d.bal) <= 0.15;
-  if (fair && d.dMe > 0.5 && d.dThem > 0.3) return ['good', 'Balanced and good for both', 'Values are within 15% and both lineups improve — the kind of deal that gets accepted.'];
+  const fair = Math.abs(d.bal) <= 0.18;
+  if (vetoRisk(d)) return ['bad', 'Lopsided enough to risk a veto', `You would receive more than three times the value you send and their lineup gets worse. Fewer than one accepted trade in ten in this league has been that uneven; five veto votes block a deal.`];
+  if (fair && d.dMe > 0.5 && d.dThem > 0.3) return ['good', 'Balanced and good for both', 'Values are close and both lineups improve — the kind of deal that gets accepted.'];
   if (fair && d.dMe > 0.5 && d.dThem >= -0.05) return ['good', 'Balanced — you gain, they lose nothing', 'Fair on value and your lineup improves while theirs holds steady. The pitch has to win on fit.'];
-  if (d.bal > 0.15) return ['good', 'Favors you on value', `You receive about ${Math.round(d.bal * 100)}% more trade value than you send — expect pushback unless they need the fit.`];
-  if (d.bal < -0.15) return ['warn', 'Favors them on value', `You send about ${Math.round(-d.bal * 100)}% more trade value than you get. Only worth it if your lineup gain is real.`];
+  if (d.bal > 0.18) return ['good', 'Favors you on value', `You receive about ${Math.round(d.bal * 100)}% more trade value than you send. That is ${d.bal <= 1 - TRADE_BALANCE.median ? 'within' : 'beyond'} what this league usually accepts (the median accepted deal was ${Math.round((1 - TRADE_BALANCE.median) * 100)}% apart), so the pitch has to rest on what it does for their lineup: ${d.dThem >= 0.3 ? 'it helps them' : d.dThem > -0.3 ? 'it barely moves theirs' : 'it hurts theirs'}.`];
+  if (d.bal < -0.18) return ['warn', 'Favors them on value', `You send about ${Math.round(-d.bal * 100)}% more trade value than you get. Only worth it if your lineup gain is real.`];
   if (d.dMe < 0) return ['bad', 'Hurts your lineup', 'Fair on value, but your typical lineup gets worse.'];
   return ['warn', 'Fair, little lineup gain', 'Balanced on value, but neither lineup moves much.'];
 }
@@ -216,7 +232,7 @@ function resultCard(M, d, i) {
   const names = (ids, status) => ids.map((id) => `<div style="margin-bottom:3px">${playerName(M, id, { status })} <span class="dim" style="font-size:12px">${n1(M.V.tv(id))}</span></div>`).join('');
   const flags = [...d.flags.map((f) => `<span class="chip chip-red">${esc(f)}</span>`), ...d.get.map((id) => diligence(M, id)).filter(Boolean)].join(' ');
   return `<div class="tier-row" style="grid-template-columns:1.1fr 1.1fr 1.4fr;gap:16px;align-items:start">
-    <div><h3 class="dimh">You give</h3>${names(d.give, false)}${d.dropsMe.length ? `<div class="drop" style="margin-top:6px">↳ also drop ${d.dropsMe.map((id) => esc(M.P(id).n)).join(', ')} to stay at ${M.maxRoster}</div>` : ''}</div>
+    <div><h3 class="dimh">You give</h3>${names(d.give, false)}${d.dropsMe.length ? `<div class="drop" style="margin-top:6px">↳ also drop ${d.dropsMe.map((id) => esc(M.P(id).n)).join(', ')} to stay at ${M.maxRoster}</div>` : ''}${d.faMe.length ? `<div class="drop" style="margin-top:6px">↳ opens a roster spot: counted with ${esc(M.P(d.faMe[0]).n)} (best free agent) added</div>` : ''}</div>
     <div><h3 class="dimh">You get from ${esc(d.partner.owner)}</h3>${names(d.get, true)}${d.dropsThem.length ? `<div class="drop" style="margin-top:6px">↳ they'd need to drop ${d.dropsThem.map((id) => esc(M.P(id).n)).join(', ')}</div>` : ''}</div>
     <div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><span class="chip ${ac}">${al} · ${d.acc}</span><span class="dim" style="font-size:12px">${d.partner.w}-${d.partner.l} · ${pct(M.odds()[d.partner.id].playoff)} to make playoffs</span></div>
@@ -253,7 +269,7 @@ function analyzer(M, ui) {
     <p class="note"><b>Why:</b> ${why(M, d)}</p>
     <div class="two" style="margin-top:12px"><div><h3 class="dimh">You send</h3>${list(give)}</div><div><h3 class="dimh">You get</h3>${list(get)}</div></div>
     <div class="btn-row" style="margin-top:12px"><button class="btn" data-to-lab>Write the pitch in Trade lab →</button></div>
-    <p class="note">Picks aren't valued here — no data source prices them — so treat any pick you add as your own judgment call. The odds change comes from this site's simulation with each team's weekly scoring shifted by the lineup change.</p>`;
+    <p class="note"><b>Doing nothing</b> keeps you at ${pct(M.odds()[M.me.id].playoff)} to make the playoffs and ${pct(M.odds()[M.me.id].title)} for the title; the odds change above is measured against that. Draft picks, in the same units as trade value: round 1 ≈ ${n1(M.V.pickValue(1))}, round 2 ≈ ${n1(M.V.pickValue(2))}, round 3 ≈ ${n1(M.V.pickValue(3))} (what those rounds returned in this league's 2025 and 2026 drafts, less a fifth for the wait). Playoff weeks count by each team's own chance of reaching them, so the same player is worth more to a contender. The odds change comes from this site's simulation with each team's weekly scoring shifted by the lineup change.</p>`;
   }
   return `<div class="btn-row" style="align-items:flex-end"><label class="muted" style="display:block;min-width:260px">Partner<br /><select id="fPartner" style="margin-top:4px;max-width:none;width:100%"><option value="">Choose a team…</option>${opts}</select></label>${partner ? `<span class="muted">Up to ${MAX_SIDE} players each side · you: ${give.length}/${MAX_SIDE} · them: ${get.length}/${MAX_SIDE}</span>` : ''}</div>
   ${partner ? `<div class="two" style="margin-top:12px"><div><h3 class="dimh">You send</h3>${pickList(M, M.me, 'give', give, MAX_SIDE)}</div><div><h3 class="dimh">You get</h3>${pickList(M, partner, 'get', get, MAX_SIDE)}</div></div>` : ''}${res}`;

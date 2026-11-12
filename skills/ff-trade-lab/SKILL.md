@@ -47,11 +47,28 @@ send/receive. Read both sides:
 
 Optional: Scout-Squad `gut_check` question_type `trade` (Pro) for a saved receipt.
 
+## Step 3a — What the dashboard's backtest says about value (2022-2026)
+
+- **Injured players are worth far less than they look.** Of players averaging 7+ points, those
+  just placed on injured reserve played 23% of the remaining games, those on it 4+ games 9%,
+  officially Out 57%, Questionable 79% (a healthy player: 87%). Price an IR player at roughly
+  a quarter of a healthy one, not half.
+- **First game back** runs about 78% of prior scoring; games two and three about 92%.
+- **Sell high / buy low is real but modest.** A player scoring 4+ a game above what his targets,
+  air yards and red-zone work normally produce dropped about 4 a game over the next month
+  (about 1 more than any hot streak cools). The dashboard tags these Buy / Hold / Sell.
+- **Playoff schedule strength is weak evidence.** Points allowed to a position predicted little
+  for RB/WR/TE once projections were known; treat a "brutal Weeks 15-17 slate" as a tiebreak for
+  quarterbacks, not a deal-breaker. A playoff-week **bye** is still a deal-breaker.
+- **This league accepts uneven trades.** The median accepted deal had one side worth under half
+  the other on the dashboard's values; 25 of 50 were 1-for-1, 12 were 1-for-2, none used picks.
+
 ## Step 5 — Keeper and pick value
 
 1 keeper per team (Owen keeps Gibbs); 3-round drafts; picks are tradable and Owen owns his
-2027–2029 1st/2nd/3rd. Picks are a clean sweetener for a contender. No tool values them —
-label any pick valuation as judgment.
+2027–2029 1st/2nd/3rd. Picks are a clean sweetener for a contender. The dashboard values them from this
+league's two drafts (round 1 ≈ 141 season points above replacement, round 2 ≈ 82, round 3 ≈ 60);
+that is 18 picks a round, so quote it as rough.
 
 ## Step 6 — Pitch
 

@@ -115,7 +115,7 @@ export function e1() {
       ['Season average', (r) => r.ppg],
       ['Last 3 games', (r) => r.ppg3],
       ['Trade-value blend (values.js)', valuesBlend],
-      ...(SKILL.includes(pos) ? [['Usage-based expected points', (r) => r.xp]] : []),
+      ...(SKILL.includes(pos) ? [['Volume-based expected points', (r) => r.xp]] : []),
       [`Projection ${Math.round(bestW * 100)}% + ${SKILL.includes(pos) ? 'usage' : 'average'} ${Math.round((1 - bestW) * 100)}%`, (r) => bestW * r.proj + (1 - bestW) * (r.xp ?? r.ppg)],
       ['Fitted blend of all', (r) => predict(beta, feats(r))],
     ];

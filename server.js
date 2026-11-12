@@ -8,6 +8,7 @@ const { buildSnapshot } = require('./lib/snapshot');
 const { buildHistory } = require('./lib/history');
 const { playerNews: fetchPlayerNews } = require('./lib/playernews');
 const { checkAlerts } = require('./lib/alerts');
+const { recordCalls } = require('./lib/calls');
 
 const PUBLIC = path.join(__dirname, 'public');
 const MIME = {
@@ -62,7 +63,9 @@ async function getSnapshot(force) {
   if (snap && Date.now() - snapAt < 45000) return snap;
   if (inflight) return inflight;
   inflight = buildSnapshot()
-    .then((s) => {
+    .then(async (s) => {
+      // the site's own lineup calls, logged and scored (never allowed to break the build)
+      s.callsRecord = await recordCalls(s, cfg.defaultRosterId).catch(() => null);
       snap = s;
       snapAt = Date.now();
       saveLast(s);

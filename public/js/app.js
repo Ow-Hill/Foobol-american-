@@ -20,6 +20,7 @@ import * as story from './views/story.js';
 import * as turning from './views/turning.js';
 import * as managers from './views/managers.js';
 import * as draft from './views/draft.js';
+import * as track from './views/track.js';
 
 const ROUTES = [
   { section: 'This week' },
@@ -38,6 +39,7 @@ const ROUTES = [
   { id: 'rate', label: 'Rate my team', ico: '★', mod: rate },
   { id: 'turning', label: 'Turning points', ico: '↯', mod: turning },
   { id: 'draft', label: 'Draft plan', ico: '✦', mod: draft },
+  { id: 'track', label: 'Track record', ico: '✓', mod: track },
   { section: 'League' },
   { id: 'report', label: 'Weekly report', ico: '✎', mod: report },
   { id: 'recap', label: 'Video recaps', ico: '▶', mod: recap },

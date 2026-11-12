@@ -97,6 +97,9 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     const es = note ? canon(note.status) : undefined;
     let eff = sl;
     if (es && sevOf(es) > sevOf(sl)) eff = es;
+    // the official report outranks both when it is more severe (most-severe status wins)
+    const os = canon(p.off?.status);
+    if (os && sevOf(os) > sevOf(eff)) eff = os;
     const conflict = !!note && (sl || null) !== (es || null);
     const game = gameFor(p.team, W);
     const bye = isBye(p.team, W);

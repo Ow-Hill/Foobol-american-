@@ -58,7 +58,8 @@ export function buildValues(M) {
     const p = M.P(pid);
     return p.eff ? rosHealth(p.eff, missedGames(pid)) : 1;
   };
-  // Points his usage normally produces, per game (null when the snapshot carries no usage detail).
+  // Points his volume normally produces, per game: targets, air yards on catches, carries and
+  // red-zone work, without touchdown and after-the-catch luck (null without that detail).
   const usagePpg = (pid, n = 99) => {
     const p = M.P(pid);
     const h = (p.hist || []).slice(-n);
@@ -152,7 +153,7 @@ export function buildValues(M) {
   const posCount = {};
   rows.forEach((r) => ((posCount[r.pos] = (posCount[r.pos] || 0) + 1), (r.posRank = posCount[r.pos])));
 
-  // Buy / hold / sell: is he scoring above or below what his usage supports? (backtest E12)
+  // Buy / hold / sell: is he scoring above or below what his volume supports? (backtest E12)
   function signal(pid) {
     const p = M.P(pid);
     const m = NEXT4[p.pos];
@@ -164,11 +165,14 @@ export function buildValues(M) {
     const next = m.a + m.t * T + m.x * X;
     const gap = T - X;
     const tag = gap >= BUY_SELL_GAP ? 'Sell' : gap <= -BUY_SELL_GAP ? 'Buy' : 'Hold';
+    // X is what his targets, air yards on catches, carries and red-zone work normally produce.
+    // What it leaves out is the noisy part: touchdowns and yards after the catch.
+    const basis = `his targets, air yards and red-zone work normally produce ${X.toFixed(1)}`;
     const why = tag === 'Sell'
-      ? `Scoring ${T.toFixed(1)} a game on usage that normally produces ${X.toFixed(1)}. Players this far above their usage gave back about 4 a game over the next month; expect about ${next.toFixed(1)}.`
+      ? `Scoring ${T.toFixed(1)} a game where ${basis}; the difference is mostly touchdowns and long gains. Players this far above gave back about 4 a game over the next month; expect about ${next.toFixed(1)}.`
       : tag === 'Buy'
-        ? `Scoring ${T.toFixed(1)} a game on usage that normally produces ${X.toFixed(1)}. Players this far below their usage gained 1-4 a game over the next month; expect about ${next.toFixed(1)}.`
-        : `Scoring ${T.toFixed(1)} a game, in line with his usage (${X.toFixed(1)}). Expect about ${next.toFixed(1)} over the next month.`;
+        ? `Scoring ${T.toFixed(1)} a game where ${basis}. Players this far below gained 1-4 a game over the next month; expect about ${next.toFixed(1)}.`
+        : `Scoring ${T.toFixed(1)} a game, in line with his volume (${X.toFixed(1)}). Expect about ${next.toFixed(1)} over the next month.`;
     return { tag, last4: T, usage: X, next, gap, why };
   }
   // Draft picks and keepers, in the same 0-100 units as player values. A pick is next season's

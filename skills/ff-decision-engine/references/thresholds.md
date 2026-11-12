@@ -21,6 +21,22 @@ weights re-synced with the code on 2026-11-12 (ripple, status log, kickoff-aware
 Never present a cached headline as newer than its timestamp. If the feed is degraded, say so
 and apply the confidence penalty in §7.
 
+## 1a. Measured constants
+
+Every start/sit cut-off, injury rate, teammate-estimate size, win-probability spread and trade
+health factor is in `public/js/fitted.js`, each with the backtest experiment it came from
+(`docs/backtest-report.md`). `test/fitted.test.mjs` fails if a value drifts from the saved
+results. Do not restate those numbers from memory; read the file.
+
+| Rule | Value |
+| --- | --- |
+| Start/sit labels (RB/WR/TE) | Lean at 2 points (about 60%), Clear at 4 (about 68%) |
+| QB / K / DEF | Lean 3 / 1.5 / 1; Clear 5 / never / 2.5 |
+| Tiebreak order | Health → matchup posture → implied total (4+ apart only) → kickoff → keep the higher projection |
+| Questionable | value = projection × 0.91 (0.80 after no practice); chance to play FP 0.90 / LP 0.68 / DNP 0.55 / QB 0.42 |
+| Win probability | projected lineups: 48-point spread; season averages pulled 40% toward the league mean |
+| Teammate estimates | RB carries `lean`; everything else `toss`; never `clear` |
+
 ## 2. Classification
 
 ### Practice (first match wins)

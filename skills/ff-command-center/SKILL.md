@@ -52,11 +52,12 @@ StatsDeck `statsdeck_projection` for each; Scout-Squad `gut_check` verdict + con
   1. Health certainty: prefer the player with no injury tag.
   2. Matchup posture: favored this week → higher floor (Down Field p15);
      underdog → higher ceiling (p85). Get favored/underdog from Down Field `get_matchup`.
-  3. Game environment: higher implied team total (in Down Field's schedule data).
-  4. Position matchup: the opponent that allowed more fantasy points to that position over
-     the last six weeks (the dashboard's "Position matchup" step; only when the ranks are a
-     quarter of the league apart).
-  5. Kickoff time: the later game keeps late-swap flexibility.
+  3. Game environment: the higher implied team total, **only when the two totals are 4 or more
+     points apart** (in the 2022-2026 backtest it won 54.5% at that gap and 52% otherwise).
+  4. Kickoff time: the later game keeps late-swap flexibility.
+  If none applies, keep the higher projection (it wins 54% of toss-ups).
+  Position matchup (points a defense allows to the position) is **not** a tiebreak: across 11,000
+  toss-ups the softer matchup won 50.0%. Mention it for quarterbacks only, as colour.
 - Show the three numbers side by side so Owen sees the disagreement.
 
 ## League calendar is confirmed
@@ -65,6 +66,18 @@ Weeks 15–17 playoffs (6 teams) and the Week 11 trade deadline come from the Sl
 `references/league-facts.md` (`playoff_week_start: 15`, `trade_deadline: 11`). That satisfies
 the "confirm, don't assume" Step 0 in `playoff-schedule-strength`; pass those values instead of
 asking Owen again.
+
+## Measured rates to quote (dashboard backtest, 2022-2026)
+
+- A projection edge of 4+ points wins about 68% of the time; 2-4 points about 60%; under 2
+  about 54%. For K and DEF a 2-point edge is already about 66%.
+- Questionable: plays 70% (full practice 90%, limited 68%, none 55%; quarterbacks 42%), and
+  scores about 91% of his projection when active. Doubtful: plays 1%.
+- If a Questionable starter's fallback kicks off before his inactives are out, compare the
+  fallback's projection with the starter's projection times his chance to play.
+- A lead back out: the back with the most recent work (not the depth-chart listing) led the
+  backfield 78% of the time and averaged 13 points.
+- Source and full tables: `docs/backtest-report.md` in the dashboard repo.
 
 ## Status-conflict rule
 

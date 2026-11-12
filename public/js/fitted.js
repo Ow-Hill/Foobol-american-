@@ -95,8 +95,11 @@ export function rosHealth(tag, missed = 0) {
   return v;
 }
 
-// E1 / E11 / E12: points a player's usage normally produces (league scoring), per game.
+// E1 / E11 / E12: points a player's volume normally produces (league scoring), per game.
 // pts = b0 + sum(coef * stat). Fitted on 2022-2024 player-games.
+// `air` is Sleeper's rec_air_yd, which is air yards on completed catches (receiving yards minus
+// yards after the catch), so this is volume plus downfield yardage. It deliberately leaves out
+// touchdowns and yards after the catch, the two noisiest parts of a stat line.
 export const XP = {
   QB: { b0: 2.0, passAtt: 0.344, att: 0.613, rzAtt: 1.303 },
   RB: { b0: -0.43, att: 0.565, rzAtt: 0.764, tgt: 1.319, air: 0.083, rzTgt: 1.034 },
@@ -110,13 +113,13 @@ export function xpGame(pos, h) {
   for (const k in m) if (k !== 'b0') v += m[k] * (h[k] || 0);
   return Math.max(0, v);
 }
-// E11: rest-of-season points per game. Half the old value blend, half usage, beat the old blend
+// E11: rest-of-season points per game. Half the old value blend, half volume-based, beat the old blend
 // at every position on 2025 (QB 3.08 vs 3.43, RB 2.96 vs 3.15, WR 2.83 vs 2.93, TE 2.28 vs 2.45).
 export const VALUE_USAGE_WEIGHT = 0.5;
 
-// E12: next four weeks from the last four games: a + t * points + x * usage-expected points.
+// E12: next four weeks from the last four games: a + t * points + x * volume-expected points.
 export const NEXT4 = { QB: { a: 5.1, t: 0.33, x: 0.4 }, RB: { a: 2.43, t: 0.32, x: 0.44 }, WR: { a: 2.77, t: 0.36, x: 0.34 }, TE: { a: 3.55, t: 0.22, x: 0.38 } };
-// Players 4+ a game above their usage dropped about 4 a game over the next month (about 1 more
+// Players 4+ a game above their volume-expected points dropped about 4 a game over the next month (about 1 more
 // than an ordinary hot streak); 4+ below gained 1-4.
 export const BUY_SELL_GAP = 4;
 
@@ -140,6 +143,7 @@ export function keepShare(pos, age) {
   return v;
 }
 
-// E13: accepted trades in this league are rarely even on value: the median deal had the smaller
-// side at 54% of the larger, a quarter were under 33%.
-export const TRADE_BALANCE = { p25: 0.33, median: 0.54, p75: 0.82 };
+// E13: accepted trades in this league are rarely even on the site's values: the median deal had
+// the smaller side at 45% of the larger, a quarter were under 34%. (Measured with the current
+// value formula; docs/backtest/results-current.json.)
+export const TRADE_BALANCE = { p25: 0.34, median: 0.45, p75: 0.8 };

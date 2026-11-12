@@ -9,6 +9,7 @@ A live roster-management dashboard for the Sleeper league **James Cook Lovers**.
 ```bash
 cd ff-roster-monitor
 node server.js        # Node 18+, no dependencies
+npm test              # 55 tests
 # open http://localhost:4321
 ```
 
@@ -73,12 +74,30 @@ batched message per refresh, each change sent once, nothing older than 12 hours,
 site is serving saved data. `"scope": "starters"` limits it to your starters. Headlines,
 speculation and teammate estimates are never sent.
 
+## How good is the advice? (Track record)
+
+The **Track record** page shows how the site's calls have done: this season's own lineup calls,
+logged the first time they appear (`data/calls-log.json`) and marked right or wrong after the
+games, next to a backtest over 2022–2026. Every threshold the engine uses was sized from that
+backtest and lives in `public/js/fitted.js`, with the experiment it came from.
+Full write-up: [`docs/backtest-report.md`](docs/backtest-report.md).
+
+```bash
+npm run backtest      # downloads history to data/bt/ and re-runs all 15 experiments
+```
+
+What it found, in short: the lineup the site recommends beat the one managers set by about 2
+points a week; Clear / Lean / Toss-up calls win 68% / 60% / 54%; a Questionable player plays 70%
+of the time (90% after a full practice, 55% after none); only running-back injuries move
+teammates' workload predictably; and points allowed to a position does not help choose between
+two players once you know their projections, so that tiebreak was removed.
+
 ## Matchup strength
 
-Lineup shows, for each player, how many fantasy points his opponent allowed to that position over
-the last six finished weeks (your league's scoring), when it is in the softest or toughest third of
-the league. It is also a tiebreak step for close start/sit calls, after game environment and before
-kickoff. Players are credited to their current NFL team, so a mid-season trade slightly blurs it.
+Lineup shows, for **quarterbacks**, when the opponent has been in the softest or toughest third of
+the league for points allowed to the position over the last six weeks. It is information only.
+For RB, WR and TE the backtest found no signal beyond the projection, so nothing is shown and it
+is no longer a tiebreak.
 
 ## Decision engine
 
@@ -119,30 +138,36 @@ when the snapshot has no match.
 
 ## Teammate ripple
 
-`public/js/ripple.js` estimates who gains or loses when a teammate is out, returns or is traded:
-vacated targets go to the other pass catchers by share (with a bump for the next man up), carries
-go mostly to the handcuff, a QB injury downgrades every pass catcher (the top target least), and a
-returning starter takes back what the fill-ins gained, and a team whose Vegas implied total moves
-2.5+ points since the week opened is flagged (the market often knows first). When the team has already played without
-him this season, the observed with/without split is used instead. Rows are labelled **Estimate**,
-capped below "Act now", and never flip a start/sit on their own. Each week's estimates are recorded
-the first time the server sees them (`data/ripple-log.json`) and scored once the games are played;
-the News page shows how often each rule moved the right way. Rules and sources:
+`public/js/ripple.js` estimates who gains or loses when a teammate is out, returns or is traded.
+The sizes are measured (backtest E5): when a running back is out the remaining backs gain about a
+third of their share of his carries (right 69% of the time, 43% by chance); a missing receiver's
+targets mostly do not land on any one teammate, so those estimates are small toss-ups; with a
+backup quarterback the top target holds up and the others lose about a tenth; a returning back
+takes back about 40% of what his fill-in gained. Games already played without him this season are
+weighted in by how many there are. A team whose implied total moves 2.5+ points since the week
+opened is flagged. Rows are labelled **Estimate**, capped below "Act now", never flip a start/sit
+on their own, and say how often that kind of estimate has been right. Each week's estimates are
+recorded (`data/ripple-log.json`) and scored after the games. Rules:
 `skills/ff-news-search/references/ripple.md`.
 
 ## Data
 
 * **Sleeper** (public API): league settings, rosters, matchups, transactions, picks, players, projections, weekly stats.
 * **ESPN** (public API): injury report with RotoWire notes, news, NFL schedule and betting lines.
+* **nflverse** (public release files): the NFL's official injury report with practice status, used directly for chance-to-play; the backtest also uses its closing lines, wind and depth charts.
 * Projections are scored with the league's exact scoring settings (checked against Sleeper's own points: 145/145 match).
 * The lineup solver reproduces Sleeper's "potential points" for all 10 teams.
 
 ## How the trade finder decides
 
-* **Trade value** = league-adjusted value (points above replacement for this league) + a small credit for useful starters; age-weighted when you pick the Balanced/Future horizon (age curves from `ff-ml-projections`).
-* **Points per game** shrinks small samples toward the projection and clips to a sane bound (also from `ff-ml-projections`).
-* **Two-stage search:** a fast pass over every balanced combination, then a bye-aware weekly lineup replay and a simulation of both teams' odds on the best 24.
-* **Acceptance** is a heuristic (value fairness, their lineup change, their odds change, seller status, how often they trade) — not a prediction. No trade is a valid answer.
+* **Points per game** is half results (projection and recent scoring, small samples shrunk) and half what the player's volume normally produces (targets, air yards on catches, carries, red-zone work). That mix predicted the rest of the season better than results alone at every position.
+* **Health** uses measured odds: a Questionable player delivers about 83% of a healthy player's rest-of-season points, an officially Out player 62%, a player on injured reserve 8–27% depending on how long he has been out.
+* **Playoff weeks** count by each team's own chance of reaching them, so a contender values Weeks 15–17 more than a team that is out, and the same player is worth different amounts to the two sides.
+* **Buy / Hold / Sell** flags players scoring 4+ a game above or below what their volume supports, with what happened next to players like them.
+* **Picks and keepers** are valued from this league's own drafts (round 1 ≈ 141 season points above replacement, round 2 ≈ 82, round 3 ≈ 60; two drafts, so treat as rough).
+* **A 2-for-1** credits the side that opens a roster spot with the best free agent, and charges the other side its forced drop.
+* **Search:** a fast pass over every combination, then a bye-aware rest-of-season replay and a simulation of both teams' odds on the best 24, ranked by the title and playoff odds you gain without costing the partner theirs. "Doing nothing" is always shown.
+* **Acceptance** is a heuristic, anchored to what this league has actually accepted (the median accepted deal had one side worth less than half the other on these values). A deal lopsided enough to draw five veto votes is flagged. No trade is a valid answer.
 
 ## Rules built in
 
@@ -155,7 +180,10 @@ nothing here can set a lineup, claim a player or send a trade.
 The Flaim / Down Field / StatsDeck / Scout-Squad connectors in the skills aren't reachable from a website.
 The Lineup, Injuries, Waivers and Trades pages each have a **Copy second-opinion prompt** button that
 hands the findings to those connectors. Playoff odds are this site's own simulation (not Down Field's).
-Official inactives and weather are not checked.
+Official inactives and wind are not checked (wind of 15+ mph costs quarterbacks about 2 points and
+kickers about 1.3; no free feed carries it). There is one projection source. The news classifier
+has no backtest because no archive of old headlines exists. The full list of what is still
+unsolved is at the end of `docs/backtest-report.md`.
 
 ## How this was built — agentic coding
 
