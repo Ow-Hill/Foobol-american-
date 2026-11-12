@@ -40,16 +40,30 @@ Verified from Sleeper league settings via Down Field `get_team_context` and Stat
 | Playoffs | Weeks 15–17, 6 teams, top 2 seeds get byes |
 | **Trade deadline** | **Week 11** (Sleeper setting `trade_deadline: 11`). Project notes said 12 or 13 — those are wrong. Confirm the exact lock time in the Sleeper app. |
 | Trade review | 1 day review; 5 veto votes needed. Get deals accepted at least a day before the deadline. |
-| Waivers | Rolling priority, no FAAB bidding; a successful claim moves you to last. 2-day clear. Owen was #2 at the Week 9 sync. |
+| Waivers | Rolling priority, no FAAB bidding; a successful claim moves you to last. 2-day clear. Current position: see the snapshot below. |
 | Keepers | 1 keeper per team (Gibbs). Drafts are 3 rounds. Draft-pick trading on; Owen owns his own 2027–2029 1st/2nd/3rd. |
 
-## Week 9 snapshot (2026-11-04) — refresh before using
+## Week 10 snapshot (2026-11-12) — refresh before using
 
-- Record 3-5, 7th of 10, but **highest points-for in the league (1,195)**. Potential points
-  1,337 → about 142 points left on the bench this season.
-- Down Field sim: 84% playoffs, 13% bye, 20% title (2nd-best title odds in the league).
-- Week 9 opponent: ColinHill (roster 5).
-- Two QBs rostered (Maye, Mahomes) — StatsDeck flags the QB surplus; DEF is the thinnest spot.
+Checked live: Flaim `get_roster` / `get_standings`, Down Field `get_team_context` and
+`simulate_league` (5,000 sims).
+
+- Record 3-6, 7th of 10. Points for 1,323.28 (3rd in the league); potential points 1,476 →
+  about 153 points left on the bench this season.
+- Waiver priority **9 of 10** (rolling; it was #2 at the Week 9 sync and has since been spent).
+- Down Field sim: **56% playoffs**, 0.3% bye, 5.8% title, 6.0 expected wins.
+  (Week 9 was 84% / 13% / 20%; the Week 9 loss to ColinHill cost most of it.)
+- Week 10 opponent: HyperFire12 (roster 9, 3-6, 27% playoffs).
+- Two QBs rostered (Maye, Mahomes) — still the standing surplus to sell. DEF (Chicago) is the
+  thinnest spot.
+- Tags: A.J. Brown Questionable (knee, starting at FLEX); IR holds Ferguson (IR), Harvey (IR),
+  Stevenson (Doubtful — IR-eligible here; an upgrade to Questionable locks moves).
+
+### Deadline status
+
+**Week 11 is the trade deadline and Week 10 is in progress.** With the 1-day review, an offer has
+to be accepted before the Week 11 lock minus one day — this week is the last full week to shop.
+At 56% playoff odds the season-planner rule says buy or consolidate, not sell.
 
 ## League directory (roster id → manager)
 

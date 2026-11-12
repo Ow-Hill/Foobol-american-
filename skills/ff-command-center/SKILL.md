@@ -34,7 +34,7 @@ League facts live in `references/league-facts.md`; connector quirks in
 | Trade ideas, evaluate an offer, counter | `ff-trade-lab` | Down Field `get_roster` scope league, `evaluate_moves` |
 | A player is hurt, tagged, or on IR | `ff-injury-triage` | Flaim `get_roster`, web search |
 | Odds, standings, recap, deadline plan, playoffs | `ff-season-planner` | Down Field `simulate_league`, `get_weekly_review` |
-| Rest-of-season player value | `fantasy-football-ml-projections` only with real data; otherwise Down Field `get_projections` + reasoning, labeled |
+| Rest-of-season player value | `fantasy-football-ml-projections` (repo folder `ff-ml-projections`) only with real data; otherwise Down Field `get_projections` + reasoning, labeled |
 | Sources disagree on a timeline | `notebooklm-research-handoff` (short brief, 5 questions max) |
 
 Connector-provided skills (Down Field `waiver-wire`, `trade-ideas`, `fantasy-data`,
@@ -53,8 +53,18 @@ StatsDeck `statsdeck_projection` for each; Scout-Squad `gut_check` verdict + con
   2. Matchup posture: favored this week → higher floor (Down Field p15);
      underdog → higher ceiling (p85). Get favored/underdog from Down Field `get_matchup`.
   3. Game environment: higher implied team total (in Down Field's schedule data).
-  4. Kickoff time: the later game keeps late-swap flexibility.
+  4. Position matchup: the opponent that allowed more fantasy points to that position over
+     the last six weeks (the dashboard's "Position matchup" step; only when the ranks are a
+     quarter of the league apart).
+  5. Kickoff time: the later game keeps late-swap flexibility.
 - Show the three numbers side by side so Owen sees the disagreement.
+
+## League calendar is confirmed
+
+Weeks 15–17 playoffs (6 teams) and the Week 11 trade deadline come from the Sleeper settings in
+`references/league-facts.md` (`playoff_week_start: 15`, `trade_deadline: 11`). That satisfies
+the "confirm, don't assume" Step 0 in `playoff-schedule-strength`; pass those values instead of
+asking Owen again.
 
 ## Status-conflict rule
 

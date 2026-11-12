@@ -2,7 +2,8 @@
 
 Every number here is implemented in `public/js/playernews.js` (evidence + scoring) and
 `public/js/decision.js` (ranking + confidence). When a hand-written brief disagrees, follow the
-code. Values verified against the Week 9 snapshot, 2026-11-05.
+code. Values verified against the Week 9 snapshot, 2026-11-05; freshness, posture and profile
+weights re-synced with the code on 2026-11-12 (ripple, status log, kickoff-aware refresh).
 
 ## 1. Window and freshness
 
@@ -10,7 +11,8 @@ code. Values verified against the Week 9 snapshot, 2026-11-05.
 | --- | --- |
 | Evidence window | 7 days (604,800,000 ms) |
 | Per-player evidence shown in a decision | 2 newest non-duplicate items |
-| Google News cache | 3 min hot / 10 min roster / 30 min wire, disk-backed, stale-on-failure |
+| Google News cache | kickoff-aware (`ttlFor` in `lib/playernews.js`): 2 min in the 2 h before kickoff (inactives) · 5 min in-game, game eve and Wed–Fri 14–19 ET practice window · 15 min up to a day after the game · 30 min otherwise; flat 3 / 10 / 30 min (hot / roster / cold) when kickoff is unknown. Disk-backed, stale-on-failure |
+| Status-change log | `data/status-log.json`, 7 days: diffs of Sleeper tag, ESPN status, top-2 depth moves and team; each becomes a dated `change` item (posture `confirmed`) |
 | Snapshot cache | 45 seconds, stale-while-rebuild |
 | Headline fetch | one exact-name query per player (`when:7d`) plus DEF nickname queries; headline + source + link only |
 | Story dedupe | one `storyId` per headline cluster (72h, ≥3 shared tokens, Jaccard ≥0.7); League/Wire/Rumours show one row |
@@ -36,7 +38,7 @@ and apply the confidence penalty in §7.
 | Headline/article | `IR` → `Out` (unless an activation phrase is present) → `Doubtful` → `Questionable` |
 
 Activation phrases (`activated`, `cleared to play`, `designated to return`, `expected to play`)
-prevent an `Out` match from firing. Anchors matter: `championship`, `headline` and
+prevent an `Out` match from firing. Surgery needs a body part ("broke out" is not an injury). Anchors matter: `championship`, `headline` and
 `is present` must not create injury/DNP flags.
 
 ### Posture
@@ -46,6 +48,14 @@ prevent an `Out` match from firing. Anchors matter: `championship`, `headline` a
 | `confirmed` | RotoWire note with no rumour language |
 | `speculative` | Non-note, rumour language present, and no official/announce/confirm/activated/cleared phrase |
 | `reported` | Everything else |
+| `estimate` | Teammate ripple items (`public/js/ripple.js`); scored like speculation and capped at 74, so they never reach `act` |
+
+Before the rumour test, `NOT_RUMOUR` strips activation phrases, "expected to start / play /
+return / be active / be available" and "according to the team / coach / injury report /
+league", so ordinary reporting language is not tagged speculative.
+
+**Latest status decides.** Health checks use `latestAdverse()`: the newest dated status item
+wins, so "Questionable (Wed) → cleared (Fri)" is not adverse.
 
 `better = !speculative && (activation phrase OR (status Questionable AND practice FP))`.
 
@@ -93,13 +103,19 @@ independent evidence.
 
 | Weight | mine ("Your players") | league | wire |
 | --- | --- | --- | --- |
-| roster | 0.12 | 0 | — |
-| impact | 0.28 | 0.20 | 0.35 |
-| availability | — | — | 0.25 |
-| urgency | 0.12 | 0.10 | 0.15 |
-| severity | 0.36 | 0.25 | 0.15 |
-| league | 0.07 | 0.40 | 0.05 |
+| roster | 0.12 | — | — |
+| opponent | — | 0.30 | — |
+| impact | 0.28 | 0.20 | 0.30 (`addImpact` / 5) |
+| opportunity | — | — | 0.35 |
+| availability | — | — | 0.10 |
+| urgency | 0.12 | 0.10 | 0.10 |
+| severity | 0.36 | 0.25 | — |
+| league | 0.07 | 0.10 | 0.10 (trending) |
 | tier | 0.05 | 0.05 | 0.05 |
+
+`opponent` = 1 when the player starts against Owen this week. `opportunity` is high for a
+promotion, activation, depth move up or positive ripple, low for the free agent's own injury.
+Ripple items are capped at 74 in every profile.
 
 ### Parts
 
