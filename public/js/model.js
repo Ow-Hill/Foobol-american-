@@ -3,7 +3,7 @@
 // league IR rules, rolling waivers, Week-11 deadline, advice only.
 import { avg, sum, quantile, clamp, fmtKick, setTz } from './util.js';
 import { buildValues } from './values.js';
-import { BANDS, gapGroup, gapWinRate, IMPLIED_GAP_MIN, playChance, playingHurt, WIN, NEXT_MAN_BY_WORK } from './fitted.js';
+import { BANDS, gapGroup, gapWinRate, IMPLIED_GAP_MIN, playChance, playingHurt, WIN, NEXT_MAN_BY_WORK, rangeFor, POSTURE_TIEBREAK, FIRST_BACK } from './fitted.js';
 
 const SEV = { IR: 5, PUP: 5, Sus: 5, NA: 4, DNR: 4, COV: 4, Out: 4, Doubtful: 3, Questionable: 2, Probable: 1 };
 // Practice participation as FP / LP / DNP, whatever the source calls it.
@@ -69,8 +69,8 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     gameIdx[wk] = {};
     byeIdx[wk] = new Set(snap.schedule[wk].byes);
     for (const g of snap.schedule[wk].games) {
-      gameIdx[wk][g.home.t] = { opp: g.away.t, home: true, date: g.date, state: g.state, completed: g.completed, detail: g.detail, imp: g.home.imp, oppImp: g.away.imp, spread: g.spread, score: g.home.score, oppScore: g.away.score };
-      gameIdx[wk][g.away.t] = { opp: g.home.t, home: false, date: g.date, state: g.state, completed: g.completed, detail: g.detail, imp: g.away.imp, oppImp: g.home.imp, spread: g.spread, score: g.away.score, oppScore: g.home.score };
+      gameIdx[wk][g.home.t] = { opp: g.away.t, home: true, date: g.date, state: g.state, completed: g.completed, detail: g.detail, imp: g.home.imp, oppImp: g.away.imp, spread: g.spread, score: g.home.score, oppScore: g.away.score, wind: g.wind || null, indoor: g.venue?.indoor ?? null };
+      gameIdx[wk][g.away.t] = { opp: g.home.t, home: false, date: g.date, state: g.state, completed: g.completed, detail: g.detail, imp: g.away.imp, oppImp: g.home.imp, spread: g.spread, score: g.away.score, oppScore: g.home.score, wind: g.wind || null, indoor: g.venue?.indoor ?? null };
     }
   }
   const gameFor = (team, wk = W) => (team && gameIdx[wk] ? gameIdx[wk][team] || null : null);
@@ -129,8 +129,25 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       ppg: avg(pts),
       ppg3: last3.length ? avg(last3) : null,
       gp: pts.length,
-      floor: recent.length >= 3 ? quantile(recent, 0.25) : null,
-      ceil: recent.length >= 3 ? quantile(recent, 0.75) : null,
+      // middle half of likely outcomes, from the projection and how far players like him usually
+      // miss it (E16); the last six games are the fallback when there is no projection
+      ...(() => {
+        const r = rangeFor(p.pos, p.proj?.pts);
+        if (r) return { floor: r[0], ceil: r[1], rangeBasis: 'projection' };
+        return { floor: recent.length >= 3 ? quantile(recent, 0.25) : null, ceil: recent.length >= 3 ? quantile(recent, 0.75) : null, rangeBasis: 'recent' };
+      })(),
+      missedRun: (() => {
+        // team games missed in a row just before this week (from the last six weeks of results)
+        const res = snap.results || {};
+        const played = new Set(ph.map((h) => h.w));
+        let k = 0;
+        for (let wk = W - 1; wk >= 1 && res[wk]; wk--) {
+          if (!res[wk][p.team]) continue;
+          if (played.has(wk)) break;
+          k++;
+        }
+        return ph.length ? k : 0;
+      })(),
       prac,
       // measured chance he plays and how he scores if he does (fitted.js, backtest E4)
       playChance: bye ? 0 : playChance(p.pos, eff, prac),
@@ -148,7 +165,9 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     if (isBye(p.team, wk)) return 0;
     if (wk === W) {
       if (p.effSev >= 3) return 0;
-      return (p.proj || 0) * p.hurtFactor;
+      // first game back after missing 2-3 games: 86% of projection (E14b)
+      const back = p.missedRun >= 1 && p.missedRun <= 3 ? FIRST_BACK[p.missedRun] : 1;
+      return (p.proj || 0) * p.hurtFactor * back;
     }
     if (p.effSev >= 4 && p.eff === 'IR') return 0;
     if (wk === W + 1) return p.projNext ?? 0;
@@ -247,8 +266,8 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       reasons.push({ step: 'Health', pick, why: `${(pick === 'start' ? A : B).n.split(' ').slice(-1)[0]} carries no injury tag` });
       return { pick, reasons };
     }
-    // 2. matchup posture
-    if (posture !== 'expected' && A.floor != null && B.floor != null) {
+    // 2. matchup posture (off: in the backtest it did no better than the projection, E16)
+    if (POSTURE_TIEBREAK && posture !== 'expected' && A.floor != null && B.floor != null) {
       const pa = posture === 'floor' ? A.floor : A.ceil;
       const pb = posture === 'floor' ? B.floor : B.ceil;
       if (Math.abs(pa - pb) > 0.5) {
@@ -559,7 +578,21 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     const path = track
       ? { seed: Array(teams.length + 1).fill(0), r1Play: 0, r1Win: 0, r2: 0, final: 0, title: 0, opp: { 1: {}, 2: {}, 3: {} }, byWins: {} }
       : null;
-    const sample = (id) => prof[id].mean + (meanAdj[id] || 0) + prof[id].sd * gauss();
+    // meanAdj[id] is a weekly shift: one number for every week, or { week: points } (trades, byes)
+    const adj = (id, wk) => {
+      const a = meanAdj[id];
+      return a == null ? 0 : typeof a === 'object' ? a[wk] || 0 : a;
+    };
+    const sample = (id, wk) => prof[id].mean + adj(id, wk) + prof[id].sd * gauss();
+    // This week: each team's projected best lineup, with the measured spread (E7). Later weeks
+    // use the shrunk season averages.
+    const lineNow = {};
+    for (const t of teams) {
+      const tot = lineup(t).opt.total;
+      if (tot > 0) lineNow[t.id] = tot;
+    }
+    const thisWeek = Object.keys(lineNow).length === teams.length;
+    const sampleWk = (id, wk) => (wk === W && thisWeek ? lineNow[id] + adj(id, wk) + (WIN.lineupSd / Math.SQRT2) * gauss() : sample(id, wk));
     const pin = (wk, a, b) => force.find((f) => f.wk === wk && (f.rid === a || f.rid === b));
     for (let i = 0; i < n; i++) {
       const w = {};
@@ -567,8 +600,8 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       teams.forEach((t) => ((w[t.id] = t.w + t.t * 0.5), (pf[t.id] = t.pf)));
       for (const wkRow of sched)
         for (const [a, b] of wkRow.games) {
-          let sa = sample(a);
-          let sb = sample(b);
+          let sa = sampleWk(a, wkRow.wk);
+          let sb = sampleWk(b, wkRow.wk);
           const f = pin(wkRow.wk, a, b);
           if (f) {
             const wantA = f.rid === a ? f.win : !f.win;
@@ -595,7 +628,8 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       }
       const [s1, s2, s3, s4, s5, s6] = order;
       const game = (a, b, round) => {
-        const wa = sample(a) > sample(b) ? a : b;
+        const wk = lastReg + round;
+        const wa = sample(a, wk) > sample(b, wk) ? a : b;
         if (path && (a === track || b === track)) {
           const opp = a === track ? b : a;
           path.opp[round][opp] = (path.opp[round][opp] || 0) + 1;

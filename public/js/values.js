@@ -210,11 +210,14 @@ export function buildValues(M) {
     },
     weeks,
     ageFactor: (pid) => ageFactor(M.P(pid).pos, M.P(pid).age),
-    // trade value under a horizon: win-now / balanced / future (age-weighted)
+    // trade value under a horizon: win-now / balanced / future. "Future" weights a player by the
+    // share of his value players of his position and age kept the next season (E15); K and DEF
+    // fall back to the age curve.
     tvH(pid, h = 'now') {
       const base = (by[pid]?.value ?? 0) + 0.4 * (by[pid]?.ppg ?? 0);
-      const f = ageFactor(M.P(pid).pos, M.P(pid).age);
-      return h === 'future' ? base * f ** 3 : h === 'balanced' ? base * f : base;
+      const p = M.P(pid);
+      const k = ['QB', 'RB', 'WR', 'TE'].includes(p.pos) ? keepShare(p.pos, p.age) : ageFactor(p.pos, p.age);
+      return h === 'future' ? base * k : h === 'balanced' ? base * (1 + k) / 2 : base;
     },
     tsumH: (ids, h = 'now') => sum(ids.map((id) => V.tvH(id, h))),
     // best lineup (slots) from the typical healthy roster, with players added/removed
@@ -235,6 +238,21 @@ export function buildValues(M) {
         tot += w * M.solve(ok, { v: (id) => ppg(id) * avail(id), can: (id) => !M.P(id).missing }).total;
       }
       return tot;
+    },
+    // best lineup each remaining week: this week from this week's projections, later weeks from
+    // points per game x health, byes removed. { week: points }
+    weekly(t, extra = [], remove = []) {
+      const l = M.lineup(t);
+      const rm = new Set(remove);
+      const ids = l.active.filter((id) => !rm.has(id)).concat(extra);
+      const out = {};
+      for (const { wk } of weeksFor(t.id)) {
+        const ok = ids.filter((id) => !M.isBye(M.P(id).team, wk));
+        out[wk] = wk === W
+          ? M.solve(ok, { v: (id) => M.val(id), can: (id) => M.canStartNow(id) }).total
+          : M.solve(ok, { v: (id) => ppg(id) * avail(id), can: (id) => !M.P(id).missing }).total;
+      }
+      return out;
     },
     sum: (ids) => sum(ids.map((id) => by[id]?.value ?? 0)),
     tsum: (ids) => sum(ids.map((id) => (by[id]?.value ?? 0) + 0.4 * (by[id]?.ppg ?? 0))),

@@ -64,8 +64,8 @@ export function render(M, ctx) {
   const fixed = l.opt.total - l.curTotal;
 
   const postureText = {
-    floor: `You're the projected favorite by ${n1(M.margin)} — lean on safer, higher-floor players this week.`,
-    ceiling: `You're the projected underdog by ${n1(-M.margin)} — lean toward higher-ceiling players.`,
+    floor: `You're the projected favorite by ${n1(M.margin)}. Start the best projections; "safe" players picked by recent floor did not avoid busts any better in the backtest.`,
+    ceiling: `You're the projected underdog by ${n1(-M.margin)}. Start the best projections; players picked by recent ceiling did not boom any more often in the backtest.`,
     expected: `Close matchup (${signed(M.margin)} for you) — start the best expected points and let the tiebreakers decide.`,
   }[M.posture];
 

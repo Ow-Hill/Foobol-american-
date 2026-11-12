@@ -1,0 +1,280 @@
+{
+ "run": "2026-11-12, NFL Week 10, before kickoff. Site: trade finder win-win search (up to 2 players a side), live snapshot. Down Field: evaluate_moves, objective title, 3,000 paired simulations, forecast run 20261112T110416Z-ppr.",
+ "baseline": {
+  "site": {
+   "playoff": 0.586,
+   "title": 0.074
+  },
+  "downField": {
+   "playoff": 0.613,
+   "title": 0.068
+  }
+ },
+ "deals": [
+  {
+   "rank": 1,
+   "partner": "ARY3R",
+   "give": [
+    "Tee Higgins"
+   ],
+   "get": [
+    "Bucky Irving",
+    "Parker Washington"
+   ],
+   "drop": [
+    "Konata Mumpfield"
+   ],
+   "site": {
+    "me": {
+     "playoff": 0.106,
+     "title": 0.057
+    },
+    "them": {
+     "playoff": -0.001,
+     "title": -0.012
+    }
+   },
+   "downField": {
+    "me": {
+     "playoff": 0.044,
+     "title": 0.021,
+     "band": "lean"
+    },
+    "them": {
+     "playoff": 0.0,
+     "title": 0.03
+    },
+    "acceptance": null,
+    "thisWeekPoints": {
+     "me": -3.05,
+     "them": 2.26
+    }
+   },
+   "siteWeekByWeek": {
+    "me": {
+     "playoff": 0.095,
+     "title": 0.055
+    },
+    "them": {
+     "playoff": -0.0,
+     "title": -0.013
+    },
+    "thisWeekPoints": {
+     "me": -2.0,
+     "them": 2.0
+    }
+   }
+  },
+  {
+   "rank": 2,
+   "partner": "ARY3R",
+   "give": [
+    "Chris Olave"
+   ],
+   "get": [
+    "Bucky Irving",
+    "Tre Tucker"
+   ],
+   "drop": [
+    "Konata Mumpfield"
+   ],
+   "site": {
+    "me": {
+     "playoff": 0.103,
+     "title": 0.055
+    },
+    "them": {
+     "playoff": -0.001,
+     "title": -0.01
+    }
+   },
+   "downField": {
+    "me": {
+     "playoff": -0.036,
+     "title": -0.012,
+     "band": "lean",
+     "verdict": "hurts"
+    },
+    "them": {
+     "playoff": 0.001,
+     "title": 0.067
+    },
+    "acceptance": null,
+    "thisWeekPoints": {
+     "me": -7.06,
+     "them": 3.61
+    }
+   },
+   "siteWeekByWeek": {
+    "me": {
+     "playoff": 0.08,
+     "title": 0.053
+    },
+    "them": {
+     "playoff": -0.0,
+     "title": -0.01
+    },
+    "thisWeekPoints": {
+     "me": -7.0,
+     "them": 2.2
+    }
+   }
+  },
+  {
+   "rank": 3,
+   "partner": "ARY3R",
+   "give": [
+    "Tee Higgins",
+    "A.J. Brown"
+   ],
+   "get": [
+    "Amon-Ra St. Brown",
+    "Chase Brown"
+   ],
+   "site": {
+    "me": {
+     "playoff": 0.077,
+     "title": 0.041
+    },
+    "them": {
+     "playoff": 0.001,
+     "title": 0.01
+    }
+   },
+   "downField": {
+    "me": {
+     "playoff": 0.138,
+     "title": 0.084,
+     "band": "clear"
+    },
+    "them": {
+     "playoff": -0.003,
+     "title": -0.08
+    },
+    "acceptance": "unlikely",
+    "thisWeekPoints": {
+     "me": 6.37,
+     "them": -12.38
+    }
+   },
+   "siteWeekByWeek": {
+    "me": {
+     "playoff": 0.083,
+     "title": 0.042
+    },
+    "them": {
+     "playoff": -0.002,
+     "title": 0.005
+    },
+    "thisWeekPoints": {
+     "me": 2.7,
+     "them": -8.4
+    }
+   }
+  },
+  {
+   "rank": 4,
+   "partner": "ARY3R",
+   "give": [
+    "Tee Higgins",
+    "Patrick Mahomes"
+   ],
+   "get": [
+    "Amon-Ra St. Brown",
+    "Chase Brown"
+   ],
+   "site": {
+    "me": {
+     "playoff": 0.077,
+     "title": 0.041
+    },
+    "them": {
+     "playoff": 0.001,
+     "title": 0.01
+    }
+   },
+   "downField": {
+    "me": {
+     "playoff": 0.117,
+     "title": 0.103,
+     "band": "clear"
+    },
+    "them": {
+     "playoff": -0.005,
+     "title": -0.098
+    },
+    "acceptance": "unlikely",
+    "thisWeekPoints": {
+     "me": 11.0,
+     "them": -13.18
+    }
+   },
+   "siteWeekByWeek": {
+    "me": {
+     "playoff": 0.026,
+     "title": 0.033
+    },
+    "them": {
+     "playoff": 0.003,
+     "title": 0.01
+    },
+    "thisWeekPoints": {
+     "me": 2.7,
+     "them": -8.4
+    }
+   }
+  },
+  {
+   "rank": 5,
+   "partner": "JamesKnowsBalls",
+   "give": [
+    "A.J. Brown"
+   ],
+   "get": [
+    "Blake Corum"
+   ],
+   "site": {
+    "me": {
+     "playoff": 0.078,
+     "title": 0.04
+    },
+    "them": {
+     "playoff": 0.0,
+     "title": -0.012
+    }
+   },
+   "downField": {
+    "me": {
+     "playoff": -0.021,
+     "title": -0.006,
+     "band": "toss-up",
+     "verdict": "within noise"
+    },
+    "them": {
+     "playoff": 0.001,
+     "title": 0.018
+    },
+    "acceptance": "plausible",
+    "thisWeekPoints": {
+     "me": -2.74,
+     "them": 2.99
+    }
+   },
+   "siteWeekByWeek": {
+    "me": {
+     "playoff": 0.056,
+     "title": 0.037
+    },
+    "them": {
+     "playoff": -0.0,
+     "title": -0.013
+    },
+    "thisWeekPoints": {
+     "me": -0.2,
+     "them": 0.2
+    }
+   }
+  }
+ ],
+ "note": "'site' is the finder as it was (one typical-week shift for every week); 'siteWeekByWeek' is after the change to week-by-week lineups. This week's points now agree closely with Down Field; rest-of-season player values still differ."
+}

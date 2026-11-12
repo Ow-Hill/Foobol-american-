@@ -348,8 +348,8 @@ Projected lineups with a 48-point spread, same check.
 
 ## E8. Would the site's lineup have beaten the one actually set?
 
-- Across 208 team-weeks the site's lineup scored 2.23 points a week more than the lineup the manager set (90% range 0.59 to 4.05). For your team: 4.7 (0.15 to 9.33).
-- Managers reached 87.5% of the perfect lineup, the site 89.1%.
+- Across 208 team-weeks the site's lineup scored 2.36 points a week more than the lineup the manager set (90% range 0.74 to 4.21). For your team: 4.84 (0.26 to 9.4).
+- Managers reached 87.5% of the perfect lineup, the site 89.2%.
 - Managers started 0.05 players a week who did not play; the site lineup 0.01. Caveat: Sleeper's stored projections are the final pre-kickoff ones, so the site lineup here knows about Sunday-morning inactives. It is what the site would say if checked 90 minutes before each game, not on Tuesday.
 - Check on the scorer: my re-scored lineup totals differ from Sleeper's official ones by 0.15 points a week on average.
 
@@ -357,10 +357,10 @@ Every team-week in this league, Weeks 2-17 of 2025 and 2026 to date. "Site lineu
 
 | Team-weeks | n | Lineup actually set | Site lineup | Perfect lineup | Site minus actual | 90% range | Site better % | Site worse % | Actual as % of perfect | Site as % of perfect |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| All teams, 2025-2026 | 208 | 135.1 | 137.3 | 154.3 | 2.23 | 0.59 to 4.05 | 37.5 | 28.8 | 87.5 | 89.1 |
-| All teams, 2025 | 128 | 135.6 | 138.4 | 157.2 | 2.78 | 0.55 to 5.27 | 37.5 | 30.5 | 86.1 | 88.1 |
-| All teams, 2026 | 80 | 134.1 | 135.5 | 149.7 | 1.34 | 0.11 to 2.47 | 37.5 | 26.3 | 89.9 | 90.7 |
-| Your team | 24 | 150 | 154.7 | 166.8 | 4.7 | 0.15 to 9.33 | 45.8 | 25 | 90.2 | 92.9 |
+| All teams, 2025-2026 | 208 | 135.1 | 137.4 | 154.3 | 2.36 | 0.74 to 4.21 | 38 | 28.4 | 87.5 | 89.2 |
+| All teams, 2025 | 128 | 135.6 | 138.7 | 157.2 | 3.05 | 0.77 to 5.46 | 39.1 | 29.7 | 86.1 | 88.2 |
+| All teams, 2026 | 80 | 134.1 | 135.4 | 149.7 | 1.24 | 0.08 to 2.29 | 36.3 | 26.3 | 89.9 | 90.7 |
+| Your team | 24 | 150 | 154.9 | 166.8 | 4.84 | 0.26 to 9.4 | 45.8 | 25 | 90.2 | 93 |
 | Your team, 2026 | 8 | 146.2 | 149.8 | 163.2 | 3.59 | -4.62 to 10.86 | 50 | 25 | 90.2 | 92.4 |
 
 2026 by manager: points per week left on the table against the site lineup.
@@ -368,11 +368,11 @@ Every team-week in this league, Weeks 2-17 of 2025 and 2026 to date. "Site lineu
 | Manager | weeks | Actual | Site lineup | Site minus actual | Actual as % of perfect | Starters who did not play, per week |
 | --- | --- | --- | --- | --- | --- | --- |
 | Thisowenguy | 8 | 146.2 | 149.8 | 3.59 | 90.2 | 0 |
-| andbums | 8 | 129.1 | 132.2 | 3 | 88.5 | 0.13 |
 | HyperFire12 | 8 | 127 | 129.9 | 2.86 | 92.7 | 0 |
+| andbums | 8 | 129.1 | 131.5 | 2.34 | 88.5 | 0.13 |
 | MWrighter38 | 8 | 125.1 | 127.4 | 2.24 | 89.5 | 0 |
 | ColinHill | 8 | 143.1 | 145 | 1.95 | 91.1 | 0 |
-| CadeCermak | 8 | 146.4 | 147.9 | 1.5 | 88.4 | 0 |
+| CadeCermak | 8 | 146.4 | 147.5 | 1.13 | 88.4 | 0 |
 | JohnTerno | 8 | 110.3 | 111.1 | 0.74 | 88.5 | 0 |
 | JamesKnowsBalls | 8 | 136.9 | 137.4 | 0.46 | 90.5 | 0 |
 | ARY3R | 8 | 144 | 143.6 | -0.47 | 89.1 | 0 |
@@ -563,6 +563,19 @@ By status on the first report after the injury.
 | Questionable | 105 | 1.5 | 60 | 85.7 |
 | Doubtful | 34 | 2.7 | 38.2 | 73.5 |
 
+## E14b. Does the projection already allow for a player's first game back?
+
+- Players who played the week before scored 100.2% of their projection; first game back after one missed game 93.1%, after 2-3 85.5%, after 4+ 105.7%. Only the 2-3-game group fell short in both periods, so those players are now valued at 85.6% of projection in their first game back; the other groups are inconsistent between periods and get no extra discount. The projection itself sits at 89.7-80.9% of pre-absence scoring for returning players.
+
+Skill players averaging 7+ points before the absence. Actual points as a share of the projection.
+
+| Situation | n | Projection as % of pre-absence scoring | Actual / projection 2022-24 | Actual / projection 2025-26 | n |
+| --- | --- | --- | --- | --- | --- |
+| Played last week | 8718 | 93.3 | 101.9 | 96.8 | 2749 |
+| Back after 1 game out | 157 | 89.7 | 89.8 | 99.6 | 52 |
+| Back after 2-3 | 122 | 94.1 | 87.2 | 80.9 | 30 |
+| Back after 4+ | 45 | 80.9 | 104.7 | 108.3 | 12 |
+
 ## E15. What are keepers and draft picks worth?
 
 - Value kept year to year: QB 25 or younger 83%, QB 26-29 75%, QB 30-33 70%, QB 34+ 73%, RB 23 or younger 94%, RB 24-25 78%, RB 26-27 74%, RB 28+ 74%, WR 23 or younger 92%, WR 24-26 86%, WR 27-29 76%, WR 30+ 85%.
@@ -608,3 +621,64 @@ This league's drafts (2025 and 2026): what each round returned that season. Poin
 | 14 | 18 | 9.9 | 8.7 | 50 | 0 |
 | 15 | 18 | 9.4 | 9.3 | 33.3 | 0 |
 | 16 | 18 | 10.9 | 11.6 | 38.9 | 0 |
+
+## E16. Floor and ceiling: are the ranges honest, and does playing for them help?
+
+- The last-six-games range contained the actual score 35.3% of the time (target 50%); the projection-based range 49.5%. The projection-based range is better calibrated and is now the one shown.
+- Posture tiebreak: the higher recent floor avoided a bust 59.3% vs 60.3% for the higher projection; the higher recent ceiling boomed 22.8% vs 23%. Recent floors and ceilings add nothing the projection does not, so the posture step is removed.
+
+Hold-out 2025-26. A 25th-75th percentile range should contain the actual score 50% of the time, with 25% below it.
+
+| Position | Last 6 games: inside % | below % | width | Projection-based: inside % | below % | width | n |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| QB | 33.7 | 34.6 | 7.7 | 47.3 | 27.8 | 10.3 | 457 |
+| RB | 34.9 | 30.4 | 7.1 | 50.3 | 27.4 | 10.5 | 774 |
+| WR | 34.3 | 33.5 | 7.1 | 49 | 26.4 | 9.8 | 1084 |
+| TE | 35.5 | 36.5 | 6.7 | 52 | 25.8 | 9.1 | 392 |
+| K | 40.4 | 32.2 | 5.1 | 47.5 | 27.1 | 6.3 | 314 |
+| DEF | 37.2 | 28.4 | 5.7 | 51.9 | 27.8 | 7.7 | 320 |
+| ALL | 35.3 | 32.7 | 6.8 | 49.5 | 26.9 | 9.4 | 3341 |
+
+Toss-ups (same position, projections within 2): picking by recent floor or ceiling, against keeping the higher projection.
+
+| Pick | Measure | Rate | Pairs |
+| --- | --- | --- | --- |
+| Higher projection | outscored the other | 53.9 | 15180 |
+| Higher recent floor | outscored the other | 51.6 | 13510 |
+| Higher recent ceiling | outscored the other | 50.2 | 14057 |
+| Higher recent floor | avoided a bust (under 70% of projection) | 59.3 | 13510 |
+| Higher projection | avoided a bust | 60.3 | 13510 |
+| Higher recent ceiling | boomed (140%+ of projection) | 22.8 | 14057 |
+| Higher projection | boomed | 23 | 14057 |
+
+## N1. News scanner: how well does it read headlines?
+
+- Development set: 100% of 143 checks correct (71.3% before the fixes this set prompted, so this number is no longer independent).
+- Second set, labelled after the first round of fixes: 76% of 31 checks were correct when first scored (status 74%: four of the five status misses were another player's news pinned on the named one). The clause rule and three more patterns were then added, so it is now 100% and also no longer independent.
+- Fresh set (live headlines, labelled after every earlier fix): 78.3% of 46 checks correct when first scored. That is the honest number. Its ten misses were then fixed too, so it now scores 100%; the next batch of labelled headlines gives the next honest number.
+
+71 labelled headlines for the classifier, 18 for the matcher (backtest/news-golden.json). Precision: when it says something, how often it is right. Recall: of the headlines that say something, how many it catches.
+
+| Field | Cases | Correct % | Precision % | Recall % |
+| --- | --- | --- | --- | --- |
+| status | 71 | 100 | 100 | 100 |
+| practice | 24 | 100 | 100 | 100 |
+| speculative | 8 | 100 | 100 | 100 |
+| injury | 12 | 100 | 100 | 100 |
+| better | 10 | 100 | 100 | 100 |
+| held-out status | 19 | 100 | 100 | 100 |
+| held-out better | 6 | 100 | 100 | 100 |
+| held-out practice | 2 | 100 | 100 | 100 |
+| held-out injury | 4 | 100 | 100 | 100 |
+| fresh status | 27 | 100 | 100 | 100 |
+| fresh injury | 8 | 100 | 100 | 100 |
+| fresh practice | 2 | 100 | 100 | 100 |
+| fresh better | 5 | 100 | 100 | 100 |
+| fresh speculative | 4 | 100 | 100 | 100 |
+| matcher | 18 | 100 | 100 | 100 |
+
+Every miss (each is a test case to fix or a known limit).
+
+| Field | Headline | Expected | Got |
+| --- | --- | --- | --- |
+

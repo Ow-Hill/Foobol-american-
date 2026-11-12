@@ -51,6 +51,11 @@ export function evaluateDeal(M, partner, give, get, horizon = 'now') {
   const dThem = thAfter.total - bt.typ.total;
   const rosMe = V.rosLineup(me, get.concat(faMe), give.concat(dm.ids)) - bm.ros;
   const rosThem = V.rosLineup(partner, give.concat(faThem), get.concat(dt.ids)) - bt.ros;
+  // week-by-week change for the season simulation (byes and this week's availability included)
+  const wkBase = (t) => ((M._wk ||= {})[t.id] ||= V.weekly(t));
+  const diffWk = (after, before) => Object.fromEntries(Object.keys(before).map((wk) => [wk, (after[wk] || 0) - before[wk]]));
+  const wkMe = diffWk(V.weekly(me, get.concat(faMe), give.concat(dm.ids)), wkBase(me));
+  const wkThem = diffWk(V.weekly(partner, give.concat(faThem), get.concat(dt.ids)), wkBase(partner));
   const changes = (before, after) =>
     after.slots
       .map((s, i) => ({ slot: s.slot, inn: s.pid, out: before.slots[i].pid, gain: s.v - before.slots[i].v }))
@@ -63,7 +68,7 @@ export function evaluateDeal(M, partner, give, get, horizon = 'now') {
     if (p.avail === 'out' || (p.eff && p.effSev >= 3)) flags.push(`${p.n} is ${p.eff}`);
     if (M.snap.meta.playoffWeeks.some((wk) => M.isBye(p.team, wk))) flags.push(`${p.n} has a playoff-week bye`);
   }
-  return { partner, give, get, gv, rv, bal, dMe, dThem, rosMe, rosThem, faMe, faThem, dropsMe: dm.ids, dropsThem: dt.ids, dropOk: dm.ok && dt.ok, changesMe: changes(bm.typ, myAfter), changesThem: changes(bt.typ, thAfter), flags, rosterAfter: me.players.length - give.length + get.length - dm.ids.length };
+  return { partner, give, get, gv, rv, bal, dMe, dThem, rosMe, rosThem, wkMe, wkThem, faMe, faThem, dropsMe: dm.ids, dropsThem: dt.ids, dropOk: dm.ok && dt.ok, changesMe: changes(bm.typ, myAfter), changesThem: changes(bt.typ, thAfter), flags, rosterAfter: me.players.length - give.length + get.length - dm.ids.length };
 }
 
 // ---------- rough acceptance likelihood (heuristic, not a prediction) ----------
@@ -171,7 +176,7 @@ function search(M, o, tradeCounts) {
   }).filter((d) => d.dropOk && d.rosMe > -2);
   // "Best" = the most title and playoff odds for you without costing the partner theirs.
   for (const d of full) {
-    d.odds = M.tradeOdds(d.partner.id, d.dMe, d.dThem);
+    d.odds = M.tradeOdds(d.partner.id, d.wkMe, d.wkThem);
     d.oddsScore = d.odds.me.title * 200 + d.odds.me.playoff * 100 - (d.odds.them.playoff < -0.01 ? 5 + -d.odds.them.playoff * 100 : 0) + 0.05 * d.score;
   }
   const sorter = { best: (a, b) => b.oddsScore - a.oddsScore, balanced: (a, b) => Math.abs(a.bal) - Math.abs(b.bal) || b.score - a.score, accept: (a, b) => b.acc0 - a.acc0 || b.score - a.score }[o.sort];
@@ -253,7 +258,7 @@ function analyzer(M, ui) {
   let res = '';
   if (partner && (give.length || get.length)) {
     const d = evaluateDeal(M, partner, give, get, ui.horizon);
-    const odds = M.tradeOdds(partner.id, d.dMe, d.dThem);
+    const odds = M.tradeOdds(partner.id, d.wkMe, d.wkThem);
     const acc = accept(M, d, odds, ui.tradeCounts);
     const [al, ac] = accLabel(acc);
     const wk = M.evalTrade(partner.id, give, get);

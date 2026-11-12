@@ -9,7 +9,7 @@ A live roster-management dashboard for the Sleeper league **James Cook Lovers**.
 ```bash
 cd ff-roster-monitor
 node server.js        # Node 18+, no dependencies
-npm test              # 55 tests
+npm test              # 64 tests
 # open http://localhost:4321
 ```
 
@@ -91,6 +91,10 @@ points a week; Clear / Lean / Toss-up calls win 68% / 60% / 54%; a Questionable 
 of the time (90% after a full practice, 55% after none); only running-back injuries move
 teammates' workload predictably; and points allowed to a position does not help choose between
 two players once you know their projections, so that tiebreak was removed.
+Floor and ceiling now come from the projection and how far players like him usually miss it
+(the old last-six-games range held the actual score 35% of the time instead of 50%). The news
+classifier is checked against hand-labelled headlines (`node backtest/news-eval.mjs`); on fresh
+live headlines it read 78% correctly before the fixes they prompted.
 
 ## Matchup strength
 
@@ -154,6 +158,7 @@ recorded (`data/ripple-log.json`) and scored after the games. Rules:
 
 * **Sleeper** (public API): league settings, rosters, matchups, transactions, picks, players, projections, weekly stats.
 * **ESPN** (public API): injury report with RotoWire notes, news, NFL schedule and betting lines.
+* **Open-Meteo** (free, no key): wind at kickoff for outdoor games, shown as a flag with its measured effect.
 * **nflverse** (public release files): the NFL's official injury report with practice status, used directly for chance-to-play; the backtest also uses its closing lines, wind and depth charts.
 * Projections are scored with the league's exact scoring settings (checked against Sleeper's own points: 145/145 match).
 * The lineup solver reproduces Sleeper's "potential points" for all 10 teams.
@@ -180,8 +185,8 @@ nothing here can set a lineup, claim a player or send a trade.
 The Flaim / Down Field / StatsDeck / Scout-Squad connectors in the skills aren't reachable from a website.
 The Lineup, Injuries, Waivers and Trades pages each have a **Copy second-opinion prompt** button that
 hands the findings to those connectors. Playoff odds are this site's own simulation (not Down Field's).
-Official inactives and wind are not checked (wind of 15+ mph costs quarterbacks about 2 points and
-kickers about 1.3; no free feed carries it). There is one projection source. The news classifier
+Official inactives are not checked. Wind is flagged but not built into projections (15+ mph costs
+quarterbacks about 2 points and kickers about 1.3). There is one projection source. The news classifier
 has no backtest because no archive of old headlines exists. The full list of what is still
 unsolved is at the end of `docs/backtest-report.md`.
 

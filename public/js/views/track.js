@@ -17,10 +17,17 @@ function live(M) {
   const r = M.snap.calibration;
   const bits = [];
   if (c && c.total) {
-    const bands = ['clear', 'lean', 'toss'].filter((b) => c.byBand[b]).map((b) => `${b} ${c.byBand[b].hit}/${c.byBand[b].n}`).join(' · ');
-    const rows = c.rows.slice(0, 12).map((x) => [`Wk ${x.week}`, `Start ${esc(M.P(x.start).n)} over ${esc(M.P(x.bench).n)}`, x.band, `${n1(x.startPts)} vs ${n1(x.benchPts)}`, x.result === 'hit' ? '<span class="pos-num">right</span>' : x.result === 'miss' ? '<span class="neg-num">wrong</span>' : 'even']);
+    const bands = ['clear', 'lean', 'toss', 'waiver'].filter((b) => c.byBand[b]).map((b) => `${b} ${c.byBand[b].hit}/${c.byBand[b].n}`).join(' · ');
+    const what = (x) => (x.kind === 'waiver' ? `Add ${esc(M.P(x.start).n)}, drop ${esc(M.P(x.bench).n)}` : `Start ${esc(M.P(x.start).n)} over ${esc(M.P(x.bench).n)}`);
+    const rows = c.rows.slice(0, 12).map((x) => [`Wk ${x.week}`, what(x), x.kind === 'waiver' ? 'waiver (2 weeks)' : x.band, `${n1(x.startPts)} vs ${n1(x.benchPts)}`, x.result === 'hit' ? '<span class="pos-num">right</span>' : x.result === 'miss' ? '<span class="neg-num">wrong</span>' : 'even']);
+    for (const f of c.flags || []) bits.push(`<div class="callout warn" style="margin:0 0 8px"><b>"${esc(f.band)}" calls are slipping</b>Right ${Math.round(f.seen * 100)}% of the time over ${f.n} calls this season; the backtest said to expect about ${Math.round(f.expect * 100)}%. That is below the range chance alone would explain, so treat these calls with more caution until it recovers.</div>`);
     bits.push(`<p style="margin:0 0 8px"><b>Lineup calls:</b> ${pc(c.hitRate)} right of ${c.total} scored${bands ? ` (${esc(bands)})` : ''}. ${c.open} call${c.open === 1 ? '' : 's'} logged for this week.</p>${table(['Week', 'Call', 'Label', 'Scored', ''], rows)}`);
-  } else bits.push(`<p style="margin:0 0 8px"><b>Lineup calls:</b> none scored yet. Every "start X over Y" the site shows for your roster is logged the first time it appears${c ? ` (${c.open} so far this week)` : ''} and marked right or wrong after the games.</p>`);
+  } else bits.push(`<p style="margin:0 0 8px"><b>Lineup and waiver calls:</b> none scored yet. Every "start X over Y" the site shows for your roster, and its top waiver claim, is logged the first time it appears${c ? ` (${c.open} so far this week)` : ''} and marked right or wrong after the games. A label that falls below its backtest rate gets flagged here.</p>`);
+  const lag = M.snap.headlineLag;
+  if (lag && lag.n) {
+    const h = (ms) => (ms < 3600000 ? `${Math.round(ms / 60000)} minutes` : `${(ms / 3600000).toFixed(1)} hours`);
+    bits.push(`<p style="margin:8px 0 0"><b>News scanner vs the official status:</b> of ${lag.n} status changes in the last week, a headline was found for ${lag.found}${lag.found ? `, a median ${h(lag.medianMs)} after the change (${lag.within6h} within 6 hours)` : ''}; ${lag.missed} had no headline at all${lag.pending ? ` and ${lag.pending} are under a day old` : ''}. Status changes come straight from Sleeper, ESPN and the NFL report, so a missing headline does not mean a missed change.</p>`);
+  }
   if (r && r.total) bits.push(`<p style="margin:8px 0 0"><b>Teammate estimates:</b> ${pc(r.hitRate)} of ${r.total} moved the right way this season (details on the News page).</p>`);
   else bits.push('<p style="margin:8px 0 0"><b>Teammate estimates:</b> none scored yet this season.</p>');
   return card('This season, on your roster', `<div style="padding:12px 16px">${bits.join('')}</div>`, { cls: 'flush', sub: 'Scored automatically once each week is final. If a rule falls well below its backtest rate here, treat it with suspicion.' });
@@ -38,6 +45,8 @@ function scorecard() {
     ['Teammate estimates', `RB out → carries: right ${pc(rb?.hit)} (chance ${pc(rb?.chance)}). Receiver out → targets: ${pc(n.ripple.byKind['out WR → targets']?.hit)} (chance ${pc(n.ripple.byKind['out WR → targets']?.chance)})`, 'Every case 2022-26', `Labels now ordered: lean ${pc(n.ripple.byConf.lean?.hit)}, toss ${pc(n.ripple.byConf.toss?.hit)}${b.ripple?.byConf?.clear ? ` (old "clear" was ${pc(b.ripple.byConf.clear.hit)})` : ''}`],
     ['Win probability', `Score ${n.winBrier['Site today: season scoring averages']} (coin flip 0.25, lower is better)`, 'Every pair of teams, 2025-26', delta(n.winBrier['Site today: season scoring averages'], b.winBrier?.['Site today: season scoring averages'])],
     ['Trade values', `Rest-of-season points per game missed by QB ${n.values.QB.mae}, RB ${n.values.RB.mae}, WR ${n.values.WR.mae}, TE ${n.values.TE.mae}`, 'Weeks 4-11 of 2025', b.values ? `was ${b.values.QB.mae} / ${b.values.RB.mae} / ${b.values.WR.mae} / ${b.values.TE.mae}` : ''],
+    ['Floor / ceiling', `Projection-based range held the actual score ${pc(T.ranges.ALL.modelInside)} of the time (target 50%); the old last-6-games range ${pc(T.ranges.ALL.recentInside)}`, '2025-26', 'Posture tiebreak removed: no better than the projection'],
+    ['News classifier', `${pc(T.news.freshFirst)} of checks right on fresh live headlines before the fixes they prompted`, `${T.news.freshN} labelled checks`, 'Add a labelled batch every few weeks to keep this honest'],
     ['Trade verdicts', `Picked the side that came out ahead in ${pc(n.trades.agree)} of ${n.trades.decided} decided trades`, "This league's own trades", 'Too few trades to tell good from lucky'],
   ];
   return card('Scorecard', table(['Advice', 'Measured result', 'On', 'Note'], rows), { cls: 'flush', sub: `Backtest run ${esc(T.generated)}. Rules were sized on 2022-24 and judged on 2025-26, seasons they never saw.` });
@@ -74,9 +83,10 @@ function winOdds() {
 function limits() {
   const w = T.wind;
   return card('What the site cannot see', `<ul class="plain" style="margin:0;padding:12px 16px 12px 32px;line-height:1.7">
-    <li><b>Wind.</b> Outdoors at 15+ mph, quarterbacks scored ${w.QB.diff} and kickers ${w.K.diff} points against projection (${w.QB.nWindy} and ${w.K.nWindy} cases). No free forecast feed carries wind speed, so check it yourself for outdoor games.</li>
+    <li><b>Wind.</b> Outdoors at 15+ mph, quarterbacks scored ${w.QB.diff} and kickers ${w.K.diff} points against projection (${w.QB.nWindy} and ${w.K.nWindy} cases). The Lineup page flags it from a free forecast (Open-Meteo); projections do not include it.</li>
     <li><b>Tuesday vs Sunday.</b> The lineup replay used projections as they stood just before kickoff. Early in the week the site knows less; re-check after Friday's report and again at inactives.</li>
-    <li><b>Headlines.</b> No archive of past headlines exists, so the news classifier itself has no backtest; the official report it tries to read does (the injury numbers above).</li>
+    <li><b>Headlines.</b> No archive of past headlines exists. Against hand-labelled headlines the classifier read ${pc(T.news.freshFirst)} of fresh ones correctly before the fixes they prompted (${pc(T.news.before)} on the first set). Status changes come from Sleeper, ESPN and the official report directly, not from headlines.</li>
+    <li><b>Trades.</b> A second model (Down Field) agreed with this site on this week's points but disagreed on the season effect for 3 of the top 5 deals on 12 Nov. Check any deal with the second-opinion button before sending it.</li>
     <li><b>Receiver injuries.</b> Who absorbs a missing receiver's targets is close to unpredictable: estimates are right ${pc(T.now.ripple.byKind['out WR → targets']?.hit)} of the time against ${pc(T.now.ripple.byKind['out WR → targets']?.chance)} by chance. Treat them as a nudge.</li>
     <li><b>Position matchups.</b> Points allowed to a position predicted nothing for RB, WR or TE once the projection was known. It is shown for quarterbacks only, as information.</li>
     <li><b>Trade verdicts.</b> ${T.now.trades.decided} decided trades is too small a sample to prove the trade values; the rest-of-season test above is the evidence.</li>

@@ -1,0 +1,845 @@
+{
+ "note": "Hand-labelled headlines for the news classifier and matcher. Classifier labels describe what the headline says about the named player: status (none / Questionable / Doubtful / Out, where Out includes IR and season-ending), practice (FP / LP / DNP / none), better (good health news), speculative (a prediction or rumour rather than a report). Real headlines from the site's Google News cache, November 2026, plus same-name and other-sport cases for the matcher.",
+ "classify": [
+  {
+   "p": "Mike Evans",
+   "t": "NFL Week 10 injury report: Mike Evans still not practicing, Puka Nacua facing multi-week absence",
+   "status": null,
+   "practice": "DNP"
+  },
+  {
+   "p": "Mike Evans",
+   "t": "Mike Evans remains out of Practice on Wednesday - NFL News | Fantasy Football",
+   "status": null,
+   "practice": "DNP"
+  },
+  {
+   "p": "Mike Evans",
+   "t": "Mike Evans Sits out Wednesday's practice",
+   "status": null,
+   "practice": "DNP"
+  },
+  {
+   "p": "Mike Evans",
+   "t": "Mike Evans remains out of practice, 49ers call him week-to-week",
+   "status": null,
+   "practice": "DNP"
+  },
+  {
+   "p": "Mike Evans",
+   "t": "NFL Week 9 injury report: Mike Evans ruled out, Seahawks' Quenton Nelson 'week-to-week' after knee procedure",
+   "status": "Out"
+  },
+  {
+   "p": "Mike Evans",
+   "t": "Mike Evans, Deebo Samuel, Christian Kirk ruled out",
+   "status": "Out"
+  },
+  {
+   "p": "Mike Evans",
+   "t": "Fantasy Football Injury Impact: Mike Evans, Deebo Samuel Are 'Unlikely' To Play in Week 9",
+   "status": "Doubtful",
+   "speculative": true
+  },
+  {
+   "p": "Mike Evans",
+   "t": "Mike Evans Unlikely to Practice on Wednesday - NFL News | Fantasy Football",
+   "status": null,
+   "practice": null,
+   "speculative": true
+  },
+  {
+   "p": "Mike Evans",
+   "t": "San Francisco 49ers Announced Concerning Mike Evans Update Amid Achilles Injury",
+   "status": null,
+   "injury": true
+  },
+  {
+   "p": "Mike Evans",
+   "t": "Mike Evans Not trending toward Week 10 return",
+   "status": null,
+   "speculative": true
+  },
+  {
+   "p": "Jared Goff",
+   "t": "Jared Goff (chest) limited to begin Week 10",
+   "status": null,
+   "practice": "LP"
+  },
+  {
+   "p": "Jared Goff",
+   "t": "Jared Goff Dealing with chest injury",
+   "status": null,
+   "injury": true
+  },
+  {
+   "p": "Jared Goff",
+   "t": "Week 10 Fantasy Football Trade Targets: Buy Jared Goff and Jordyn Tyson, Sell Derrick Henry?",
+   "status": null,
+   "injury": false
+  },
+  {
+   "p": "Hunter Henry",
+   "t": "Hunter Henry Listed as questionable",
+   "status": "Questionable"
+  },
+  {
+   "p": "Hunter Henry",
+   "t": "Hunter Henry (foot) questionable for Week 9",
+   "status": "Questionable"
+  },
+  {
+   "p": "Hunter Henry",
+   "t": "A.J. Brown, TreVeyon Henderson, Hunter Henry did not practice on Thursday",
+   "status": null,
+   "practice": "DNP"
+  },
+  {
+   "p": "Hunter Henry",
+   "t": "Hunter Henry Missing Another Practice on Thursday - NFL News | Fantasy Football",
+   "status": null,
+   "practice": "DNP"
+  },
+  {
+   "p": "Hunter Henry",
+   "t": "Is Hunter Henry playing today? Injury update, fantasy advice for Week 9",
+   "status": null
+  },
+  {
+   "p": "Demarcus Robinson",
+   "t": "Demarcus Robinson Off IR, clear for Sunday",
+   "status": null,
+   "better": true
+  },
+  {
+   "p": "Demarcus Robinson",
+   "t": "Demarcus Robinson activated, to play in Week 9",
+   "status": null,
+   "better": true
+  },
+  {
+   "p": "Demarcus Robinson",
+   "t": "49ers activate wide receiver Demarcus Robinson off IR after five-game absence",
+   "status": null,
+   "better": true
+  },
+  {
+   "p": "Demarcus Robinson",
+   "t": "49ers' Demarcus Robinson: Three grabs in return to action",
+   "status": null,
+   "injury": false
+  },
+  {
+   "p": "Alvin Kamara",
+   "t": "Alvin Kamara misses practice Wednesday",
+   "status": null,
+   "practice": "DNP"
+  },
+  {
+   "p": "Alvin Kamara",
+   "t": "No injury designation for Alvin Kamara for Week 9",
+   "status": null,
+   "better": true
+  },
+  {
+   "p": "Alvin Kamara",
+   "t": "Alvin Kamara Returns to practice Thursday",
+   "status": null,
+   "better": true
+  },
+  {
+   "p": "Patrick Mahomes",
+   "t": "Patrick Mahomes practiced in full on Wednesday: \"I'm in a great spot\"",
+   "status": null,
+   "practice": "FP",
+   "better": true
+  },
+  {
+   "p": "Patrick Mahomes",
+   "t": "Patrick Mahomes Practices fully Wednesday",
+   "status": null,
+   "practice": "FP",
+   "better": true
+  },
+  {
+   "p": "Patrick Mahomes",
+   "t": "Patrick Mahomes Trending toward full practice",
+   "status": null,
+   "speculative": true
+  },
+  {
+   "p": "Patrick Mahomes",
+   "t": "Chiefs QB Patrick Mahomes day-to-day with elbow injury",
+   "status": null,
+   "injury": true
+  },
+  {
+   "p": "Patrick Mahomes",
+   "t": "Patrick and Brittany Mahomes announce baby No. 4 on NFL trade deadline day",
+   "status": null,
+   "injury": false
+  },
+  {
+   "p": "Patrick Mahomes",
+   "t": "Patrick Mahomes hurts elbow, but returns before halftime; Chiefs lead 14-12",
+   "status": null,
+   "injury": true
+  },
+  {
+   "p": "A.J. Brown",
+   "t": "A.J. Brown Returns to Practice as Limited Participant - NFL News | Fantasy Football",
+   "status": null,
+   "practice": "LP",
+   "better": true
+  },
+  {
+   "p": "A.J. Brown",
+   "t": "A.J. Brown Limited practice session Wednesday",
+   "status": null,
+   "practice": "LP"
+  },
+  {
+   "p": "A.J. Brown",
+   "t": "A.J. Brown limited in return to practice, Patriots rule out three",
+   "status": null,
+   "practice": "LP"
+  },
+  {
+   "p": "Amon-Ra St. Brown",
+   "t": "Amon-Ra St. Brown Limited by rib injury",
+   "status": null,
+   "practice": "LP"
+  },
+  {
+   "p": "Amon-Ra St. Brown",
+   "t": "Amon-Ra St. Brown listed as questionable for Lions",
+   "status": "Questionable"
+  },
+  {
+   "p": "Amon-Ra St. Brown",
+   "t": "Amon-Ra St. Brown (ribs) questionable for Week 9",
+   "status": "Questionable"
+  },
+  {
+   "p": "Amon-Ra St. Brown",
+   "t": "Amon-Ra St. Brown Limited Again in Thursday's Practice - NFL News | Fantasy Football",
+   "status": null,
+   "practice": "LP"
+  },
+  {
+   "p": "Chuba Hubbard",
+   "t": "Chuba Hubbard Misses Practice on Wednesday for Rest - NFL News | Fantasy Football",
+   "status": null,
+   "practice": "DNP"
+  },
+  {
+   "p": "Rhamondre Stevenson",
+   "t": "Rhamondre Stevenson unable to practice",
+   "status": null,
+   "practice": "DNP"
+  },
+  {
+   "p": "Rhamondre Stevenson",
+   "t": "Patriots RB Rhamondre Stevenson expected to miss at least 1 game with knee injury",
+   "status": "Out"
+  },
+  {
+   "p": "Rhamondre Stevenson",
+   "t": "Patriots RB Rhamondre Stevenson will miss multiple weeks with a knee issue",
+   "status": "Out"
+  },
+  {
+   "p": "Rhamondre Stevenson",
+   "t": "Rhamondre Stevenson set to miss time with knee injury",
+   "status": "Out"
+  },
+  {
+   "p": "Rhamondre Stevenson",
+   "t": "Patriots RB Rhamondre Stevenson Could Miss Time With Knee Injury",
+   "status": null,
+   "speculative": true
+  },
+  {
+   "p": "Rhamondre Stevenson",
+   "t": "Patriots RB Rhamondre Stevenson Might Miss Time With Knee Injury - NFL Rumors - ProFootballRumors.com",
+   "status": null,
+   "speculative": true
+  },
+  {
+   "p": "Rhamondre Stevenson",
+   "t": "Rhamondre Stevenson Won't Require Surgery, Likely to Miss Time - NFL News | Fantasy Football",
+   "status": "Out"
+  },
+  {
+   "p": "Jake Ferguson",
+   "t": "Jake Ferguson Expected to Miss Multiple Weeks With Knee Injury - NFL News | Fantasy Football",
+   "status": "Out"
+  },
+  {
+   "p": "Jake Ferguson",
+   "t": "Jake Ferguson Listed as questionable for Sunday",
+   "status": "Questionable"
+  },
+  {
+   "p": "Jake Ferguson",
+   "t": "Jake Ferguson Could practice Friday",
+   "status": null,
+   "speculative": true
+  },
+  {
+   "p": "Jake Ferguson",
+   "t": "Can't-Miss Play: Dallas Cowboys tight end Jake Ferguson Mosses a Colts defender to snag Prescott's 10-yard TD pass",
+   "status": null,
+   "injury": false
+  },
+  {
+   "p": "Justice Hill",
+   "t": "Can't-Miss Play: 65-yard TD! Justice Hill floors his gas pedal on speedy score vs. Jaguars",
+   "status": null,
+   "injury": false
+  },
+  {
+   "p": "Michael Wilson",
+   "t": "Cardinals place QB Gardner Minshew and WR Michael Wilson on IR",
+   "status": "Out"
+  },
+  {
+   "p": "Michael Wilson",
+   "t": "Cardinals WR Michael Wilson Out For Season With Neck Fracture",
+   "status": "Out"
+  },
+  {
+   "p": "Michael Wilson",
+   "t": "Cardinals coach: Michael Wilson will miss the rest of the season",
+   "status": "Out"
+  },
+  {
+   "p": "Michael Wilson",
+   "t": "Michael Wilson injury: No neck surgery needed",
+   "status": null,
+   "injury": true
+  },
+  {
+   "p": "Michael Wilson",
+   "t": "Michael Wilson Stays limited in practice",
+   "status": null,
+   "practice": "LP"
+  },
+  {
+   "p": "Brandon Aubrey",
+   "t": "Why Did Brandon Aubrey Miss From 50? Answering 5 Questions Cowboys Fans Are Asking",
+   "status": null,
+   "injury": false
+  },
+  {
+   "p": "Drake Maye",
+   "t": "Drake Maye takes part in practice Wednesday",
+   "status": null
+  },
+  {
+   "p": "J.J. McCarthy",
+   "t": "Giants list J.J. McCarthy as limited on Monday's practice report",
+   "status": null,
+   "practice": "LP"
+  },
+  {
+   "p": "J.J. McCarthy",
+   "t": "Giants QB J.J. McCarthy (hip) exits, returns vs. Eagles",
+   "status": null,
+   "injury": true
+  },
+  {
+   "p": "Malik Nabers",
+   "t": "Malik Nabers a Full Participant in Monday's Walkthrough - NFL News | Fantasy Football",
+   "status": null,
+   "practice": "FP"
+  },
+  {
+   "p": "Malik Nabers",
+   "t": "Malik Nabers doesn't practice, says he's good for Sunday",
+   "status": null,
+   "practice": "DNP"
+  },
+  {
+   "p": "Sione Vaki",
+   "t": "Sione Vaki (ankle) limited to begin Week 10",
+   "status": null,
+   "practice": "LP"
+  },
+  {
+   "p": "Sione Vaki",
+   "t": "Sione Vaki (ankle) considered questionable for Sunday",
+   "status": "Questionable"
+  },
+  {
+   "p": "Cam Skattebo",
+   "t": "Giants' John Harbaugh: Cam Skattebo 'full go' on Thursday vs. Washington",
+   "status": null,
+   "better": true
+  },
+  {
+   "p": "Cam Skattebo",
+   "t": "Cam Skattebo Listed as doubtful, reportedly pushing to play",
+   "status": "Doubtful"
+  },
+  {
+   "p": "Cam Skattebo",
+   "t": "Cam Skattebo (hamstring) doubtful to face Eagles",
+   "status": "Doubtful"
+  },
+  {
+   "p": "Cam Skattebo",
+   "t": "Cam Skattebo (hamstring) misses another practice",
+   "status": null,
+   "practice": "DNP"
+  },
+  {
+   "p": "Cam Skattebo",
+   "t": "Cam Skattebo (hamstring) expected to be full-go in Week 10",
+   "status": null,
+   "better": true
+  },
+  {
+   "p": "Terrance Ferguson",
+   "t": "Rams expect Terrance Ferguson to miss \"another couple weeks\" with hamstring injury",
+   "status": "Out"
+  },
+  {
+   "p": "Terrance Ferguson",
+   "t": "Terrance Ferguson Return from IR not guaranteed",
+   "status": null,
+   "speculative": true
+  }
+ ],
+ "match": [
+  {
+   "p": {
+    "n": "Josh Allen",
+    "pos": "QB",
+    "team": "BUF"
+   },
+   "t": "Josh Allen throws three touchdowns as Bills beat Jets",
+   "about": true
+  },
+  {
+   "p": {
+    "n": "Josh Allen",
+    "pos": "QB",
+    "team": "BUF"
+   },
+   "t": "Jaguars' Josh Allen records two sacks in win over Colts",
+   "about": false
+  },
+  {
+   "p": {
+    "n": "Josh Allen",
+    "pos": "QB",
+    "team": "BUF"
+   },
+   "t": "Jaguars edge rusher Josh Allen (knee) questionable for Sunday",
+   "about": false
+  },
+  {
+   "p": {
+    "n": "Justice Hill",
+    "pos": "RB",
+    "team": "BAL"
+   },
+   "t": "Can't-Miss Play: 65-yard TD! Justice Hill floors his gas pedal on speedy score vs. Jaguars",
+   "about": true
+  },
+  {
+   "p": {
+    "n": "Justice Hill",
+    "pos": "RB",
+    "team": "BAL"
+   },
+   "t": "Justice Hill Elementary unveils new playground after fundraiser",
+   "about": false
+  },
+  {
+   "p": {
+    "n": "Michael Wilson",
+    "pos": "WR",
+    "team": "ARI"
+   },
+   "t": "Cardinals WR Michael Wilson Out For Season With Neck Fracture",
+   "about": true
+  },
+  {
+   "p": {
+    "n": "Michael Wilson",
+    "pos": "WR",
+    "team": "ARI"
+   },
+   "t": "Michael Wilson scores 22 as Gonzaga tops Saint Mary's",
+   "about": false
+  },
+  {
+   "p": {
+    "n": "Aaron Jones",
+    "pos": "RB",
+    "team": "MIN"
+   },
+   "t": "Aaron Jones Sr. or Israel Abanikanda: Who Should I Start in Week 10? Fantasy Football",
+   "about": true
+  },
+  {
+   "p": {
+    "n": "Aaron Jones",
+    "pos": "RB",
+    "team": "MIN"
+   },
+   "t": "Aaron Jones homers twice as Triple-A season ends",
+   "about": false
+  },
+  {
+   "p": {
+    "n": "Corey Kiner",
+    "pos": "RB",
+    "team": "NE"
+   },
+   "t": "Corey Kiner Could Be the Patriots' Lead Back if Rhamondre Stevenson Misses Time",
+   "about": true
+  },
+  {
+   "p": {
+    "n": "Mike Evans",
+    "pos": "WR",
+    "team": "SF"
+   },
+   "t": "Mike Evans remains out of practice, 49ers call him week-to-week",
+   "about": true
+  },
+  {
+   "p": {
+    "n": "Mike Evans",
+    "pos": "WR",
+    "team": "SF"
+   },
+   "t": "Former Buccaneers WR Mike Evans honored at Raymond James Stadium ceremony",
+   "about": true
+  },
+  {
+   "p": {
+    "n": "Chris Olave",
+    "pos": "WR",
+    "team": "NO"
+   },
+   "t": "Saints' Chris Olave catches two touchdowns in win over Panthers",
+   "about": true
+  },
+  {
+   "p": {
+    "n": "Jordan Love",
+    "pos": "QB",
+    "team": "GB"
+   },
+   "t": "Jordan Love shines as Packers rout Patriots",
+   "about": true
+  },
+  {
+   "p": {
+    "n": "Kenneth Walker III",
+    "pos": "RB",
+    "team": "KC"
+   },
+   "t": "Kenneth Walker III takes over as Chiefs' lead back",
+   "about": true
+  },
+  {
+   "p": {
+    "n": "Sam LaPorta",
+    "pos": "TE",
+    "team": "DET"
+   },
+   "t": "Sam LaPorta and the Lions prepare for Patriots in Munich",
+   "about": true
+  },
+  {
+   "p": {
+    "n": "Drake Maye",
+    "pos": "QB",
+    "team": "NE"
+   },
+   "t": "Drake Maye named AFC Offensive Player of the Week",
+   "about": true
+  },
+  {
+   "p": {
+    "n": "Devin Singletary",
+    "pos": "RB",
+    "team": "NYG"
+   },
+   "t": "Devin Singletary trial date set in Florida county case",
+   "about": false
+  }
+ ],
+ "heldout_note": "Labelled after the classifier fixes, from cached headlines that were not looked at while fixing: an honest score.",
+ "heldout": [
+  {
+   "p": "Kyle McCord",
+   "t": "Malik Willis on IR, Kyle McCord in line to start at QB for Dolphins",
+   "status": null
+  },
+  {
+   "p": "Kyle McCord",
+   "t": "Kyle McCord Takes Over For Dolphins as Malik Willis Heads to IR",
+   "status": null
+  },
+  {
+   "p": "Kyle McCord",
+   "t": "Dolphins place QB Malik Willis (groin) on injured reserve; Kyle McCord in line for first start",
+   "status": null
+  },
+  {
+   "p": "Kyle McCord",
+   "t": "Who is Kyle McCord? The Dolphins' new starting QB after Malik Willis went on IR",
+   "status": null
+  },
+  {
+   "p": "Emeka Egbuka",
+   "t": "Sunday Night Football: Emeka Egbuka active, Kyle Monangai inactive for Bucs-Bears",
+   "status": null,
+   "better": true
+  },
+  {
+   "p": "Emeka Egbuka",
+   "t": "Buccaneers vs. Bears inactives: Emeka Egbuka will play on Sunday Night Football",
+   "status": null,
+   "better": true
+  },
+  {
+   "p": "Emeka Egbuka",
+   "t": "Emeka Egbuka Officially questionable for Week 9",
+   "status": "Questionable"
+  },
+  {
+   "p": "Emeka Egbuka",
+   "t": "Emeka Egbuka Back at practice Thursday",
+   "status": null,
+   "better": true
+  },
+  {
+   "p": "Emeka Egbuka",
+   "t": "Emeka Egbuka Upgrades to full practice",
+   "status": null,
+   "practice": "FP",
+   "better": true
+  },
+  {
+   "p": "Emeka Egbuka",
+   "t": "Emeka Egbuka (foot) practices in full Thursday",
+   "status": null,
+   "practice": "FP",
+   "better": true
+  },
+  {
+   "p": "Emeka Egbuka",
+   "t": "Emeka Egbuka Returns to Practice Thursday - NFL News | Fantasy Football",
+   "status": null,
+   "better": true
+  },
+  {
+   "p": "Emeka Egbuka",
+   "t": "Emeka Egbuka does little in return from foot injury",
+   "status": null,
+   "injury": true
+  },
+  {
+   "p": "Emeka Egbuka",
+   "t": "Is Emeka Egbuka playing tonight? Buccaneers injury update ahead of Sunday Night Football",
+   "status": null
+  },
+  {
+   "p": "Luther Burden III",
+   "t": "Luther Burden III scores early, departs late with head injury",
+   "status": null,
+   "injury": true
+  },
+  {
+   "p": "Luther Burden III",
+   "t": "Luther Burden injury update as Bears WR left 'Sunday Night Football' with concussion",
+   "status": null,
+   "injury": true
+  },
+  {
+   "p": "KC Concepcion Jr.",
+   "t": "KC Concepcion Jr. Leaves game with apparent leg injury",
+   "status": null,
+   "injury": true
+  },
+  {
+   "p": "Corey Kiner",
+   "t": "Corey Kiner ready to step up amid Patriots' backfield injuries",
+   "status": null
+  },
+  {
+   "p": "Corey Kiner",
+   "t": "Fantasy Football Waiver Alert: Corey Kiner a Top Week 10 Waiver Wire Target as Rhamondre Stevenson Set to Miss Time",
+   "status": null
+  },
+  {
+   "p": "RJ Harvey",
+   "t": "Is RJ Harvey The Starting Running Back For The Denver Broncos When He Returns? Week 9 Update",
+   "status": null
+  }
+ ],
+ "fresh_note": "Live Google News headlines fetched 2026-11-12 and labelled after every classifier fix; scored once and not used to change the code.",
+ "fresh": [
+  {
+   "p": "Ladd McConkey",
+   "t": "Ladd McConkey (back) does not play in Week 9 loss",
+   "status": "Out"
+  },
+  {
+   "p": "Ladd McConkey",
+   "t": "Ladd McConkey Injury: Exits Sunday's game",
+   "status": null,
+   "injury": true
+  },
+  {
+   "p": "Ladd McConkey",
+   "t": "Ladd McConkey Has Back Injury",
+   "status": null,
+   "injury": true
+  },
+  {
+   "p": "Breece Hall",
+   "t": "Breece Hall up to full practice Thursday, says he’s ready to play this week",
+   "status": null,
+   "practice": "FP",
+   "better": true
+  },
+  {
+   "p": "Breece Hall",
+   "t": "Jets' Breece Hall says he's ready to play, cites threats for social media exit",
+   "status": null,
+   "better": true
+  },
+  {
+   "p": "Breece Hall",
+   "t": "Breece Hall Returns to Jets With Clear Message About Trade Rumors & Starting Job",
+   "status": null,
+   "injury": false
+  },
+  {
+   "p": "Travis Kelce",
+   "t": "Chiefs stretch lead to 21-12 on Travis Kelce TD on fourth down",
+   "status": null,
+   "injury": false
+  },
+  {
+   "p": "Travis Kelce",
+   "t": "Congrats Pour In For Travis Kelce After NFL Announcement",
+   "status": null
+  },
+  {
+   "p": "Jayden Daniels",
+   "t": "Jayden Daniels, CJ Stroud, and 2 More Must-Start Quarterbacks in Week 10 Fantasy Football",
+   "status": null,
+   "injury": false
+  },
+  {
+   "p": "Jayden Daniels",
+   "t": "HIGHLIGHTS: Rams OLB Myles Garrett engulfs Commanders QB Jayden Daniels for a key sack in the fourth quarter",
+   "status": null
+  },
+  {
+   "p": "Bijan Robinson",
+   "t": "Report: Giants called Falcons about a potential Bijan Robinson trade",
+   "status": null,
+   "speculative": true
+  },
+  {
+   "p": "Bijan Robinson",
+   "t": "Giants Inquired About Bijan Robinson - NFL Rumors - ProFootballRumors.com",
+   "status": null,
+   "speculative": true
+  },
+  {
+   "p": "Puka Nacua",
+   "t": "Rams WR Puka Nacua likely to be placed on injured reserve with turf toe, sprained MCL and PCL",
+   "status": "Out"
+  },
+  {
+   "p": "Puka Nacua",
+   "t": "Puka Nacua won’t be placed on IR, but will still be out for an extended period",
+   "status": "Out"
+  },
+  {
+   "p": "Puka Nacua",
+   "t": "Rams star Puka Nacua out for an 'extended period' after suffering injury on final play of win",
+   "status": "Out"
+  },
+  {
+   "p": "Puka Nacua",
+   "t": "Puka Nacua may not go on IR",
+   "status": null,
+   "speculative": true
+  },
+  {
+   "p": "Puka Nacua",
+   "t": "Sources: Puka Nacua set for tests on late-game knee injury; Rams believe ACL OK",
+   "status": null,
+   "injury": true
+  },
+  {
+   "p": "George Pickens",
+   "t": "George Pickens, Joey Porter Jr. will not play for the Cowboys",
+   "status": "Out"
+  },
+  {
+   "p": "George Pickens",
+   "t": "George Pickens inactive for Week 9 against Colts",
+   "status": "Out"
+  },
+  {
+   "p": "Josh Jacobs",
+   "t": "Packers RB Josh Jacobs to miss time due to surgery on broken finger - Green Bay Packers – packers.com",
+   "status": "Out"
+  },
+  {
+   "p": "Josh Jacobs",
+   "t": "Josh Jacobs questionable to return for Packers vs. Patriots",
+   "status": "Questionable"
+  },
+  {
+   "p": "Josh Jacobs",
+   "t": "Packers' Josh Jacobs dealing with broken finger, status for Vikings tilt TBD",
+   "status": null,
+   "injury": true
+  },
+  {
+   "p": "Josh Jacobs",
+   "t": "Josh Jacobs Exits game with hand injury",
+   "status": null,
+   "injury": true
+  },
+  {
+   "p": "Christian McCaffrey",
+   "t": "Christian McCaffrey returned to practice as limited participant",
+   "status": null,
+   "practice": "LP",
+   "better": true
+  },
+  {
+   "p": "Christian McCaffrey",
+   "t": "Christian McCaffrey Practicing Friday",
+   "status": null,
+   "better": true
+  },
+  {
+   "p": "Christian McCaffrey",
+   "t": "Christian McCaffrey (hamstring) returns to practice",
+   "status": null,
+   "better": true
+  },
+  {
+   "p": "Christian McCaffrey",
+   "t": "Insider Hints There’s a Chance 49ers Could Part Ways With Christian McCaffrey",
+   "status": null,
+   "speculative": true
+  }
+ ]
+}

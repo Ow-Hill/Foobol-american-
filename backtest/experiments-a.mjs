@@ -654,3 +654,165 @@ export function e10() {
     fit,
   };
 }
+
+// ================= E16 =================
+// Floor / ceiling. The site showed the middle half of a player's last six games. Is the actual
+// score inside that range about half the time, and does a range built from the projection plus
+// typical misses do better? Also: does the "favoured → higher floor, underdog → higher ceiling"
+// tiebreak beat simply keeping the higher projection?
+const PROJ_BANDS = [0, 5, 8, 11, 14, 18, 99];
+const band = (v) => PROJ_BANDS.findIndex((b, i) => v >= b && v < PROJ_BANDS[i + 1]);
+function quantile(a, q) {
+  const s = a.slice().sort((x, y) => x - y);
+  const i = (s.length - 1) * q;
+  const lo = Math.floor(i);
+  return s[lo] + (s[Math.min(lo + 1, s.length - 1)] - s[lo]) * (i - lo);
+}
+export function e16() {
+  const rows = [];
+  eachWeek(D.SEASONS, 4, (s, w) => {
+    const P = asOf(s, w);
+    const act = D.actual(s, w);
+    for (const pos of ['QB', 'RB', 'WR', 'TE', 'K', 'DEF']) {
+      for (const p of D.relevant(P, pos)) {
+        const a = act.get(p.id);
+        if (!a?.played) continue;
+        const recent = p.hist.slice(-6).map((h) => h.pts);
+        rows.push({ season: s, wk: w, split: split(s), pos, proj: p.proj.pts, actual: a.pts, q25: recent.length >= 3 ? quantile(recent, 0.25) : null, q75: recent.length >= 3 ? quantile(recent, 0.75) : null, gp: recent.length });
+      }
+    }
+  });
+  // residual quantiles of actual / projection, by position and projection band (training seasons)
+  const ratio = {};
+  for (const r of rows.filter((x) => x.split === 'train' && x.proj > 0)) ((ratio[r.pos] ||= {})[band(r.proj)] ||= []).push(r.actual / r.proj);
+  const fit = { bands: PROJ_BANDS, ratio: {} };
+  for (const pos of Object.keys(ratio)) {
+    fit.ratio[pos] = {};
+    for (const [b, list] of Object.entries(ratio[pos])) if (list.length >= 40) fit.ratio[pos][b] = [r3(quantile(list, 0.25)), r3(quantile(list, 0.75)), list.length];
+  }
+  const modelRange = (r) => {
+    const t = fit.ratio[r.pos];
+    if (!t) return null;
+    let b = band(r.proj);
+    while (b >= 0 && !t[b]) b--;
+    if (b < 0) return null;
+    return [r.proj * t[b][0], r.proj * t[b][1]];
+  };
+  const cover = (set, f) => {
+    const x = set.map((r) => ({ r, rg: f(r) })).filter((z) => z.rg);
+    return { inside: mean(x.map((z) => (z.r.actual >= z.rg[0] && z.r.actual <= z.rg[1] ? 1 : 0))), below: mean(x.map((z) => (z.r.actual < z.rg[0] ? 1 : 0))), width: mean(x.map((z) => z.rg[1] - z.rg[0])), n: x.length };
+  };
+  const te = rows.filter((r) => r.split === 'test' && r.gp >= 3);
+  const out = [];
+  for (const pos of ['QB', 'RB', 'WR', 'TE', 'K', 'DEF', 'ALL']) {
+    const set = te.filter((r) => pos === 'ALL' || r.pos === pos);
+    const a = cover(set, (r) => [r.q25, r.q75]);
+    const b = cover(set, modelRange);
+    out.push([pos, pct(a.inside), pct(a.below), r1(a.width), pct(b.inside), pct(b.below), r1(b.width), set.length]);
+    fit[pos] = { recentInside: r3(a.inside), modelInside: r3(b.inside), recentBelow: r3(a.below), modelBelow: r3(b.below) };
+  }
+  // posture tiebreak: among same-position pairs within 2 points, does the higher recent floor
+  // finish higher more often (what a favourite wants), and the higher recent ceiling beat the
+  // other side's ceiling (what an underdog wants)?
+  const g = {};
+  for (const r of te.filter((x) => ['RB', 'WR', 'TE'].includes(x.pos))) (g[r.season + ':' + r.wk + ':' + r.pos] ||= []).push(r);
+  const res = { floorPick: { n: 0, w: 0 }, ceilPick: { n: 0, w: 0 }, projPick: { n: 0, w: 0 }, ceilBoom: { n: 0, w: 0 }, projBoom: { n: 0, w: 0 }, floorSafe: { n: 0, w: 0 }, projSafe: { n: 0, w: 0 } };
+  const add = (k, win) => ((res[k].n += 1), (res[k].w += win));
+  for (const list of Object.values(g)) {
+    for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+      const a = list[i];
+      const b = list[j];
+      if (Math.abs(a.proj - b.proj) >= 2 || a.actual === b.actual) continue;
+      const hiProj = a.proj >= b.proj ? a : b;
+      const loProj = hiProj === a ? b : a;
+      add('projPick', hiProj.actual > loProj.actual ? 1 : 0);
+      if (Math.abs(a.q25 - b.q25) > 0.5) {
+        const f = a.q25 > b.q25 ? a : b;
+        add('floorPick', f.actual > (f === a ? b : a).actual ? 1 : 0);
+        // a favourite cares about not busting: below 70% of projection
+        add('floorSafe', f.actual >= 0.7 * f.proj ? 1 : 0);
+        add('projSafe', hiProj.actual >= 0.7 * hiProj.proj ? 1 : 0);
+      }
+      if (Math.abs(a.q75 - b.q75) > 0.5) {
+        const c = a.q75 > b.q75 ? a : b;
+        add('ceilPick', c.actual > (c === a ? b : a).actual ? 1 : 0);
+        // an underdog needs a big week: 140% of projection or more
+        add('ceilBoom', c.actual >= 1.4 * c.proj ? 1 : 0);
+        add('projBoom', hiProj.actual >= 1.4 * hiProj.proj ? 1 : 0);
+      }
+    }
+  }
+  const rate = (k) => (res[k].n ? res[k].w / res[k].n : NaN);
+  fit.posture = Object.fromEntries(Object.keys(res).map((k) => [k, { rate: r3(rate(k)), n: res[k].n }]));
+  const better = fit.ALL.modelInside != null && Math.abs(fit.ALL.modelInside - 0.5) < Math.abs(fit.ALL.recentInside - 0.5);
+  fit.useModel = better;
+  fit.keepPosture = rate('floorSafe') > rate('projSafe') + 0.01 || rate('ceilBoom') > rate('projBoom') + 0.01;
+  return {
+    id: 'E16', title: 'Floor and ceiling: are the ranges honest, and does playing for them help?',
+    tables: [
+      { caption: 'Hold-out 2025-26. A 25th-75th percentile range should contain the actual score 50% of the time, with 25% below it.', head: ['Position', 'Last 6 games: inside %', 'below %', 'width', 'Projection-based: inside %', 'below %', 'width', 'n'], rows: out },
+      { caption: 'Toss-ups (same position, projections within 2): picking by recent floor or ceiling, against keeping the higher projection.', head: ['Pick', 'Measure', 'Rate', 'Pairs'], rows: [
+        ['Higher projection', 'outscored the other', pct(rate('projPick')), res.projPick.n],
+        ['Higher recent floor', 'outscored the other', pct(rate('floorPick')), res.floorPick.n],
+        ['Higher recent ceiling', 'outscored the other', pct(rate('ceilPick')), res.ceilPick.n],
+        ['Higher recent floor', 'avoided a bust (under 70% of projection)', pct(rate('floorSafe')), res.floorSafe.n],
+        ['Higher projection', 'avoided a bust', pct(rate('projSafe')), res.projSafe.n],
+        ['Higher recent ceiling', 'boomed (140%+ of projection)', pct(rate('ceilBoom')), res.ceilBoom.n],
+        ['Higher projection', 'boomed', pct(rate('projBoom')), res.projBoom.n],
+      ] },
+    ],
+    findings: [
+      `The last-six-games range contained the actual score ${pct(fit.ALL.recentInside)}% of the time (target 50%); the projection-based range ${pct(fit.ALL.modelInside)}%. ${better ? 'The projection-based range is better calibrated and is now the one shown.' : 'The recent-games range stays.'}`,
+      `Posture tiebreak: the higher recent floor avoided a bust ${pct(rate('floorSafe'))}% vs ${pct(rate('projSafe'))}% for the higher projection; the higher recent ceiling boomed ${pct(rate('ceilBoom'))}% vs ${pct(rate('projBoom'))}%. ${fit.keepPosture ? 'It earns its place.' : 'Recent floors and ceilings add nothing the projection does not, so the posture step is removed.'}`,
+    ],
+    fit,
+  };
+}
+
+// ================= E14b =================
+// Does Sleeper's projection already account for a player's first game back from an absence?
+export function e14b() {
+  const rows = [];
+  eachWeek(D.SEASONS, 3, (s, w, S) => {
+    const P = asOf(s, w);
+    const act = D.actual(s, w);
+    for (const p of Object.values(P)) {
+      if (!SKILL.includes(p.pos) || !p.proj || p.hist.length < 3) continue;
+      const last = p.hist[p.hist.length - 1];
+      let missed = 0;
+      for (let wk = w - 1; wk > last.w; wk--) if (!S.isBye(p.team, wk)) missed++;
+      const before = mean(p.hist.slice(-4).map((h) => h.pts));
+      if (before < 7) continue;
+      const a = act.get(p.id);
+      if (!a?.played) continue;
+      rows.push({ split: split(s), missed, proj: p.proj.pts, actual: a.pts, before });
+    }
+  }, 18);
+  const grp = [['Played last week', (r) => r.missed === 0], ['Back after 1 game out', (r) => r.missed === 1], ['Back after 2-3', (r) => r.missed >= 2 && r.missed <= 3], ['Back after 4+', (r) => r.missed >= 4]];
+  const fit = {};
+  const out = grp.map(([k, f]) => {
+    const x = rows.filter(f);
+    const tr = x.filter((r) => r.split === 'train');
+    const te = x.filter((r) => r.split === 'test');
+    const ratio = (set) => (set.length ? sum(set.map((r) => r.actual)) / sum(set.map((r) => r.proj)) : NaN);
+    fit[k] = { n: x.length, ratio: r3(ratio(x)), train: r3(ratio(tr)), test: r3(ratio(te)), nTest: te.length, projVsBefore: r3(sum(x.map((r) => r.proj)) / sum(x.map((r) => r.before))) };
+    return [k, x.length, pct(fit[k].projVsBefore), pct(fit[k].train), pct(fit[k].test), te.length];
+  });
+  const base = fit['Played last week'];
+  const back = ['Back after 1 game out', 'Back after 2-3', 'Back after 4+'].map((k) => fit[k]);
+  // a factor is applied only to a group that fell short of the projection in both periods
+  fit.factors = {};
+  for (const [k, key] of [['Back after 1 game out', 1], ['Back after 2-3', 2], ['Back after 4+', 4]]) {
+    const f = fit[k];
+    fit.factors[key] = f.train < base.train - 0.03 && f.test < base.test - 0.03 ? r3(f.train / base.train) : 1;
+  }
+  fit.applyFactor = Object.values(fit.factors).some((x) => x < 1);
+  return {
+    id: 'E14b', title: 'Does the projection already allow for a player\'s first game back?',
+    tables: [{ caption: 'Skill players averaging 7+ points before the absence. Actual points as a share of the projection.', head: ['Situation', 'n', 'Projection as % of pre-absence scoring', 'Actual / projection 2022-24', 'Actual / projection 2025-26', 'n'], rows: out }],
+    findings: [
+      `Players who played the week before scored ${pct(base.ratio)}% of their projection; first game back after one missed game ${pct(fit['Back after 1 game out'].ratio)}%, after 2-3 ${pct(fit['Back after 2-3'].ratio)}%, after 4+ ${pct(fit['Back after 4+'].ratio)}%. Only the 2-3-game group fell short in both periods${fit.factors[2] < 1 ? `, so those players are now valued at ${pct(fit.factors[2])}% of projection in their first game back` : ''}; the other groups are inconsistent between periods and get no extra discount. The projection itself sits at ${pct(fit['Back after 1 game out'].projVsBefore)}-${pct(fit['Back after 4+'].projVsBefore)}% of pre-absence scoring for returning players.`,
+    ],
+    fit,
+  };
+}

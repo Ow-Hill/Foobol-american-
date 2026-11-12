@@ -1,6 +1,7 @@
 import { esc, n1, signed, fmtKick, avg } from '../util.js';
 import { card, table, playerName, callBadge, problemList, statusChip, spark, secondOpinionBtn } from '../ui.js';
 import { matchupFor } from '../matchup.js';
+import { WIND } from '../fitted.js';
 
 export function oppCell(p, M = null) {
   if (p.avail === 'bye') return `<span class="chip chip-bye">BYE</span>`;
@@ -13,7 +14,15 @@ export function oppCell(p, M = null) {
   const muTxt = mu && mu.tier !== 'neutral' && p.pos === 'QB'
     ? `<div class="dim" style="font-size:11.5px" title="Average ${mu.avg.toFixed(1)} pts/g allowed to ${esc(p.pos)} over the last ${mu.games} games. Information only: the projection already accounts for most of it.">${esc(mu.label)}</div>`
     : '';
-  return `<span>${g.home ? 'vs' : '@'} ${esc(g.opp)}</span>${imp}${muTxt}`;
+  return `<span>${g.home ? 'vs' : '@'} ${esc(g.opp)}</span>${imp}${muTxt}${windTxt(p)}`;
+}
+// Wind flag: outdoor games forecast at 15+ mph (backtest E10). Information only; projections
+// are not changed.
+export function windTxt(p) {
+  const w = p.game?.wind;
+  if (!w || w.mph < WIND.mph || WIND[p.pos] == null) return '';
+  const eff = WIND[p.pos];
+  return `<div style="font-size:11.5px;color:var(--amber)" title="Forecast at kickoff. In 2022-2026, outdoor games at ${WIND.mph}+ mph cost ${esc(p.pos)}s about ${Math.abs(eff)} points against their projection. The projection does not include it.">wind ${w.mph} mph${w.gust > w.mph + 5 ? ` (gusts ${w.gust})` : ''} · ${eff} pts typical</div>`;
 }
 export function kickCell(p) {
   if (!p.game) return '<span class="dim">–</span>';
@@ -36,8 +45,8 @@ export function render(M, ctx) {
   const swaps = M.swaps();
   const probs = M.problems().filter((p) => p.sev !== 'info' && (p.tab === 'lineup' || p.tab === 'injuries'));
   const postureTxt = {
-    floor: ['Protect the floor', `You project ${n1(M.margin)} ahead of ${esc(M.opp?.owner || 'your opponent')} — favorites should take safer players when a call is close.`],
-    ceiling: ['Chase upside', `You project ${n1(-M.margin)} behind ${esc(M.opp?.owner || 'your opponent')} — underdogs need ceiling when a call is close.`],
+    floor: ['Favored', `You project ${n1(M.margin)} ahead of ${esc(M.opp?.owner || 'your opponent')}. Start the best projections: in the 2022-2026 backtest, picking "safer" players by recent floor did not avoid busts any better.`],
+    ceiling: ['Underdog', `You project ${n1(-M.margin)} behind ${esc(M.opp?.owner || 'your opponent')}. Start the best projections: picking by recent ceiling did not produce big weeks any more often.`],
     expected: ['Best expected points', `Your matchup with ${esc(M.opp?.owner || 'your opponent')} projects within ${n1(Math.abs(M.margin))} points — no need to skew the risk.`],
   }[M.posture];
 
@@ -52,7 +61,7 @@ export function render(M, ctx) {
     const st = M.P(s.start);
     const b = s.bench ? M.P(s.bench) : null;
     const keep = s.keep;
-    const tb = s.tb ? `<details class="how"><summary>Tiebreak steps</summary><ul>${['Health certainty: prefer the player with no injury tag', 'Matchup posture: favorite → floor, underdog → ceiling', 'Game environment: higher implied team total', 'Position matchup: opponent allowed more points to that position over the last six weeks', 'Kickoff: later game keeps swap flexibility'].map((x, i) => `<li ${s.tb.reasons[0] && x.startsWith(s.tb.reasons[0].step.split(' ')[0]) ? 'style="color:var(--green)"' : ''}>${x}</li>`).join('')}</ul></details>` : '';
+    const tb = s.tb ? `<details class="how"><summary>Tiebreak steps</summary><ul>${['Health certainty: prefer the player with no injury tag', 'Game environment: implied team totals 4+ points apart', 'Kickoff: later game keeps swap flexibility', 'No tiebreak: keep the higher projection (wins 54% of toss-ups)'].map((x, i) => `<li ${s.tb.reasons[0] && x.startsWith(s.tb.reasons[0].step.split(' ')[0]) ? 'style="color:var(--green)"' : ''}>${x}</li>`).join('')}</ul></details>` : '';
     return [
       `<span class="slot">${s.slot}</span>`,
       keep ? `<span class="muted">Keep ${playerName(M, s.bench, { status: true })}</span>` : playerName(M, s.start),
@@ -101,8 +110,8 @@ export function render(M, ctx) {
       ${card('Bench', table(['Player', 'Opponent', 'Kickoff', 'Proj', 'Usual range', 'Last 6 · usage'], benchRows), { cls: 'flush' })}
     </div>
     <div class="callout warn" style="margin-top:14px"><b>What this page can't verify</b>
-      These calls use a single projection source. The consensus method in your command-center skill wants Down Field, StatsDeck and Scout-Squad side by side — those connectors aren't reachable from a website, so use the button above to run them, and treat anything short of a Clear call as provisional. Official inactives (about 90 minutes before kickoff) and weather aren't checked.
-      <details class="how"><summary>Tiebreak order when a call is close</summary><ul><li>Health certainty — prefer the player with no injury tag.</li><li>Matchup posture — favored: higher floor; underdog: higher ceiling (from each player's last 6 games).</li><li>Game environment — higher implied team total from the betting line.</li><li>Position matchup — the opponent allowed clearly more fantasy points to that position over the last six weeks (a quarter of the league apart in the ranking).</li><li>Kickoff — the later game keeps late-swap flexibility.</li></ul></details>
+      These calls use a single projection source. The consensus method in your command-center skill wants Down Field, StatsDeck and Scout-Squad side by side — those connectors aren't reachable from a website, so use the button above to run them, and treat anything short of a Clear call as provisional. Official inactives (about 90 minutes before kickoff) aren't checked. Wind of 15+ mph is flagged next to the opponent when the forecast is available; it is not built into projections.
+      <details class="how"><summary>Tiebreak order when a call is close</summary><ul><li>Health certainty — prefer the player with no injury tag.</li><li>Game environment — the higher implied team total, only when the two are 4+ points apart (won 54.5% in the backtest).</li><li>Kickoff — the later game keeps late-swap flexibility.</li><li>Otherwise keep the higher projection: it wins 54% of toss-ups.</li><li class="dim">Dropped after the 2022-2026 backtest: position matchup (won 50%) and floor/ceiling by recent games (no better than the projection). See Track record.</li></ul></details>
     </div>`;
 }
 

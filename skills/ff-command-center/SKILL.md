@@ -50,7 +50,8 @@ StatsDeck `statsdeck_projection` for each; Scout-Squad `gut_check` verdict + con
 - **All three agree, Down Field lean or toss-up** → "lean X", give the margin from each.
 - **Split 2-1, or any margin under ~2 points** → it's a toss-up. Break it in this order:
   1. Health certainty: prefer the player with no injury tag.
-  2. Matchup posture: favored this week → higher floor (Down Field p15);
+  2. Matchup posture (only with Down Field's modelled ranges; the dashboard dropped its own version
+     because recent-game floors and ceilings did no better than the projection): favored this week → higher floor (Down Field p15);
      underdog → higher ceiling (p85). Get favored/underdog from Down Field `get_matchup`.
   3. Game environment: the higher implied team total, **only when the two totals are 4 or more
      points apart** (in the 2022-2026 backtest it won 54.5% at that gap and 52% otherwise).

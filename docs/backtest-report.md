@@ -23,7 +23,7 @@ before this work is in [`tables-before.md`](backtest/tables-before.md).
 
 | Advice | Before | After | The naive alternative | Verdict |
 | --- | --- | --- | --- | --- |
-| Weekly lineup (208 team-weeks in this league) | +2.21 pts/week over the lineup managers set | +2.23 (90% range 0.59 to 4.05); your team +4.7 | Managers: 87.5% of a perfect lineup; site 89.1% | Works. Unchanged by this round: the gain comes from following the projection |
+| Weekly lineup (208 team-weeks in this league) | +2.21 pts/week over the lineup managers set | +2.36 (90% range 0.74 to 4.21); your team +4.8 | Managers: 87.5% of a perfect lineup; site 89.2% | Works. Most of the gain comes from following the projection; the first-game-back discount and dropping the posture step added a little |
 | Start/sit labels | 4-point "Clear", 2-point "Lean" for every position | Same for RB/WR/TE (68% and 59–63% measured); smaller cut-offs for K, DEF; QB lean at 3 | Coin flip 50% | Labels were honest for skill positions, wrong for K/DEF. Fixed; each label now shows its measured rate |
 | Tiebreak: position matchup | Used | **Removed** | Won 50.0% of 11,051 toss-ups | Did not work |
 | Tiebreak: implied team total | Used at any 1-point gap | Used only at 4+ points | 52.4% overall, 54.5% at 4+ | Weak; kept only where it showed something |
@@ -32,7 +32,13 @@ before this work is in [`tables-before.md`](backtest/tables-before.md).
 | Teammate estimates, WR/TE out | Right 43%, sized 4.5× too big | Right 48–55%, far fewer and smaller | Chance 37% | Weak signal; labelled toss-up |
 | Teammate estimates, QB out | −10% top target, −20% others | 0% and −10% | Top target scored 99% of expected, others 89% | Old rule too harsh |
 | Confidence labels on estimates | "clear" 43.5%, "lean" 51.5%, "toss" 53.3% (upside down) | lean 66%, toss 52% | — | Fixed: the label now tracks accuracy |
-| Win probability | Brier 0.245; said 75% when the side won 59% | 0.235; says 74%, wins 73% | Coin flip 0.250 | Was barely better than guessing; now calibrated |
+| Win probability | Brier 0.245; said 75% when the side won 59% | 0.235; says 74%, wins 73% | Coin flip 0.250 | Was barely better than guessing; now calibrated. The season simulation now uses each team's projected lineup for the current week too |
+| Floor / ceiling | Middle half of the last 6 games: held the actual score 35% of the time (should be 50%) | Projection-based: 49.5% | — | Fixed |
+| Posture tiebreak (favoured → floor, underdog → ceiling) | Used | **Removed** | Recent floor avoided busts 59.3% vs 60.3% for the higher projection; recent ceiling boomed 22.8% vs 23.0% | Did not work |
+| First game back | Full projection | 86% after missing 2–3 games | Projection alone: 86% of it scored in both periods | Fixed where both periods agree |
+| News classifier (labelled headlines) | 71% of checks right on the first labelled set; 78% on fresh live headlines | 100% on all three sets after the fixes they prompted | — | **78% is the honest number**: each set stopped being independent once it was used to fix the code |
+| Headlines that name two players | One player's status pinned on the other (e.g. "Malik Willis on IR, Kyle McCord in line to start" marked McCord IR) | Status read only from the parts of the headline about that player | — | Fixed |
+| Trade odds vs Down Field (5 deals, this week) | Agreed on direction for you in 3 of 5 | This week's points now match Down Field within about 1–4 points; season effect still disagrees on 3 of 5 | — | **Partly fixed**: player values for the rest of the season differ between the models |
 | Next man up (RB) | Depth chart order | Recent work first | Depth chart led the backfield 71%, recent work 78%; when they disagreed 25% vs 55% | Changed |
 | Trade values (rest-of-season pts/game miss) | QB 3.43, RB 3.15, WR 2.93, TE 2.45 | 3.07, 3.00, 2.87, 2.21 | Season average: 3.82, 3.26, 3.31, 2.68 | Better at every position |
 | Trade values: injured players | IR counted as 50% of healthy, Out 85%, Questionable 97% | 8–27%, 62%, 83% | Measured: IR players played 9–30% of remaining games | Largest single error found |
@@ -125,6 +131,50 @@ WR 23 or younger 92%, 24–26 86%, 27–29 76%; QB 25 or younger 83%, 30+ 70%. T
 returned 141 season points above replacement in round 1, 82 in round 2, 60 in round 3 (18 picks
 each: a small sample).
 
+**E14b — First game back.** Players who played the week before scored 100% of their projection.
+First game back after one missed game: 90% (2022–24) but 100% (2025–26), so no change. After
+2–3 missed games: 87% and 81% (n=122): now valued at 86%. After 4+: 105–108% (n=45), no change.
+
+**E16 — Ranges and posture.** The last-six-games range held the actual score only 35% of the time.
+It was too narrow, and a third of scores fell below it. A range built from the projection and
+the typical miss for that position and projection level held it 49.5% of the time, with 27% below.
+Picking players by recent floor or ceiling in close calls did no better than the projection.
+
+**N1 — News scanner.** 143 hand-labelled checks on cached headlines first scored 71%. The misses
+were:
+- practice wording such as "sits out practice" and "misses practice";
+- "will miss" / "set to miss" not read as out;
+- good news not recognised ("off IR", "full go", "no injury designation");
+- guesses ("could miss", "trending toward") treated as reports;
+- an ex-team name ("Former Buccaneers WR Mike Evans") rejected as a different player.
+
+A second set labelled after those fixes scored 76%: four of its five status misses were another
+player's news pinned on the named one. That led to the clause rule. A third set of 46 checks,
+from live headlines labelled after every fix, scored **78%**: that is the honest accuracy. Its
+misses were fixed too, so all three sets now score 100%, and the next labelled batch will give
+the next honest number. Set and script: `backtest/news-golden.json`, `backtest/news-eval.mjs`.
+
+**Down Field cross-check (12 Nov, Week 10).** Down Field's `evaluate_moves` was run on the
+finder's top five deals for your roster (`docs/backtest/downfield-crosscheck.json`).
+
+| Deal | Site: your title odds | Down Field: your title odds | Site: partner | Down Field: partner | This week, you (site / DF) |
+| --- | --- | --- | --- | --- | --- |
+| Higgins → Irving + P. Washington (ARY3R) | +5.5 | +2.1 (lean) | −1.3 | +3.0 | −2.0 / −3.1 |
+| Olave → Irving + Tucker (ARY3R) | +5.3 | **−1.2 (hurts)** | −1.0 | +6.7 | −7.0 / −7.1 |
+| Higgins + A.J. Brown → St. Brown + C. Brown (ARY3R) | +4.2 | +8.4 (clear) | +0.5 | **−8.0, "unlikely"** | +2.7 / +6.4 |
+| Higgins + Mahomes → St. Brown + C. Brown (ARY3R) | +3.3 | +10.3 (clear) | +1.0 | **−9.8, "unlikely"** | +2.7 / +11.0 |
+| A.J. Brown → Corum (JamesKnowsBalls) | +3.7 | −0.6 (noise) | −1.3 | +1.8 | −0.2 / −2.7 |
+
+Site figures are after the switch to week-by-week lineups in the season simulation; before it,
+the site ignored this week's byes in trade odds (the Olave deal costs about 7 points this week,
+with Irving on bye, which the old method could not see). The models now agree on this week. They
+still disagree about the season, because they value some players differently for the rest of it:
+- The site rates Higgins (19.8 a game) above St. Brown (19.2, discounted for his Questionable tag).
+- The site rates Irving higher than Down Field does.
+
+Neither can be shown right from this league's 17 decided trades. The Trades page says so and points
+to the second-opinion button.
+
 ## What changed in the code
 
 | Change | Where |
@@ -135,29 +185,31 @@ each: a small sample).
 | Trade values: health by status and games missed, half volume-based, playoff weeks by each team's odds, Buy/Hold/Sell, pick and keeper values | `public/js/values.js` |
 | One rest-of-season answer on both trade pages; roster-spot credit in 2-for-1s; acceptance judged against this league's accepted deals; veto warning; finder ranks by title odds gained | `public/js/views/finder.js`, `views/trades.js` |
 | Official injury report (practice + game status) as a direct source | `lib/nflverse.js`, `lib/snapshot.js` |
-| Every lineup call logged and scored; Track record page | `lib/calls.js`, `public/js/views/track.js` |
+| Every lineup call and the top waiver claim logged and scored; a label falling below its backtest rate is flagged; Track record page | `lib/calls.js`, `public/js/views/track.js` |
+| Floor/ceiling from the projection; posture tiebreak off; first-game-back discount; season sim uses this week's lineups; trade odds week by week | `public/js/model.js`, `public/js/values.js`, `public/js/views/finder.js` |
+| Classifier fixes and the clause rule; labelled headline set; headline lag behind official changes | `public/js/playernews.js`, `lib/playernews.js`, `backtest/news-*`, `lib/snapshot.js` |
+| Official status and practice changes in the status log, News items and alerts | `lib/snapshot.js`, `public/js/playernews.js`, `lib/alerts.js` |
+| Wind at kickoff for outdoor games (Open-Meteo), shown with its measured effect | `lib/weather.js`, `public/js/views/lineup.js` |
+| Deadline lead on the Trades page; priced sweeteners; future horizon from measured value retention; Buy/Hold/Sell on Values | `public/js/views/{trades,finder,values}.js`, `public/js/values.js` |
 | Matchup label shown for QBs only | `public/js/views/lineup.js` |
 | The harness itself | `backtest/` |
 
 ## Not solved
 
-- **A second projection source.** The evidence that averaging helps is from other people's studies;
-  it could not be tested here because only Sleeper's projections are archived. This is the most
-  valuable thing still missing.
-- **Early-week accuracy.** The archive holds final projections only, so how good the site's advice
-  is on Tuesday or Friday is unmeasured. The live call log will answer it from now on.
-- **Trade verdicts.** 17–19 decided trades cannot show whether the new values judge trades better
-  (12 of 19 before, 9 of 17 after; both are within noise of each other and of a coin).
-- **Acceptance.** Only accepted trades are recorded. Without the offers that were refused, the
-  acceptance number remains a heuristic, now anchored to what this league has accepted.
-- **Headline classifier.** No archive of past headlines, so no backtest. A labelled evaluation set
-  and a measure of how far headlines lag the official report were planned and not built.
-- **Ranges.** Floor and ceiling still come from the last six games.
-- **Wind.** Measured, but ESPN's feed carries temperature and conditions only.
-- **Season simulation.** Later weeks use the corrected team averages; only this week's win
-  probability uses projected lineups.
-- **Cross-check against Down Field.** The finder's top deals were not compared with Down Field's
-  `evaluate_moves` in this round.
+- **A second projection source.** This is the root of the trade disagreement with Down Field and
+  the most valuable thing still missing. Only Sleeper's projections are archived, so averaging
+  could not be tested here.
+- **Early-week accuracy.** The archive holds final projections only. The live call log measures it
+  from now on.
+- **Trade verdicts and acceptance.** 17 decided trades cannot prove the trade values either way,
+  and refused offers are never recorded. Acceptance stays a heuristic anchored to accepted deals.
+- **News accuracy, going forward.** 78% on fresh headlines before the last fixes. It needs a new
+  labelled batch every few weeks to stay honest. Headline lag behind official changes is now
+  measured live (Track record page); it had no data yet on the first day.
+- **Wind in this environment.** Open-Meteo's free daily limit is shared by everyone on the same
+  outgoing address, and it ran out here after two stadiums. From your own machine it is per user.
+- **Season-odds calibration.** Using this week's lineups in the season simulation is a consistency
+  fix. Two seasons of one league is too little to score season odds on their own.
 - **Playoff-schedule adjustment for trades.** Dropped: matchup strength showed no signal to build
   it on, except weakly for quarterbacks.
 

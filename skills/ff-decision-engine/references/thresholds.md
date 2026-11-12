@@ -32,7 +32,9 @@ results. Do not restate those numbers from memory; read the file.
 | --- | --- |
 | Start/sit labels (RB/WR/TE) | Lean at 2 points (about 60%), Clear at 4 (about 68%) |
 | QB / K / DEF | Lean 3 / 1.5 / 1; Clear 5 / never / 2.5 |
-| Tiebreak order | Health → matchup posture → implied total (4+ apart only) → kickoff → keep the higher projection |
+| Tiebreak order | Health → implied total (4+ apart only) → kickoff → keep the higher projection (matchup posture removed: recent floors/ceilings did no better than the projection, E16) |
+| Ranges | floor/ceiling = projection × measured 25th/75th percentile ratio by position and projection band (`rangeFor` in fitted.js) |
+| First game back | 86% of projection after missing 2-3 games (E14b) |
 | Questionable | value = projection × 0.91 (0.80 after no practice); chance to play FP 0.90 / LP 0.68 / DNP 0.55 / QB 0.42 |
 | Win probability | projected lineups: 48-point spread; season averages pulled 40% toward the league mean |
 | Teammate estimates | RB carries `lean`; everything else `toss`; never `clear` |

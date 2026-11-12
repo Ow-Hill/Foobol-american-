@@ -7,19 +7,19 @@ import { buildRipple, rippleNet } from './ripple.js';
 
 // ---------- classification ----------
 const RX = {
-  dnp: /did not practice|didn.t practice|won.t practice|no practice|not practicing|miss(ed)? (his )?(wed|thurs|fri|mon|tues|satur)day|sat out|non.participant|absent from (practice|the facility)|dnp\b|doesn.t practice|skipped practice|(isn.t|wasn.t|is not|was not) (present|at practice)|not present at (practice|the facility)|isn.t practicing|sidelined during practice/i,
-  limited: /limited (in|at|during)? ?practice|limited participant|was limited|practice on a limited|on the side|with a trainer|side drills|individual drills|officially limited/i,
-  full: /full (practice|participant|go)|practic(e|ed|ing) in full|practiced without (limitation|restriction)|ran full (practice|drills)/i,
+  dnp: /did not practice|didn.t practice|won.t practice|no practice|not practicing|miss(ed)? (his )?(wed|thurs|fri|mon|tues|satur)day|sat out|non.participant|absent from (practice|the facility)|dnp\b|doesn.t practice|skipped practice|(isn.t|wasn.t|is not|was not) (present|at practice)|not present at (practice|the facility)|isn.t practicing|sidelined during practice|(out of|sits? out( \w+.s)?) practice|miss(es|ing)? (another |his )?practice|unable to practice|not seen at practice/i,
+  limited: /limited (in|at|during)? ?practice|limited participant|was limited|practice on a limited|on the side|with a trainer|side drills|individual drills|officially limited|\blimited (to begin|again|by|in return)|(as|list\w*) limited/i,
+  full: /full (practice|participant|go)|practic(e|ed|ing) in full|practiced without (limitation|restriction)|ran full (practice|drills)|practic(es|ed) fully|full participant|practices in full/i,
   estimated: /walkthrough|estimated practice/i,
   ir: /injured reserve|\bon IR\b|\bto IR\b|\bfrom IR\b|designated to return for/i,
-  out: /\bruled out\b|\blisted as out\b|\bout (for|this|the) (week|game|season|sunday|monday|thursday|saturday)\b|\bwon.t (return|play)\b|\bwill not (return|play)\b|\bexpected to miss (time|multiple)/i,
-  doubtful: /\bdoubtful\b/i,
+  out: /\bruled out\b|\blisted as out\b|\bout (for|this|the) (week|game|season|sunday|monday|thursday|saturday)\b|\bwon.t (return|play)\b|\bwill not (return|play)\b|\bexpected to miss (time|multiple)|\b(will|to|set to|expected to|likely to) miss (time|multiple|several|a few|the rest|at least|\d+|another|\"?another couple|\w+ weeks)|\bout for (the )?(rest of the |remainder of the )?(season|year)\b|\bmiss(es)? the rest of the (season|year)|\bdoes(n.t| not) play\b|(?<!\bnot )\binactive\b|\bout for an? .?extended/i,
+  doubtful: /\bdoubtful\b|\bunlikely.{0,3} to play/i,
   questionable: /\bquestionable\b/i,
   // "broke out" / "broke a tackle" are performance, not injuries: require a body part.
   surgery: /surgery|fracture|sprain|\b(torn|tears?)\b.{0,20}\b(acl|mcl|pcl|achilles|labrum|meniscus|hamstring|pec\w*|rotator|ligament|tendon|muscle|quad|calf|biceps|triceps)\b|\bbr(oke|oken|eaks?) (his |a |the |her )?(\w+ )?(ankle|leg|arm|hand|foot|wrist|collarbone|ribs?|finger|thumb|jaw|nose|fibula|tibia|bone|fema?ur)\b/i,
-  activated: /activated|designated to return|cleared to (practice|play)|returning to (practice|action)|off the injury report|ready to return|expected to play|in line to play/i,
+  activated: /activated|designated to return|cleared to (practice|play)|returning to (practice|action)|off the injury report|ready to return|expected to play|in line to play|\boff (the )?IR\b|\bclear(ed)? for (sunday|monday|thursday|saturday|week)|no injury designation|\breturns? to practice|full.?go\b|good to go|(?<!in)\bactive\b|\bwill play\b|\bback at practice|ready to play|\breturned to practice|(?<!not )\bpracticing (mon|tues|wednes|thurs|fri|satur)day/i,
   trade: /trade|traded|blockbuster|on the block|trade deadline|landing spots|acquire|deal (for|in)|trading/i,
-  rumour: /rumou?r|report(edly)|per (sources|a source)|according to|expected to|linked to|interest(ed)? in|mooting|weighing|exploring|preferred target/i,
+  rumour: /rumou?r|report(edly)|per (sources|a source)|according to|expected to|linked to|interest(ed)? in|mooting|weighing|exploring|preferred target|\b(could|might|may) (miss|practice|return|play|be (out|back|ready))\b|\bunlikely\b|trending (toward|towards)|not guaranteed|\biffy\b|\breport:|\bcould\b|\bhints?\b|\bmay not\b/i,
   depth: /workload|carries|touches|targets|snaps|backfield|committee|featured|depth chart|goal.?line/i,
   roleUp: /expanded|bigger role|increased (role|work|snaps)|featured|lead (back|role)|starting role|promoted|elevated|takes? over|more (snaps|touches|targets|work)|workhorse|bell.?cow|named (the )?starter|will start\b/i,
   roleDown: /reduced|decreased|demoted|benched|loses? (snaps|work|role|touches)|smaller role|fewer (snaps|touches|targets)|backup role|phased out|healthy scratch/i,
@@ -29,29 +29,73 @@ const RX = {
 };
 // Phrases that are health news even when worded as an expectation ("expected to play"),
 // plus official attributions. Stripped before the rumour test.
-const NOT_RUMOUR = new RegExp(RX.activated.source + '|expected to (start|play|return|be (active|available))|according to (the )?(team|coach\\w*|head coach|injury report|official\\w*|league)', 'gi');
+const NOT_RUMOUR = new RegExp(RX.activated.source + '|expected to (start|play|return|be (active|available|full.?go|ready|cleared))|according to (the )?(team|coach\\w*|head coach|injury report|official\\w*|league)', 'gi');
 const STATUS_RANK = { IR: 5, PUP: 5, Sus: 5, NA: 4, DNR: 4, COV: 4, Out: 4, Doubtful: 3, Questionable: 2, Probable: 1 };
 const PRACTICE_RANK = { DNP: 3, EST: 2.4, LP: 2, FP: 0.6 };
 const TIER1 = /espn|nfl\.com|yahoo|cbs |nbc sports|fox|the athletic|rotowire|sports illustrated|profootballtalk|\bpff\b|boston globe|the ringer|reuters|associated press|ny times|new york times|washington post|the score/i;
 const TIER2 = /fantasypros|fantasy footballers|rotoballer|clutchpoints|usa today|bleacher|walterfootball|draftsharks|peacock|sporting news|numberfire/i;
 const STOP = new Set('week weeks game games team teams players their about after before could would should might said says report reports news nfl fantasy football start started stadium official officially season seasons being have has had been more most than when where which while during draft look ahead opens vs take takes win wins playing player this that with from and the for are was were'.split(' '));
 
-export function classify(title, text, kind, statusHint) {
+// Headlines often carry two players' news ("Malik Willis on IR, Kyle McCord in line to start").
+// Status and practice words count for a player only from the clauses about him: clauses naming
+// him, clauses naming nobody else (and no team), and, when his clause is just his name in a list
+// ("Mike Evans, Deebo Samuel, Christian Kirk ruled out"), the list's predicate.
+const NICKS = /\b(cardinals|falcons|ravens|bills|panthers|bears|bengals|browns|cowboys|broncos|lions|packers|texans|colts|jaguars|chiefs|raiders|chargers|rams|dolphins|vikings|patriots|saints|giants|jets|eagles|steelers|49ers|niners|seahawks|buccaneers|bucs|titans|commanders)\b/i;
+const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[’'.]/g, '').replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+const SUFFIXES = new Set(['jr', 'sr', 'ii', 'iii', 'iv', 'v']);
+const nameKey = (n) => norm(n).split(' ').filter((w) => !SUFFIXES.has(w)).join(' ');
+export function focusText(title, who, others) {
+  if (!who || !title) return title;
+  const me = nameKey(who);
+  const last = me.split(' ').slice(-1)[0];
+  if (!last || !norm(title).includes(last)) return title;
+  const clauses = title.split(/\s*(?:[;:,?|]|\s[-–—]\s|\s(?:as|after|amid|while|but|with)\s(?=[A-Z]))\s*/).filter(Boolean);
+  if (clauses.length < 2) return title;
+  const otherIn = (c) => {
+    const n = ` ${norm(c)} `;
+    for (const o of others || []) if (o !== me && o.length > 4 && n.includes(` ${o} `)) return true;
+    return false;
+  };
+  const statusy = (c) => RX.ir.test(c) || RX.out.test(c) || RX.doubtful.test(c) || RX.questionable.test(c) || RX.dnp.test(c) || RX.limited.test(c) || RX.full.test(c) || RX.activated.test(c);
+  const keep = [];
+  for (let i = 0; i < clauses.length; i++) {
+    const c = clauses[i];
+    const n = norm(c);
+    if (n.includes(last)) {
+      keep.push(c);
+      // just his name in a list: the list's predicate applies to him too
+      const rest = n.replace(me, '').replace(last, '').trim();
+      if (rest.split(' ').filter(Boolean).length <= 1 && !statusy(c)) {
+        for (let j = i + 1; j < clauses.length; j++) {
+          if (statusy(clauses[j])) {
+            keep.push(clauses[j]);
+            break;
+          }
+        }
+      }
+    } else if (!otherIn(c) && !NICKS.test(c)) keep.push(c);
+  }
+  return keep.length ? keep.join(', ') : title;
+}
+
+export function classify(title, text, kind, statusHint, who = null, others = null) {
   const blob = `${title} ${text || ''}`;
+  // status, practice and good-news words are read only from the parts about this player
+  const own = who ? `${focusText(title, who, others)} ${text || ''}` : blob;
   let practice = null;
-  if (RX.full.test(blob)) practice = 'FP';
-  else if (RX.dnp.test(blob)) practice = 'DNP';
-  else if (RX.estimated.test(blob)) practice = 'EST';
-  else if (RX.limited.test(blob)) practice = 'LP';
+  if (RX.full.test(own)) practice = 'FP';
+  else if (RX.dnp.test(own)) practice = 'DNP';
+  else if (RX.estimated.test(own)) practice = 'EST';
+  else if (RX.limited.test(own)) practice = 'LP';
 
   // RotoWire notes carry an authoritative status — trust it over prose matching
   let status = null;
   if (kind === 'note') {
     status = statusHint ? canon(statusHint) : null;
-  } else if (RX.ir.test(blob)) status = 'IR';
-  else if (RX.out.test(blob) && !RX.activated.test(blob)) status = 'Out';
-  else if (RX.doubtful.test(blob)) status = 'Doubtful';
-  else if (RX.questionable.test(blob)) status = 'Questionable';
+  } else if (RX.ir.test(own) && !RX.activated.test(own) && !/return(s|ing)? from (ir|injured reserve)|(may not|won.t|will not|not) (go|be placed|land) on (ir|injured reserve)/i.test(own)) status = 'IR';
+  else if (RX.out.test(own) && !RX.activated.test(own)) status = 'Out';
+  else if (RX.doubtful.test(own)) status = 'Doubtful';
+  else if (RX.questionable.test(own)) status = 'Questionable';
 
   const cats = [];
   if (status || practice || RX.body.test(blob) || RX.surgery.test(blob) || /injur/i.test(blob)) cats.push('injury');
@@ -63,7 +107,7 @@ export function classify(title, text, kind, statusHint) {
 
   const speculative = kind !== 'note' && RX.rumour.test(blob.replace(NOT_RUMOUR, ' ')) && !/official|announc|confirm|activated|cleared to/i.test(blob);
   const posture = speculative ? 'speculative' : kind === 'note' && !RX.rumour.test(blob) ? 'confirmed' : 'reported';
-  const better = !speculative && (RX.activated.test(blob) || (status === 'Questionable' && practice === 'FP'));
+  const better = !speculative && (RX.activated.test(own) || (practice === 'FP' && (!status || status === 'Questionable')));
 
   const roleDir = RX.roleDown.test(blob) ? 'down' : RX.roleUp.test(blob) ? 'up' : null;
   if (roleDir && !cats.includes('depth')) cats.push('depth');
@@ -198,8 +242,9 @@ export function buildPlayerNews(M) {
   }
 
   // ---- classify ----
+  const others = otherNames(M);
   for (const r of raw) {
-    const c = r.pre || classify(r.title, r.text, r.kind, r.detail && r.detail.status);
+    const c = r.pre || classify(r.title, r.text, r.kind, r.detail && r.detail.status, r.kind === 'note' ? null : M.P(r.pid).n, others);
     const p = M.P(r.pid);
     const isMine = p.own === M.me.id;
     const spot = isMine ? myRosterSpot(M, r.pid) : null;
@@ -356,6 +401,25 @@ function changeItem(pid, ch) {
       src: ch.field === 'inj' ? 'Sleeper' : 'ESPN',
       title: `${ch.field === 'inj' ? 'Sleeper' : 'ESPN'} status: ${STATUS_WORD(ch.from)} → ${STATUS_WORD(ch.to)}`,
       pre: { cats: ['injury'], practice: null, status: to, posture: 'confirmed', better, roleDir: null },
+    };
+  }
+  if (ch.field === 'off') {
+    const to = canon(ch.to);
+    return {
+      ...base,
+      src: 'NFL injury report',
+      title: `Official status: ${STATUS_WORD(ch.from)} → ${STATUS_WORD(ch.to)}`,
+      pre: { cats: ['injury'], practice: null, status: to, posture: 'confirmed', better: SEV_OF(ch.to) < SEV_OF(ch.from), roleDir: null },
+    };
+  }
+  if (ch.field === 'prac') {
+    const rank = { FP: 0, LP: 1, DNP: 2 };
+    const word = { FP: 'full', LP: 'limited', DNP: 'did not practice' };
+    return {
+      ...base,
+      src: 'NFL injury report',
+      title: `Practice: ${word[ch.from] || 'not listed'} → ${word[ch.to] || 'not listed'}`,
+      pre: { cats: ['practice'], practice: ch.to === 'FP' ? 'FP' : ch.to === 'LP' ? 'LP' : ch.to === 'DNP' ? 'DNP' : null, status: null, posture: 'confirmed', better: (rank[ch.to] ?? 0) < (rank[ch.from] ?? 0), roleDir: null },
     };
   }
   if (ch.field === 'depth') {
@@ -611,6 +675,13 @@ function score100(W, parts) {
   return s * 100;
 }
 
+// Every player name in the snapshot, for telling whose news a headline carries.
+const namesMemo = new WeakMap();
+function otherNames(M) {
+  if (!namesMemo.has(M.snap)) namesMemo.set(M.snap, [...new Set(Object.values(M.snap.players || {}).filter((p) => p.pos !== 'DEF').map((p) => nameKey(p.n)))]);
+  return namesMemo.get(M.snap);
+}
+
 // On-demand lookup: classify a single player's freshly fetched headlines without
 // rebuilding the whole snapshot. Same fields the News rows expect.
 export function lookupItems(M, pid, raw) {
@@ -619,7 +690,7 @@ export function lookupItems(M, pid, raw) {
   const spot = isMine ? myRosterSpot(M, pid) : null;
   const items = (raw || [])
     .map((g) => {
-      const c = classify(g.title || '', '', 'search', null);
+      const c = classify(g.title || '', '', 'search', null, p.n, otherNames(M));
       return {
         id: g.id || 'l' + (g.time || 0) + (g.title || ''),
         kind: 'search',

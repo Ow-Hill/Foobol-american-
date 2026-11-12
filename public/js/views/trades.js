@@ -1,9 +1,29 @@
 import { esc, n1, signed, fmtDay, fmtDayTime, pct, countdown, ago } from '../util.js';
 import { card, table, playerName, statusChip, ownerChip, secondOpinionBtn, callBadge } from '../ui.js';
 
-import { evaluateDeal } from './finder.js';
+import { evaluateDeal, search } from './finder.js';
 
 const POS_ORDER = { QB: 0, RB: 1, WR: 2, TE: 3, K: 4, DEF: 5 };
+
+// ---------- deadline lead: this week's best deals, searched once per snapshot ----------
+const leadCache = new WeakMap();
+const LEAD_OPTS = (M) => ({ partner: null, goal: 'winwin', giveN: [1, 2], getN: [1, 2], tol: 0.35, horizon: 'now', sort: 'best', upPos: 'WR', protect: [M.V.rows.find((r) => M.me.players.includes(r.pid))?.pid].filter(Boolean), mustGive: [], mustGet: [] });
+function deadlineLead(M) {
+  if (M.deadlinePassed) return '';
+  const c = leadCache.get(M.snap);
+  const o = M.odds()[M.me.id];
+  const stand = `<p class="note" style="margin:0 0 10px"><b>Doing nothing:</b> ${pct(o.playoff)} to make the playoffs, ${pct(o.title)} to win the title. Every deal below is measured against that.</p>`;
+  if (!c || c.status === 'running') return card('Best deals before the deadline', `<div style="padding:12px 16px">${stand}<p class="dim">Searching every team for deals that raise your odds without lowering theirs…</p></div>`, { cls: 'flush' });
+  const good = (c.res.results || []).filter((d) => d.odds && (d.odds.me.title > 0.002 || d.odds.me.playoff > 0.005) && d.odds.them.playoff > -0.01).slice(0, 3);
+  const names = (ids) => ids.map((id) => esc(M.P(id).n)).join(' + ');
+  const f = (x) => `<span class="${x >= 0 ? 'pos-num' : 'neg-num'}">${signed(x * 100)}</span>`;
+  const rows = good.map((d) => `<div class="tier-row" style="grid-template-columns:1.3fr 1fr auto;gap:12px;align-items:center">
+      <div><b>Give</b> ${names(d.give)} <span class="dim">→</span> <b>get</b> ${names(d.get)} <span class="dim">from ${esc(d.partner.owner)}</span></div>
+      <div style="font-size:12.5px">You: playoffs ${f(d.odds.me.playoff)} · title ${f(d.odds.me.title)}<br /><span class="dim">Them: playoffs ${f(d.odds.them.playoff)}</span></div>
+      <div><button class="btn btn-ghost" data-load="${d.partner.id}|${d.give.join(',')}|${d.get.join(',')}">Open in builder</button></div></div>`).join('');
+  const body = good.length ? rows : '<p class="empty" style="margin:0">No deal found this week raises your odds without lowering your partner\'s. Standing pat is a fine answer; the Trade finder can search with looser settings.</p>';
+  return card('Best deals before the deadline', `<div style="padding:12px 16px">${stand}${body}<p class="source" style="margin-top:8px">Win-win search across every team (up to 2 players a side), ranked by the title and playoff odds you gain in this site's season simulation. <b>Check a deal with a second model before sending it</b> (Copy second-opinion prompt, top right): in the 12 Nov cross-check, Down Field agreed on this week's points but disagreed on the season effect for 3 of the top 5 deals, because the two models value some players differently for the rest of the season.</p></div>`, { cls: 'flush', sub: `Accept by ${M.acceptBy ? fmtDayTime(M.acceptBy) : 'the day before the deadline'} (${countdown(Math.max(0, M.acceptBy - M.now))} left)` });
+}
 
 function pickLabel(p) {
   return `${p.season} round ${p.r}`;
@@ -51,7 +71,8 @@ function buildPitches(M, partner, give, get, ev) {
   const theirNames = names(M, get) || 'nothing yet';
   const l = M.lineup(M.me);
   const optSet = new Set(l.opt.slots.map((s) => s.pid));
-  // sweetener: healthy depth that doesn't start for me, else a late pick (a judgment call, not a valuation)
+  // sweetener: the cheaper of healthy depth that doesn't start for me and my latest pick, each
+  // priced on the same trade-value scale (picks from this league's own drafts)
   const sweet = l.active.filter((id) => !give.includes(id) && !optSet.has(id) && M.P(id).avail === 'ok' && ['RB', 'WR', 'TE'].includes(M.P(id).pos)).sort((a, b) => M.val(b) - M.val(a))[0];
   const picks = M.picksOwned(M.me.id);
   const latePick = [...picks.own].sort((a, b) => b.round - a.round || b.season - a.season)[0];
@@ -67,7 +88,12 @@ function buildPitches(M, partner, give, get, ev) {
   const myReason = myGain >= 0.5 ? `it upgrades my lineup by about ${n1(myGain)} points a week` : get.length && give.length ? 'it consolidates my depth into the spot I actually start' : 'it fills a gap on my roster';
 
   const anchor = `Hey ${first}, would you do my ${mineNames} for your ${theirNames}? ${forThem} Let me know what you think.`;
-  const sweetened = `Hey ${first}, how about my ${mineNames} for your ${theirNames}, and I'll add ${sweet ? M.P(sweet).n + ' as depth' : latePick ? `my ${latePick.season} round ${latePick.round} pick` : 'a late pick'} to get it done? ${forThem}`;
+  const sweetTv = sweet ? M.V.tv(sweet) : Infinity;
+  const pickTv = latePick ? M.V.pickValue(latePick.round) : Infinity;
+  const usePick = latePick && pickTv > 0 && pickTv <= sweetTv;
+  const sweetName = usePick ? `my ${latePick.season} round ${latePick.round} pick` : sweet ? M.P(sweet).n + ' as depth' : 'a late pick';
+  const sweetened = `Hey ${first}, how about my ${mineNames} for your ${theirNames}, and I'll add ${sweetName} to get it done? ${forThem}`;
+  const sweetNote = usePick || sweet ? `Sweetener costs about ${n1(usePick ? pickTv : sweetTv)} in trade value${usePick && sweet ? ` (cheaper than ${esc(M.P(sweet).n)} at ${n1(sweetTv)})` : !usePick && latePick ? ` (your round ${latePick.round} pick would cost about ${n1(pickTv)})` : ''}.` : '';
   const holeTxt = hole && hole.s > 0 ? `your ${hole.p} spot looks like one of the thinner parts of your roster (about ${n1(hole.s)} points under the league's typical starter)` : `I looked at your lineup and this lines up with where you could use help`;
   const needs = `Hey ${first}, ${holeTxt}, and I have ${givePos.join('/') || 'depth'} to spare: my ${mineNames}. I'd like your ${theirNames} because ${myReason}. ${forThem.replace('I know it costs', 'It costs')} Want me to send it?`;
   const gainFloor = Math.max(1, Math.round(Math.max(myGain, 0) * 0.5 * 10) / 10);
@@ -77,7 +103,7 @@ function buildPitches(M, partner, give, get, ev) {
     ev.rosterAfter > ev.rosterMax ? `it puts me at ${ev.rosterAfter}/${ev.rosterMax} and forces me to drop a needed player` : null,
     `they ask for a pick on top of a deal that already lowers my lineup`,
   ].filter(Boolean);
-  return { anchor, sweetened, needs, walk };
+  return { anchor, sweetened, needs, walk, sweetNote };
 }
 
 function needScoreFor(M, t, pos) {
@@ -149,7 +175,7 @@ export function render(M, ctx) {
       <div class="two" style="margin-top:12px"><div><h3 class="dimh">You send — diligence</h3>${both(give)}</div><div><h3 class="dimh">You get — diligence</h3>${both(get)}</div></div>
       ${pitches ? `<h3 class="dimh" style="margin-top:18px">Pitch · three versions</h3>
       <div class="stack">
-        ${[['Anchor — the deal you want', pitches.anchor], ['Sweetened — adds depth or a late pick', pitches.sweetened], ['Needs-based — framed around their hole', pitches.needs]].map(([h, t]) => `<div class="pitch"><h4>${h}</h4>${esc(t)}<div style="margin-top:8px"><button class="btn btn-ghost" data-copy="${esc(t)}">Copy</button></div></div>`).join('')}
+        ${[['Anchor — the deal you want', pitches.anchor], ['Sweetened — adds depth or a pick', pitches.sweetened, pitches.sweetNote], ['Needs-based — framed around their hole', pitches.needs]].map(([h, t, note]) => `<div class="pitch"><h4>${h}</h4>${esc(t)}${note ? `<div class="dim" style="font-size:12px;margin-top:4px">${note}</div>` : ''}<div style="margin-top:8px"><button class="btn btn-ghost" data-copy="${esc(t)}">Copy</button></div></div>`).join('')}
         <div class="pitch walk"><h4 style="color:var(--red)">Walk-away line</h4>Walk away if: <ul style="margin:6px 0 0 18px;padding:0">${pitches.walk.map((w) => `<li>${esc(w)}</li>`).join('')}</ul></div>
       </div>
       <p class="source">Pitch before Sunday's games while your pieces are healthy and their situation is uncertain. Picks are a clean sweetener for a contender — nothing here values draft picks, so any pick value is your judgment.</p>` : ''}`;
@@ -173,7 +199,7 @@ export function render(M, ctx) {
     return [`<span class="dim">${esc(fmtDay(t.created))}</span>`, Object.keys(moves).map((rid) => `<b>${esc(M.ownerName(Number(rid)))}</b> gets ${esc(moves[rid].join(', '))}`).join('<br />')];
   });
   const picks = M.picksOwned(M.me.id);
-  const pickTxt = `<p><b>${picks.own.length}</b> of your own picks${picks.own.length ? ` (${[...new Set(picks.own.map((p) => p.season))].join(', ')} · rounds 1–${M.L.settings.draft_rounds})` : ''}${picks.acquired.length ? ` · acquired: ${picks.acquired.map((p) => `${p.season} R${p.round} from ${esc(M.ownerName(p.from))}`).join(', ')}` : ''}${picks.sold.length ? ` · traded away: ${picks.sold.map((p) => `${p.season} R${p.round}`).join(', ')}` : ''}.</p><p class="note">${M.L.settings.max_keepers} keeper per team, ${M.L.settings.draft_rounds}-round drafts, pick trading is on. Picks are a clean sweetener for a contender, but no data source values them — treat any value as judgment.</p>`;
+  const pickTxt = `<p><b>${picks.own.length}</b> of your own picks${picks.own.length ? ` (${[...new Set(picks.own.map((p) => p.season))].join(', ')} · rounds 1–${M.L.settings.draft_rounds})` : ''}${picks.acquired.length ? ` · acquired: ${picks.acquired.map((p) => `${p.season} R${p.round} from ${esc(M.ownerName(p.from))}`).join(', ')}` : ''}${picks.sold.length ? ` · traded away: ${picks.sold.map((p) => `${p.season} R${p.round}`).join(', ')}` : ''}.</p><p class="note">${M.L.settings.max_keepers} keeper per team, ${M.L.settings.draft_rounds}-round drafts, pick trading on. In this league's 2025 and 2026 drafts, round 1 returned about 141 season points above a replacement player, round 2 about 82 and round 3 about 60. On the site's trade-value scale that makes a pick worth about ${n1(M.V.pickValue(1))} / ${n1(M.V.pickValue(2))} / ${n1(M.V.pickValue(3))} (a fifth off for the wait). Two drafts is a small sample: treat these as rough.</p>`;
 
   const prompt = `Use the ff-command-center skill. Run ff-trade-lab for roster ${M.me.id} before the Week ${M.deadlineWeek} deadline. Ideas from my roster site: ${mk.rows.slice(0, 3).map((r) => `${M.P(r.give).n} to ${r.team.owner}`).join('; ') || 'none'}. Score each version with Down Field evaluate_moves for both teams, check Weeks 15–17 schedules, and give anchor / sweetened / needs-based pitches with a walk-away line.`;
 
@@ -181,6 +207,7 @@ export function render(M, ctx) {
     <div class="page-h"><div><h1>Trade lab</h1><p>Find the trade that moves a spare piece into a real upgrade, check both teams' lineups, then write the pitch. "No trade" is a valid answer.</p></div><div class="btn-row">${secondOpinionBtn(prompt)}</div></div>
     ${dlCard}
     <div class="stack" style="margin-top:14px">
+      ${deadlineLead(M)}
       ${card('Market', marketBody, { sub: 'Built from every roster in the league — lineup math with Sleeper/RotoWire projections, not market values', cls: '' })}
       ${card('Trade builder', builder, { sub: 'Both teams\u2019 best-lineup projections before and after, health and bye checks on every player' })}
       <div class="grid g2">
@@ -199,6 +226,19 @@ function spareQb(M) {
 
 export function mount(root, M, ctx) {
   const ui = ctx.ui.trade;
+  if (!M.deadlinePassed && !leadCache.has(M.snap)) {
+    leadCache.set(M.snap, { status: 'running' });
+    setTimeout(() => {
+      let res = { results: [] };
+      try {
+        res = search(M, LEAD_OPTS(M), null);
+      } catch (err) {
+        console.warn('Deadline search failed:', err);
+      }
+      leadCache.set(M.snap, { status: 'done', res });
+      ctx.rerender();
+    }, 60);
+  }
   root.querySelector('#tradePartner')?.addEventListener('change', (e) => {
     ui.partner = e.target.value ? Number(e.target.value) : null;
     ui.give = [];
@@ -217,8 +257,8 @@ export function mount(root, M, ctx) {
     b.addEventListener('click', () => {
       const [team, give, get] = b.dataset.load.split('|');
       ui.partner = Number(team);
-      ui.give = give ? [give] : [];
-      ui.get = get ? [get] : [];
+      ui.give = give ? give.split(',') : [];
+      ui.get = get ? get.split(',') : [];
       ctx.rerender();
       document.querySelector('#tradePartner')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }),

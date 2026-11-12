@@ -107,7 +107,7 @@ export function render(M, ctx) {
     `<b>Weeks 12–14:</b> trim depth that can't help in the playoffs; keep handcuffs for your starting backs${gibbsCuff.length ? ` (${gibbsCuff.map((g) => `${esc(M.P(g.id).n)}: ${g.cuffs[0] ? esc(g.cuffs[0].n) + ' — ' + esc(g.cuffs[0].ownerLabel) : 'no clear backup'}`).join('; ')})` : ''}.`,
     `<b>Defense:</b> pre-add DSTs with soft Week 15–17 slates before rivals do. This league pays +10 for a shutout and −4 at 35+ points allowed, so opponent scoring matters more than sacks.`,
     `<b>Kicker:</b> distance bonuses (4/5/6 for 40+/50+/60+) favor long-range kickers in domes or calm weather.`,
-    `<b>Weeks 15–17:</b> run the Lineup tab every week; set the risk posture from the matchup (favorite → floor, underdog → ceiling).`,
+    `<b>Weeks 15–17:</b> run the Lineup tab every week; start the best projections (picking by floor or ceiling did no better in the backtest).`,
   ];
 
   const checkins = table(

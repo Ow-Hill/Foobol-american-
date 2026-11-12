@@ -147,3 +147,34 @@ export function keepShare(pos, age) {
 // the smaller side at 45% of the larger, a quarter were under 34%. (Measured with the current
 // value formula; docs/backtest/results-current.json.)
 export const TRADE_BALANCE = { p25: 0.34, median: 0.45, p75: 0.8 };
+
+// E16: 25th-75th percentile range as a share of the projection, by position and projection band
+// (bands: 0-5, 5-8, 8-11, 11-14, 14-18, 18+). The last-six-games range held the actual score only
+// 35% of the time (target 50%); this one 49.5% on 2025-26.
+export const RANGE_BANDS = [0, 5, 8, 11, 14, 18];
+export const RANGE = {
+  QB: { 3: [0.66, 1.32], 4: [0.7, 1.34], 5: [0.71, 1.21] },
+  RB: { 1: [0.47, 1.42], 2: [0.49, 1.42], 3: [0.65, 1.42], 4: [0.61, 1.39], 5: [0.6, 1.23] },
+  WR: { 1: [0.29, 1.48], 2: [0.44, 1.37], 3: [0.56, 1.36], 4: [0.61, 1.28], 5: [0.64, 1.27] },
+  TE: { 1: [0.48, 1.65], 2: [0.5, 1.45], 3: [0.63, 1.45], 4: [0.52, 0.98] },
+  K: { 1: [0.59, 1.43], 2: [0.6, 1.31] },
+  DEF: { 1: [0.47, 1.56], 2: [0.6, 1.47] },
+};
+export function rangeFor(pos, proj) {
+  const t = RANGE[pos];
+  if (!t || !(proj > 0)) return null;
+  let b = RANGE_BANDS.length - 1;
+  while (b > 0 && proj < RANGE_BANDS[b]) b--;
+  // use the nearest band with enough history (lower first, then higher)
+  let r = null;
+  for (let k = b; k >= 0 && !r; k--) r = t[k];
+  for (let k = b + 1; k < 6 && !r; k++) r = t[k];
+  return r ? [proj * r[0], proj * r[1]] : null;
+}
+// E16: picking the higher recent floor (when favoured) or ceiling (when the underdog) did no
+// better than keeping the higher projection, so that tiebreak step is gone.
+export const POSTURE_TIEBREAK = false;
+
+// E14b: first game back after missing 2-3 games, players scored 86% of their projection in both
+// periods; after 1 or 4+ games the projection already allowed for it.
+export const FIRST_BACK = { 1: 1, 2: 0.86, 3: 0.86, 4: 1 };
