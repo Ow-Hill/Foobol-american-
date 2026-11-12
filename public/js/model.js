@@ -3,6 +3,7 @@
 // league IR rules, rolling waivers, Week-11 deadline, advice only.
 import { avg, sum, quantile, clamp, fmtKick, setTz } from './util.js';
 import { buildValues } from './values.js';
+import { matchupFor } from './matchup.js';
 
 const SEV = { IR: 5, PUP: 5, Sus: 5, NA: 4, DNR: 4, COV: 4, Out: 4, Doubtful: 3, Questionable: 2, Probable: 1 };
 const FLEX_ELIG = {
@@ -247,7 +248,16 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       reasons.push({ step: 'Game environment', pick, why: `higher implied team total (${ia.toFixed(1)} vs ${ib.toFixed(1)})` });
       return { pick, reasons };
     }
-    // 4. kickoff
+    // 4. matchup vs position (points the opponent allowed to that position, last six weeks)
+    const ma = matchupFor({ P, snap }, a);
+    const mb = matchupFor({ P, snap }, b);
+    if (ma && mb && ma.of >= 8 && Math.abs(ma.rank - mb.rank) >= Math.round(ma.of / 4)) {
+      const pick = ma.rank < mb.rank ? 'start' : 'bench';
+      const w = pick === 'start' ? ma : mb;
+      reasons.push({ step: 'Position matchup', pick, why: `${w.opp} ${w.label} over the last ${buildWeeks()} weeks` });
+      return { pick, reasons };
+    }
+    // 5. kickoff
     if (A.game && B.game && A.game.date !== B.game.date) {
       const pick = A.game.date > B.game.date ? 'start' : 'bench';
       reasons.push({ step: 'Kickoff', pick, why: 'later game keeps late-swap flexibility' });
@@ -256,6 +266,7 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     return { pick: 'start', reasons: [{ step: 'No tiebreak separates them', pick: 'start', why: 'keep the higher projection' }] };
   }
   const outPlayer = (id) => P(id);
+  const buildWeeks = () => Object.keys(snap.results || {}).length;
 
   function callFor(inn, outId, gap) {
     if (!outId) return { call: 'Fix', band: 'hard', note: 'Empty or illegal slot — fill it', tb: null };

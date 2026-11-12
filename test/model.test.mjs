@@ -164,3 +164,30 @@ test('refresh timing follows the football clock', async () => {
   assert.equal(ttlFor(p, Date.parse('2026-11-10T20:00:00Z')), 30 * MIN, 'quiet day');
   assert.equal(ttlFor({ hot: true }, Date.now()), 3 * MIN, 'no kickoff known: flat TTL');
 });
+
+test('tiebreak: equal projections, the softer matchup vs position wins', () => {
+  const snap = league({
+    w2: pl('w2', 'WR', 'DAL', 11), // now equal to w3 (11)
+  });
+  const t = Date.now() + 3 * 86400e3;
+  // this week: DAL vs T01 (soft vs WR), LAR vs T08 (tough vs WR); same kickoff, no lines
+  snap.schedule[6].games = [
+    { home: { t: 'DAL' }, away: { t: 'T01' }, date: new Date(t).toISOString(), state: 'pre' },
+    { home: { t: 'LAR' }, away: { t: 'T08' }, date: new Date(t).toISOString(), state: 'pre' },
+  ];
+  // 8 defenses over 3 weeks; T01 allows the most to WRs, T08 the least
+  snap.results = {};
+  for (let w = 1; w <= 3; w++) {
+    snap.results[w] = {};
+    for (let i = 1; i <= 8; i++) {
+      snap.results[w][`O${i}`] = `T0${i}`;
+      snap.results[w][`T0${i}`] = `O${i}`;
+      snap.players[`o${i}`] = { id: `o${i}`, n: `Opp WR ${i}`, pos: 'WR', team: `O${i}`, hist: [1, 2, 3].map((wk) => ({ w: wk, pts: 30 - i * 3 })), own: null, proj: { pts: 0 } };
+    }
+  }
+  const M = buildModel(snap, 1, Date.now());
+  const ss = M.startSit('w2', 'w3');
+  assert.equal(ss.band, 'toss');
+  assert.equal(ss.pick, 'w2');
+  assert.ok(ss.why.some((x) => /Position matchup/.test(x)), ss.why.join(' | '));
+});

@@ -7,6 +7,7 @@ const S = require('./lib/sources');
 const { buildSnapshot } = require('./lib/snapshot');
 const { buildHistory } = require('./lib/history');
 const { playerNews: fetchPlayerNews } = require('./lib/playernews');
+const { checkAlerts } = require('./lib/alerts');
 
 const PUBLIC = path.join(__dirname, 'public');
 const MIME = {
@@ -65,6 +66,8 @@ async function getSnapshot(force) {
       snap = s;
       snapAt = Date.now();
       saveLast(s);
+      // Fire and forget: alerting must never slow or break the page.
+      checkAlerts(s, cfg.alerts).then((r) => r.sent && console.log(`Sent ${r.sent} alert(s)`)).catch(() => {});
       return s;
     })
     .catch(async (err) => {

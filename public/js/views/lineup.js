@@ -1,12 +1,17 @@
 import { esc, n1, signed, fmtKick, avg } from '../util.js';
 import { card, table, playerName, callBadge, problemList, statusChip, spark, secondOpinionBtn } from '../ui.js';
+import { matchupFor } from '../matchup.js';
 
-export function oppCell(p) {
+export function oppCell(p, M = null) {
   if (p.avail === 'bye') return `<span class="chip chip-bye">BYE</span>`;
   if (!p.game) return '<span class="dim">–</span>';
   const g = p.game;
   const imp = g.imp != null ? `<div class="dim" style="font-size:11.5px">team total ${g.imp.toFixed(1)}${g.spread ? ` · ${g.spread.fav === p.team ? 'fav' : 'dog'} ${g.spread.pts}` : ''}</div>` : '';
-  return `<span>${g.home ? 'vs' : '@'} ${esc(g.opp)}</span>${imp}`;
+  const mu = M ? matchupFor(M, p.id) : null;
+  const muTxt = mu && mu.tier !== 'neutral'
+    ? `<div style="font-size:11.5px;color:var(${mu.tier === 'soft' ? '--green' : '--red'})" title="Average ${mu.avg.toFixed(1)} pts/g allowed to ${esc(p.pos)} over the last ${mu.games} games">${esc(mu.label)}</div>`
+    : '';
+  return `<span>${g.home ? 'vs' : '@'} ${esc(g.opp)}</span>${imp}${muTxt}`;
 }
 export function kickCell(p) {
   if (!p.game) return '<span class="dim">–</span>';
@@ -37,7 +42,7 @@ export function render(M, ctx) {
   const curRows = l.cur.map((s) => {
     if (!s.pid) return `<tr class="empty-slot"><td><span class="slot">${s.slot}</span></td><td colspan="6"><b style="color:var(--red)">EMPTY — you are leaving points on the table</b></td></tr>`;
     const p = M.P(s.pid);
-    return `<tr><td><span class="slot">${s.slot}</span></td><td>${playerName(M, s.pid)}</td><td>${oppCell(p)}</td><td>${kickCell(p)}</td><td class="num"><b>${n1(M.val(s.pid))}</b>${p.avail === 'out' ? '<div class="dim" style="font-size:11px">counts 0 — out</div>' : p.avail === 'q' ? '<div class="dim" style="font-size:11px">if he plays</div>' : ''}</td><td class="num">${rangeCell(p)}</td><td>${usageCell(p)}</td></tr>`;
+    return `<tr><td><span class="slot">${s.slot}</span></td><td>${playerName(M, s.pid)}</td><td>${oppCell(p, M)}</td><td>${kickCell(p)}</td><td class="num"><b>${n1(M.val(s.pid))}</b>${p.avail === 'out' ? '<div class="dim" style="font-size:11px">counts 0 — out</div>' : p.avail === 'q' ? '<div class="dim" style="font-size:11px">if he plays</div>' : ''}</td><td class="num">${rangeCell(p)}</td><td>${usageCell(p)}</td></tr>`;
   });
   const curTable = `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Slot</th><th>Player</th><th>Opponent</th><th>Kickoff</th><th class="r">Proj</th><th class="r">Usual range</th><th>Last 6 · usage</th></tr></thead><tbody>${curRows.join('')}</tbody><tfoot><tr><td colspan="4" class="muted" style="padding:9px 12px">Lineup as set in Sleeper</td><td class="num" style="padding:9px 12px"><b>${n1(l.curTotal)}</b></td><td colspan="2"></td></tr></tfoot></table></div>`;
 
@@ -45,7 +50,7 @@ export function render(M, ctx) {
     const st = M.P(s.start);
     const b = s.bench ? M.P(s.bench) : null;
     const keep = s.keep;
-    const tb = s.tb ? `<details class="how"><summary>Tiebreak steps</summary><ul>${['Health certainty: prefer the player with no injury tag', 'Matchup posture: favorite → floor, underdog → ceiling', 'Game environment: higher implied team total', 'Kickoff: later game keeps swap flexibility'].map((x, i) => `<li ${s.tb.reasons[0] && x.startsWith(s.tb.reasons[0].step.split(' ')[0]) ? 'style="color:var(--green)"' : ''}>${x}</li>`).join('')}</ul></details>` : '';
+    const tb = s.tb ? `<details class="how"><summary>Tiebreak steps</summary><ul>${['Health certainty: prefer the player with no injury tag', 'Matchup posture: favorite → floor, underdog → ceiling', 'Game environment: higher implied team total', 'Position matchup: opponent allowed more points to that position over the last six weeks', 'Kickoff: later game keeps swap flexibility'].map((x, i) => `<li ${s.tb.reasons[0] && x.startsWith(s.tb.reasons[0].step.split(' ')[0]) ? 'style="color:var(--green)"' : ''}>${x}</li>`).join('')}</ul></details>` : '';
     return [
       `<span class="slot">${s.slot}</span>`,
       keep ? `<span class="muted">Keep ${playerName(M, s.bench, { status: true })}</span>` : playerName(M, s.start),
@@ -74,7 +79,7 @@ export function render(M, ctx) {
 
   const benchRows = l.bench.map((id) => {
     const p = M.P(id);
-    return [playerName(M, id), oppCell(p), kickCell(p), `<span class="num">${n1(M.val(id))}</span>`, rangeCell(p), usageCell(p)];
+    return [playerName(M, id), oppCell(p, M), kickCell(p), `<span class="num">${n1(M.val(id))}</span>`, rangeCell(p), usageCell(p)];
   });
 
   const delta = l.opt.total - l.curTotal;
@@ -95,7 +100,7 @@ export function render(M, ctx) {
     </div>
     <div class="callout warn" style="margin-top:14px"><b>What this page can't verify</b>
       These calls use a single projection source. The consensus method in your command-center skill wants Down Field, StatsDeck and Scout-Squad side by side — those connectors aren't reachable from a website, so use the button above to run them, and treat anything short of a Clear call as provisional. Official inactives (about 90 minutes before kickoff) and weather aren't checked.
-      <details class="how"><summary>Tiebreak order when a call is close</summary><ul><li>Health certainty — prefer the player with no injury tag.</li><li>Matchup posture — favored: higher floor; underdog: higher ceiling (from each player's last 6 games).</li><li>Game environment — higher implied team total from the betting line.</li><li>Kickoff — the later game keeps late-swap flexibility.</li></ul></details>
+      <details class="how"><summary>Tiebreak order when a call is close</summary><ul><li>Health certainty — prefer the player with no injury tag.</li><li>Matchup posture — favored: higher floor; underdog: higher ceiling (from each player's last 6 games).</li><li>Game environment — higher implied team total from the betting line.</li><li>Position matchup — the opponent allowed clearly more fantasy points to that position over the last six weeks (a quarter of the league apart in the ranking).</li><li>Kickoff — the later game keeps late-swap flexibility.</li></ul></details>
     </div>`;
 }
 

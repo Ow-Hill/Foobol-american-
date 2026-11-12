@@ -308,6 +308,35 @@ function feedBanner(flags, tab) {
   return '';
 }
 
+const KIND_LABEL = { out: 'Teammate out', return: 'Teammate returns', 'qb-out': 'QB out', 'trade-in': 'Traded in', 'trade-out': 'Traded away', 'line-move': 'Line move' };
+
+// How last weeks' teammate estimates turned out, per rule. Hidden until a week has been scored.
+function calibrationCard(M) {
+  const c = M.snap.calibration;
+  if (!c || !c.total) return '';
+  const pct = (b) => (b.n ? Math.round((b.hit / b.n) * 100) + '%' : '–');
+  const kinds = Object.entries(c.byKind)
+    .sort((a, b) => b[1].n - a[1].n)
+    .map(([k, b]) => `<li><b>${esc(KIND_LABEL[k] || k)}</b> ${b.hit}/${b.n} right direction (${pct(b)})${b.miss ? ` · ${b.miss} wrong` : ''}</li>`)
+    .join('');
+  const conf = ['clear', 'lean', 'toss']
+    .filter((k) => c.byConf[k])
+    .map((k) => `${k} ${pct(c.byConf[k])}`)
+    .join(' · ');
+  const unit = { tgt: 'tgt', att: 'car', pts: 'pts' };
+  const rows = c.rows.slice(0, 12).map((r) => {
+    const est = r.est != null ? `${r.est > 0 ? '+' : ''}${r.est} ${unit[r.metric]}` : r.dir === 'up' ? 'up' : 'down';
+    const act = `${r.actual > 0 ? '+' : ''}${r.actual} ${unit[r.metric]}`;
+    return `<tr><td>Wk ${r.week}</td><td>${esc(M.P(r.pid).n)}</td><td>${esc(KIND_LABEL[r.kind] || r.kind)} · ${esc(M.P(r.src).n)}</td><td class="num">${esc(est)}</td><td class="num">${esc(act)}</td><td><span class="chip ${r.result === 'hit' ? 'chip-mine' : r.result === 'miss' ? 'chip-red' : ''}">${r.result === 'hit' ? 'Right' : r.result === 'miss' ? 'Wrong' : 'Flat'}</span></td></tr>`;
+  }).join('');
+  return card(
+    'How the teammate estimates did',
+    `<div style="padding:12px 16px"><p style="margin:0 0 8px"><b>${Math.round(c.hitRate * 100)}%</b> of ${c.total} scored estimates moved the right way (weeks ${c.weeks.join(', ')}).${conf ? ` By confidence: ${esc(conf)}.` : ''}</p><ul class="dec-because" style="margin:0 0 8px">${kinds}</ul>
+    <details><summary>Recent estimates vs what happened</summary><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Week</th><th>Player</th><th>Because</th><th>Estimate</th><th>Actual</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></details></div>`,
+    { cls: 'flush', sub: 'Actual = that week minus his own average over the 3 games before. Flat = within noise.' }
+  );
+}
+
 function minePanel(M, openPid) {
   const res = engineFor(M);
   const PN = M.snap.playerNews || {};
@@ -331,6 +360,7 @@ function minePanel(M, openPid) {
       panel,
       { cls: 'flush', sub: `Ranked by what it means for your lineup this week · ${fresh} · ${coverage}` }
     )}
+    ${calibrationCard(M)}
     <p class="source">Headlines come from Google News RSS (headline + source + link only). Practice reports and status changes are read from RotoWire notes as published by ESPN. <b>Teammate</b> rows are ripple estimates: when a teammate is out, returns or is traded, his targets and carries are spread by current usage and the depth chart, or by games played without him when there are any. A worse-news label always wins until a dated report says otherwise; speculative items and estimates never flip a start or sit on their own.</p>`;
 }
 

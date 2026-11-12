@@ -188,3 +188,25 @@ test('engine: rival news ranks higher when he is this week’s opponent starter'
   const noOpp = buildPlayerNews(buildModel(snap2, 1, now)).items.find((i) => i.id === 'g3').scores.league;
   assert.ok(withOpp > noOpp, `${withOpp} > ${noOpp}`);
 });
+
+test('matchup strength: points allowed by position, ranked softest first, byes not counted', async () => {
+  const { buildMatchups } = await import('../public/js/matchup.js');
+  const P = (id, pos, team, pts) => ({ id, pos, team, hist: [1, 2, 3].map((w) => ({ w, pts })) });
+  const snap = {
+    // weeks 1-3: BUF plays MIA every week; KC plays NYJ in weeks 1-2, KC on bye week 3
+    results: { 1: { BUF: 'MIA', MIA: 'BUF', KC: 'NYJ', NYJ: 'KC' }, 2: { BUF: 'MIA', MIA: 'BUF', KC: 'NYJ', NYJ: 'KC' }, 3: { BUF: 'MIA', MIA: 'BUF' } },
+    players: {
+      a: P('a', 'RB', 'BUF', 20), // MIA allows 20 to RBs
+      b: P('b', 'RB', 'KC', 8), // NYJ allows 8 (weeks 1-2 only)
+      c: P('c', 'RB', 'MIA', 12),
+      d: { id: 'd', pos: 'RB', team: 'NYJ', hist: [1, 2].map((w) => ({ w, pts: 4 })) },
+    },
+  };
+  const m = buildMatchups(snap);
+  assert.equal(m.byDef.MIA.RB.avg, 20);
+  assert.equal(m.byDef.NYJ.RB.avg, 8);
+  assert.equal(m.byDef.KC.RB.games, 2, 'bye week not counted as a zero');
+  assert.equal(m.byDef.KC.RB.avg, 4);
+  assert.equal(m.byDef.MIA.RB.rank, 1);
+  assert.equal(m.byDef.KC.RB.rank, 4);
+});

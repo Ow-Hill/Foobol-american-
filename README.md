@@ -59,6 +59,27 @@ Nothing is deployed. The app only runs on the machine that starts it:
 
 History comes from walking the league's `previous_league_id` chain (currently 2025 and 2026).
 
+## Alerts
+
+Status changes on your roster (Sleeper or ESPN injury tag, a starter's depth-chart move, a trade)
+can be pushed to your phone. Off by default; add an `alerts` block to `config.json`:
+
+```json
+"alerts": { "ntfy": "https://ntfy.sh/<your-private-topic>", "quietHours": [23, 7] }
+```
+
+or a webhook: `{ "webhook": "<url>", "format": "discord" }` (`slack` and `json` also work). One
+batched message per refresh, each change sent once, nothing older than 12 hours, nothing while the
+site is serving saved data. `"scope": "starters"` limits it to your starters. Headlines,
+speculation and teammate estimates are never sent.
+
+## Matchup strength
+
+Lineup shows, for each player, how many fantasy points his opponent allowed to that position over
+the last six finished weeks (your league's scoring), when it is in the softest or toughest third of
+the league. It is also a tiebreak step for close start/sit calls, after game environment and before
+kickoff. Players are credited to their current NFL team, so a mid-season trade slightly blurs it.
+
 ## Decision engine
 
 The Briefing opens with a ranked decision brief (`public/js/decision.js`): `act` / `this-week` /
@@ -104,7 +125,9 @@ go mostly to the handcuff, a QB injury downgrades every pass catcher (the top ta
 returning starter takes back what the fill-ins gained, and a team whose Vegas implied total moves
 2.5+ points since the week opened is flagged (the market often knows first). When the team has already played without
 him this season, the observed with/without split is used instead. Rows are labelled **Estimate**,
-capped below "Act now", and never flip a start/sit on their own. Rules and sources:
+capped below "Act now", and never flip a start/sit on their own. Each week's estimates are recorded
+the first time the server sees them (`data/ripple-log.json`) and scored once the games are played;
+the News page shows how often each rule moved the right way. Rules and sources:
 `skills/ff-news-search/references/ripple.md`.
 
 ## Data
