@@ -1,6 +1,6 @@
 # Backtest tables (current)
 
-Generated 2026-11-12 by `npm run backtest`. Seasons 2022-2026; constants are fitted on 2022, 2023, 2024 and judged on 2025, 2026.
+Generated 2026-11-13 by `npm run backtest`. Seasons 2022-2026; constants are fitted on 2022, 2023, 2024 and judged on 2025, 2026.
 
 ## E1. How accurate are the numbers the engine ranks on?
 
@@ -350,6 +350,7 @@ Projected lineups with a 48-point spread, same check.
 
 - Across 208 team-weeks the site's lineup scored 2.36 points a week more than the lineup the manager set (90% range 0.74 to 4.21). For your team: 4.84 (0.26 to 9.4).
 - Managers reached 87.5% of the perfect lineup, the site 89.2%.
+- Blending in the expert consensus (QB, WR, K) changed the site's lineup in 50 of 208 team-weeks and moved its score by 0.57 points a week on average (90% range 0.15 to 1.09); where it changed something, it scored more 60% of the time.
 - Managers started 0.05 players a week who did not play; the site lineup 0.01. Caveat: Sleeper's stored projections are the final pre-kickoff ones, so the site lineup here knows about Sunday-morning inactives. It is what the site would say if checked 90 minutes before each game, not on Tuesday.
 - Check on the scorer: my re-scored lineup totals differ from Sleeper's official ones by 0.15 points a week on average.
 
@@ -362,6 +363,7 @@ Every team-week in this league, Weeks 2-17 of 2025 and 2026 to date. "Site lineu
 | All teams, 2026 | 80 | 134.1 | 135.4 | 149.7 | 1.24 | 0.08 to 2.29 | 36.3 | 26.3 | 89.9 | 90.7 |
 | Your team | 24 | 150 | 154.9 | 166.8 | 4.84 | 0.26 to 9.4 | 45.8 | 25 | 90.2 | 93 |
 | Your team, 2026 | 8 | 146.2 | 149.8 | 163.2 | 3.59 | -4.62 to 10.86 | 50 | 25 | 90.2 | 92.4 |
+| All teams, site lineup with expert consensus blended in | 208 | 135.1 | 138 | 154.3 | 2.93 | 1.3 to 4.98 | 39.4 | 27.4 | 87.5 | 89.6 |
 
 2026 by manager: points per week left on the table against the site lineup.
 
@@ -651,10 +653,82 @@ Toss-ups (same position, projections within 2): picking by recent floor or ceili
 | Higher recent ceiling | boomed (140%+ of projection) | 22.8 | 14057 |
 | Higher projection | boomed | 23 | 14057 |
 
+## E17. Does expert consensus beat Sleeper's projection, or improve it?
+
+- Average miss, QB-TE on 2025-26: Sleeper alone 5.86, blended with consensus 5.83. Blend weights on Sleeper (fitted on 2022-24): QB 0%, RB 85%, WR 45%, TE 75%, K 0%, DEF 60%.
+- Close calls: RB Sleeper 55%, consensus 55.5%, blend 55.2% (when they disagree the experts were right 50.9% of 984); WR Sleeper 53.4%, consensus 56.1%, blend 55.1% (when they disagree the experts were right 54.9% of 2289); TE Sleeper 52.3%, consensus 52.5%, blend 51.8% (when they disagree the experts were right 50.4% of 417).
+- Early week: Wednesday's consensus missed by 5.91 vs 5.88 on Sunday (rank correlation 0.467 vs 0.487); 0.3% of Sunday's ranked players were not yet ranked on Wednesday.
+- Rule chosen on 2022-24 alone: average Sleeper's projection 50/50 with the consensus at QB, WR, K, DEF; Sleeper alone at RB, TE. On 2025-26 the 50/50 average was no worse than Sleeper at QB, RB, WR, TE, K.
+
+Hold-out 2025-26, Sunday and Monday games, players ranked by FantasyPros' weekly consensus and projected by Sleeper. Consensus rank is turned into points with a curve per position fitted on 2022-24.
+
+| Position | Method | Avg miss (pts) | Bias | Weekly rank corr. | n |
+| --- | --- | --- | --- | --- | --- |
+| QB | Sleeper projection (site today) | 6.14 | -0.32 | 0.287 | 433 |
+| QB | Expert consensus rank, as points | 6.12 | 0.35 | 0.291 | 433 |
+| QB | Blend: 0% Sleeper / 100% consensus | 6.12 | 0.35 | 0.291 | 433 |
+| QB | Half and half | 6.1 | 0.02 | 0.304 | 433 |
+| QB | FantasyPros' own points (2024+) | 6.12 | 0.05 | 0.291 | 433 |
+| RB | Sleeper projection (site today) | 6.09 | -0.2 | 0.457 | 725 |
+| RB | Expert consensus rank, as points | 6.1 | 0.16 | 0.457 | 725 |
+| RB | Blend: 85% Sleeper / 15% consensus | 6.07 | -0.15 | 0.458 | 725 |
+| RB | Half and half | 6.05 | -0.02 | 0.464 | 725 |
+| RB | FantasyPros' own points (2024+) | 6.02 | 0.31 | 0.459 | 725 |
+| WR | Sleeper projection (site today) | 5.88 | -0.65 | 0.395 | 1009 |
+| WR | Expert consensus rank, as points | 5.84 | -0.64 | 0.41 | 1009 |
+| WR | Blend: 45% Sleeper / 55% consensus | 5.83 | -0.65 | 0.405 | 1009 |
+| WR | Half and half | 5.83 | -0.65 | 0.405 | 1009 |
+| WR | FantasyPros' own points (2024+) | 5.82 | -0.47 | 0.408 | 1009 |
+| TE | Sleeper projection (site today) | 5.34 | -0.38 | 0.328 | 364 |
+| TE | Expert consensus rank, as points | 5.26 | 0.36 | 0.325 | 364 |
+| TE | Blend: 75% Sleeper / 25% consensus | 5.3 | -0.2 | 0.327 | 364 |
+| TE | Half and half | 5.28 | -0.01 | 0.326 | 364 |
+| TE | FantasyPros' own points (2024+) | 5.32 | -0.24 | 0.326 | 364 |
+| K | Sleeper projection (site today) | 3.8 | 0.13 | 0.065 | 253 |
+| K | Expert consensus rank, as points | 3.74 | 0.63 | 0.132 | 253 |
+| K | Blend: 0% Sleeper / 100% consensus | 3.74 | 0.63 | 0.132 | 253 |
+| K | Half and half | 3.76 | 0.38 | 0.107 | 253 |
+| K | FantasyPros' own points (2024+) | 3.8 | 0.9 | 0.138 | 253 |
+| DEF | Sleeper projection (site today) | 4.55 | 0.5 | 0.222 | 287 |
+| DEF | Expert consensus rank, as points | 4.69 | -0.69 | 0.19 | 287 |
+| DEF | Blend: 60% Sleeper / 40% consensus | 4.56 | 0.03 | 0.234 | 287 |
+| DEF | Half and half | 4.57 | -0.09 | 0.228 | 287 |
+| DEF | FantasyPros' own points (2024+) | 4.58 | 0.78 | 0.19 | 287 |
+
+Close calls (Sleeper projections within 2 points of each other), 2025-26: how often each source picked the player who scored more. Last columns: only the pairs where Sleeper and the experts disagreed.
+
+| Position | Sleeper % | Consensus % | Blend % | Pairs | Consensus right when they disagree % | Pairs |
+| --- | --- | --- | --- | --- | --- | --- |
+| RB | 55 | 55.5 | 55.2 | 3173 | 50.9 | 984 |
+| WR | 53.4 | 56.1 | 55.1 | 8322 | 54.9 | 2289 |
+| TE | 52.3 | 52.5 | 51.8 | 1676 | 50.4 | 417 |
+
+Early week: the consensus as it stood on Wednesday vs Sunday morning, same players (2025-26).
+
+| Version | Avg miss | Weekly rank corr. | n |
+| --- | --- | --- | --- |
+| Wednesday | 5.91 | 0.467 | 2524 |
+| Sunday morning | 5.88 | 0.487 | 2524 |
+
+## E18. A second volume model: ffopportunity expected points vs the site's own
+
+- Rest of season: ffopportunity in place of the site's volume model did not do better (QB 3.5 vs 3.25, RB 3.15 vs 3.1, WR 3.48 vs 3.49, TE 2.83 vs 2.72).
+- Next four weeks (buy/sell): QB 4.06 vs 4.06, RB 3.92 vs 3.9, WR 3.82 vs 3.82, TE 3.53 vs 3.5. No consistent gain.
+
+Hold-out (2025 for rest of season, 2025-26 for next four weeks). Average miss in points per game; lower is better. Volume measures are averaged over the season so far (rest of season) or the last four games (next four).
+
+| Position | Rest of season: season average | Half average, half site volume model | Half average, half ffopportunity | Fitted: average + both | n | Next 4: with site volume model | Next 4: with ffopportunity | n |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| QB | 3.87 | 3.25 | 3.5 | 3.31 | 218 | 4.06 | 4.06 | 330 |
+| RB | 3.32 | 3.1 | 3.15 | 3.15 | 314 | 3.9 | 3.92 | 502 |
+| WR | 3.74 | 3.49 | 3.48 | 3.4 | 489 | 3.82 | 3.82 | 698 |
+| TE | 2.95 | 2.72 | 2.83 | 2.91 | 203 | 3.5 | 3.53 | 320 |
+
 ## N1. News scanner: how well does it read headlines?
 
 - Development set: 100% of 143 checks correct (71.3% before the fixes this set prompted, so this number is no longer independent).
 - Second set, labelled after the first round of fixes: 76% of 31 checks were correct when first scored (status 74%: four of the five status misses were another player's news pinned on the named one). The clause rule and three more patterns were then added, so it is now 100% and also no longer independent.
+- Second fresh set (live headlines from 13 Nov, labelled before scoring): 89.2% of 37 checks correct when first scored, status 100%. Its four misses (good-news practice wording, two opinion pieces) were then fixed; it now scores 100%.
 - Fresh set (live headlines, labelled after every earlier fix): 78.3% of 46 checks correct when first scored. That is the honest number. Its ten misses were then fixed too, so it now scores 100%; the next batch of labelled headlines gives the next honest number.
 
 71 labelled headlines for the classifier, 18 for the matcher (backtest/news-golden.json). Precision: when it says something, how often it is right. Recall: of the headlines that say something, how many it catches.
@@ -675,6 +749,11 @@ Toss-ups (same position, projections within 2): picking by recent floor or ceili
 | fresh practice | 2 | 100 | 100 | 100 |
 | fresh better | 5 | 100 | 100 | 100 |
 | fresh speculative | 4 | 100 | 100 | 100 |
+| fresh2 status | 20 | 100 |  |  |
+| fresh2 speculative | 5 | 100 | 100 | 100 |
+| fresh2 better | 3 | 100 | 100 | 100 |
+| fresh2 injury | 8 | 100 | 100 | 100 |
+| fresh2 practice | 1 | 100 | 100 | 100 |
 | matcher | 18 | 100 | 100 | 100 |
 
 Every miss (each is a test case to fix or a known limit).

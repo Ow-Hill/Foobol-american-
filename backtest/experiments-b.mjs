@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import * as D from './data.mjs';
 import { DIR } from './fetch.mjs';
-import { asOf, eachWeek, ppg, ppg3, xpAvg, xpGame } from './experiments-a.mjs';
+import { asOf, eachWeek, ppg, ppg3, xpAvg, xpGame, ecrWeek } from './experiments-a.mjs';
 import { buildModel } from '../public/js/model.js';
 import { buildRipple } from '../public/js/ripple.js';
 
@@ -38,21 +38,27 @@ function leagueWeeks() {
   }
   return out;
 }
-function modelFor(lw) {
+// withEcr: attach that week's final expert consensus, as the live site now does (E17)
+function modelFor(lw, withEcr = false) {
   const teams = lw.mu.map((m) => ({ id: m.rid, owner: lw.owners[m.rid], players: m.players || [], starters: m.starters || [], reserve: [] }));
-  const { snap, now } = D.synthSnap(lw.L.season, lw.wk, { teams, lg: lw.L, pastScores: lw.pastScores, pairs: lw.pairs, playersOverride: structuredClone(asOf(lw.L.season, lw.wk)) });
+  const players = structuredClone(asOf(lw.L.season, lw.wk));
+  if (withEcr) {
+    const e = ecrWeek(lw.L.season, lw.wk, 'final');
+    for (const [pid, x] of e?.players || []) if (players[pid] && players[pid].pos === x.pos) players[pid].ecr = { ecr: x.ecr, sd: x.sd, pos: x.pos };
+  }
+  const { snap, now } = D.synthSnap(lw.L.season, lw.wk, { teams, lg: lw.L, pastScores: lw.pastScores, pairs: lw.pairs, playersOverride: players });
   return buildModel(snap, teams[0].id, now);
 }
 
 // ================= E8 + E7 =================
-let replayCache = null;
-function replay() {
-  if (replayCache) return replayCache;
+const replayCache = {};
+function replay(withEcr = false) {
+  if (replayCache[withEcr]) return replayCache[withEcr];
   const rows = [];
   const games = [];
   const cfg = JSON.parse(fs.readFileSync(path.join(DIR, '..', '..', 'config.json'), 'utf8'));
   for (const lw of leagueWeeks()) {
-    const M = modelFor(lw);
+    const M = modelFor(lw, withEcr);
     const act = D.actual(lw.L.season, lw.wk);
     const pts = (id) => (act.get(id)?.played ? act.get(id).pts : 0);
     const P = M.snap.players;
@@ -87,7 +93,7 @@ function replay() {
       }
     }
   }
-  return (replayCache = { rows, games });
+  return (replayCache[withEcr] = { rows, games });
 }
 
 export function e8() {
@@ -107,7 +113,18 @@ export function e8() {
   for (const r of rows.filter((x) => x.season === 2026)) (owners[r.owner] ||= []).push(r);
   const perOwner = Object.entries(owners).map(([o, x]) => [o, x.length, r1(mean(x.map((r) => r.manager))), r1(mean(x.map((r) => r.engine))), r2(mean(x.map((r) => r.engine - r.manager))), pct(mean(x.map((r) => r.manager / r.optimal))), r2(mean(x.map((r) => r.deadStarts)))]).sort((a, b) => b[4] - a[4]);
   const dead = { mgr: mean(rows.map((r) => r.deadStarts)), engine: mean(rows.map((r) => r.engineDead)) };
-  const fit = { diff: t[0][5], range: t[0][6], mine: t[3][5], mineRange: t[3][6], mgrPctOfPerfect: t[0][9], sitePctOfPerfect: t[0][10], scorerGap: r2(scorerGap), deadStartsMgr: r3(dead.mgr), deadStartsSite: r3(dead.engine), n: rows.length };
+  // the same replay with the expert consensus blended in at QB, WR and K
+  const ecrRows = replay(true).rows;
+  const key = (r) => `${r.season}:${r.wk}:${r.rid}`;
+  const ecrBy = Object.fromEntries(ecrRows.map((r) => [key(r), r]));
+  const paired = rows.filter((r) => ecrBy[key(r)]).map((r) => ({ season: r.season, wk: r.wk, d: ecrBy[key(r)].engine - r.engine }));
+  const byWk = {};
+  for (const r of paired) (byWk[r.season + ':' + r.wk] ||= []).push(r);
+  const ecrDiff = mean(paired.map((r) => r.d));
+  const ecrCi = bootCI(byWk, (x) => mean(x.map((r) => r.d)), 300);
+  const changed = paired.filter((r) => Math.abs(r.d) > 0.01);
+  t.push(tab(ecrRows, 'All teams, site lineup with expert consensus blended in'));
+  const fit = { ecr: { diff: r2(ecrDiff), range: `${r2(ecrCi[0])} to ${r2(ecrCi[1])}`, changed: changed.length, n: paired.length, betterWhenChanged: r3(mean(changed.map((r) => (r.d > 0 ? 1 : 0)))) }, diff: t[0][5], range: t[0][6], mine: t[3][5], mineRange: t[3][6], mgrPctOfPerfect: t[0][9], sitePctOfPerfect: t[0][10], scorerGap: r2(scorerGap), deadStartsMgr: r3(dead.mgr), deadStartsSite: r3(dead.engine), n: rows.length };
   return {
     id: 'E8', title: 'Would the site\'s lineup have beaten the one actually set?',
     tables: [
@@ -117,6 +134,7 @@ export function e8() {
     findings: [
       `Across ${rows.length} team-weeks the site's lineup scored ${t[0][5]} points a week ${t[0][5] >= 0 ? 'more' : 'less'} than the lineup the manager set (90% range ${t[0][6]}). For your team: ${t[3][5]} (${t[3][6]}).`,
       `Managers reached ${t[0][9]}% of the perfect lineup, the site ${t[0][10]}%.`,
+      `Blending in the expert consensus (QB, WR, K) changed the site's lineup in ${changed.length} of ${paired.length} team-weeks and moved its score by ${r2(ecrDiff)} points a week on average (90% range ${r2(ecrCi[0])} to ${r2(ecrCi[1])}); where it changed something, it scored more ${pct(mean(changed.map((r) => (r.d > 0 ? 1 : 0))))}% of the time.`,
       `Managers started ${r2(dead.mgr)} players a week who did not play; the site lineup ${r2(dead.engine)}. Caveat: Sleeper's stored projections are the final pre-kickoff ones, so the site lineup here knows about Sunday-morning inactives. It is what the site would say if checked 90 minutes before each game, not on Tuesday.`,
       `Check on the scorer: my re-scored lineup totals differ from Sleeper's official ones by ${r2(scorerGap)} points a week on average.`,
     ],

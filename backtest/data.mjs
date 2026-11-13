@@ -10,7 +10,7 @@ import { DIR, SEASONS } from './fetch.mjs';
 const require = createRequire(import.meta.url);
 const { makeScorer } = require('../lib/sources.js');
 
-export { SEASONS };
+export { SEASONS, DIR };
 export const TRAIN = [2022, 2023, 2024];
 export const TEST = [2025, 2026];
 export const SKILL = ['QB', 'RB', 'WR', 'TE'];

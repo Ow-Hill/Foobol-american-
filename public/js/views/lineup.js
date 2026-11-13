@@ -24,6 +24,14 @@ export function windTxt(p) {
   const eff = WIND[p.pos];
   return `<div style="font-size:11.5px;color:var(--amber)" title="Forecast at kickoff. In 2022-2026, outdoor games at ${WIND.mph}+ mph cost ${esc(p.pos)}s about ${Math.abs(eff)} points against their projection. The projection does not include it.">wind ${w.mph} mph${w.gust > w.mph + 5 ? ` (gusts ${w.gust})` : ''} · ${eff} pts typical</div>`;
 }
+// Where the projection averages Sleeper with the expert consensus (QB, WR, K), show both, and
+// flag a big disagreement: on WRs the experts were right 55% of the time when they disagreed.
+export function sourcesTxt(p) {
+  if (p.projExperts == null || !(p.projSleeper > 0)) return '';
+  const d = p.projExperts - p.projSleeper;
+  const big = Math.abs(d) >= 3;
+  return `<div class="dim" style="font-size:11px${big ? ';color:var(--amber)' : ''}" title="${p.blended ? 'Projection used = average of the two (beat Sleeper alone in the 2022-2026 backtest at QB, WR and K).' : 'Shown for reference; at this position Sleeper alone did as well in the backtest.'}">Sleeper ${n1(p.projSleeper)} · experts ${n1(p.projExperts)}</div>`;
+}
 export function kickCell(p) {
   if (!p.game) return '<span class="dim">–</span>';
   if (p.game.state === 'in') return `<span class="chip chip-red">LIVE</span>`;
@@ -53,7 +61,7 @@ export function render(M, ctx) {
   const curRows = l.cur.map((s) => {
     if (!s.pid) return `<tr class="empty-slot"><td><span class="slot">${s.slot}</span></td><td colspan="6"><b style="color:var(--red)">EMPTY — you are leaving points on the table</b></td></tr>`;
     const p = M.P(s.pid);
-    return `<tr><td><span class="slot">${s.slot}</span></td><td>${playerName(M, s.pid)}</td><td>${oppCell(p, M)}</td><td>${kickCell(p)}</td><td class="num"><b>${n1(M.val(s.pid))}</b>${p.avail === 'out' ? '<div class="dim" style="font-size:11px">counts 0 — out</div>' : p.avail === 'q' ? '<div class="dim" style="font-size:11px">if he plays</div>' : ''}</td><td class="num">${rangeCell(p)}</td><td>${usageCell(p)}</td></tr>`;
+    return `<tr><td><span class="slot">${s.slot}</span></td><td>${playerName(M, s.pid)}</td><td>${oppCell(p, M)}</td><td>${kickCell(p)}</td><td class="num"><b>${n1(M.val(s.pid))}</b>${sourcesTxt(p)}${p.avail === 'out' ? '<div class="dim" style="font-size:11px">counts 0 — out</div>' : p.avail === 'q' ? '<div class="dim" style="font-size:11px">if he plays</div>' : ''}</td><td class="num">${rangeCell(p)}</td><td>${usageCell(p)}</td></tr>`;
   });
   const curTable = `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Slot</th><th>Player</th><th>Opponent</th><th>Kickoff</th><th class="r">Proj</th><th class="r">Usual range</th><th>Last 6 · usage</th></tr></thead><tbody>${curRows.join('')}</tbody><tfoot><tr><td colspan="4" class="muted" style="padding:9px 12px">Lineup as set in Sleeper</td><td class="num" style="padding:9px 12px"><b>${n1(l.curTotal)}</b></td><td colspan="2"></td></tr></tfoot></table></div>`;
 
@@ -90,7 +98,7 @@ export function render(M, ctx) {
 
   const benchRows = l.bench.map((id) => {
     const p = M.P(id);
-    return [playerName(M, id), oppCell(p, M), kickCell(p), `<span class="num">${n1(M.val(id))}</span>`, rangeCell(p), usageCell(p)];
+    return [playerName(M, id), oppCell(p, M), kickCell(p), `<span class="num">${n1(M.val(id))}</span>${sourcesTxt(p)}`, rangeCell(p), usageCell(p)];
   });
 
   const delta = l.opt.total - l.curTotal;
@@ -110,7 +118,7 @@ export function render(M, ctx) {
       ${card('Bench', table(['Player', 'Opponent', 'Kickoff', 'Proj', 'Usual range', 'Last 6 · usage'], benchRows), { cls: 'flush' })}
     </div>
     <div class="callout warn" style="margin-top:14px"><b>What this page can't verify</b>
-      These calls use a single projection source. The consensus method in your command-center skill wants Down Field, StatsDeck and Scout-Squad side by side — those connectors aren't reachable from a website, so use the button above to run them, and treat anything short of a Clear call as provisional. Official inactives (about 90 minutes before kickoff) aren't checked. Wind of 15+ mph is flagged next to the opponent when the forecast is available; it is not built into projections.
+      Projections are Sleeper's, averaged with the experts' consensus at QB, WR and K (the average beat Sleeper alone in the 2022-2026 backtest); RB, TE and DEF use Sleeper alone. The consensus method in your command-center skill wants Down Field, StatsDeck and Scout-Squad side by side — those connectors aren't reachable from a website, so use the button above to run them, and treat anything short of a Clear call as provisional. Official inactives (about 90 minutes before kickoff) aren't checked. Wind of 15+ mph is flagged next to the opponent when the forecast is available; it is not built into projections.
       <details class="how"><summary>Tiebreak order when a call is close</summary><ul><li>Health certainty — prefer the player with no injury tag.</li><li>Game environment — the higher implied team total, only when the two are 4+ points apart (won 54.5% in the backtest).</li><li>Kickoff — the later game keeps late-swap flexibility.</li><li>Otherwise keep the higher projection: it wins 54% of toss-ups.</li><li class="dim">Dropped after the 2022-2026 backtest: position matchup (won 50%) and floor/ceiling by recent games (no better than the projection). See Track record.</li></ul></details>
     </div>`;
 }

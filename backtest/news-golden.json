@@ -841,5 +841,125 @@
    "status": null,
    "speculative": true
   }
+ ],
+ "fresh2_note": "Second fresh batch: live headlines fetched 2026-11-13 and labelled before the classifier was run on them; scored once.",
+ "fresh2": [
+  {
+   "p": "Garrett Wilson",
+   "t": "Report: Chiefs, 49ers showed interest in trading for Garrett Wilson",
+   "status": null,
+   "speculative": true
+  },
+  {
+   "p": "Garrett Wilson",
+   "t": "Jets' Garrett Wilson: Practicing again Thursday",
+   "status": null,
+   "better": true
+  },
+  {
+   "p": "Garrett Wilson",
+   "t": "Garrett Wilson (concussion) practices Thursday",
+   "status": null,
+   "better": true,
+   "injury": true
+  },
+  {
+   "p": "Garrett Wilson",
+   "t": "Chiefs, 49ers Showed Trade Interest In Jets WR Garrett Wilson - NFL Rumors - ProFootballRumors.com",
+   "status": null,
+   "speculative": true
+  },
+  {
+   "p": "Davante Adams",
+   "t": "Sean McVay: Rams optimistic WR Davante Adams will return 'sooner than later'",
+   "status": null
+  },
+  {
+   "p": "Davante Adams",
+   "t": "Sean McVay: Davante Adams could return after Week 12 game vs. Packers",
+   "status": null,
+   "speculative": true
+  },
+  {
+   "p": "Davante Adams",
+   "t": "Injury updates on Trent McDuffie and Davante Adams offer Rams fans hope",
+   "status": null,
+   "injury": true
+  },
+  {
+   "p": "Jaxon Smith-Njigba",
+   "t": "Full practice for Jaxon Smith-Njigba",
+   "status": null,
+   "practice": "FP",
+   "better": true
+  },
+  {
+   "p": "Jonathan Taylor",
+   "t": "Jonathan Taylor focused on being leader for Colts with trade deadline drama over",
+   "status": null,
+   "injury": false
+  },
+  {
+   "p": "Jonathan Taylor",
+   "t": "Jonathan Taylor won't say if wanted to stay with Colts but he'd love to talk about the Dolphins",
+   "status": null
+  },
+  {
+   "p": "Kyren Williams",
+   "t": "Rams Restructure Deals For RB Kyren Williams & S Kam Curl",
+   "status": null,
+   "injury": false
+  },
+  {
+   "p": "Kyren Williams",
+   "t": "Rams | Kyren Williams is Rams’ ‘new punt returner right now’",
+   "status": null
+  },
+  {
+   "p": "Saquon Barkley",
+   "t": "Eagles can't risk DeVonta Smith & Saquon Barkley playing after the bye week",
+   "status": null,
+   "speculative": true
+  },
+  {
+   "p": "Trey McBride",
+   "t": "INSANE TREY MCBRIDE CATCH 👀 | AZ Cardinals",
+   "status": null,
+   "injury": false
+  },
+  {
+   "p": "Joe Burrow",
+   "t": "NFL MVP odds: Joe Burrow surpasses Josh Allen for top spot entering Week 10",
+   "status": null,
+   "injury": false
+  },
+  {
+   "p": "Tucker Kraft",
+   "t": "Calling it ‘immature’ to complain about opportunities, Tucker Kraft focuses on elevating Packers in other ways amid slow statistical start",
+   "status": null
+  },
+  {
+   "p": "Omarion Hampton",
+   "t": "Omarion Hampton leads team in rushing Sunday",
+   "status": null,
+   "injury": false
+  },
+  {
+   "p": "Omarion Hampton",
+   "t": "Fantasy Football Usage Report: Tyler Shough Rises, Omarion Hampton a Drop",
+   "status": null
+  },
+  {
+   "p": "Derrick Henry",
+   "t": "Are Roquan Smith, Derrick Henry, Mark Andrews Back With Ravens in '27? NFL Contract Expert Predicts",
+   "status": null,
+   "speculative": true
+  },
+  {
+   "p": "Drake London",
+   "t": "Moves to Make Before Week 10 Fantasy Football: Buy Ollie Gordon, sell Drake London",
+   "status": null,
+   "injury": false
+  }
  ]
 }

@@ -3,7 +3,7 @@
 // league IR rules, rolling waivers, Week-11 deadline, advice only.
 import { avg, sum, quantile, clamp, fmtKick, setTz } from './util.js';
 import { buildValues } from './values.js';
-import { BANDS, gapGroup, gapWinRate, IMPLIED_GAP_MIN, playChance, playingHurt, WIN, NEXT_MAN_BY_WORK, rangeFor, POSTURE_TIEBREAK, FIRST_BACK } from './fitted.js';
+import { BANDS, gapGroup, gapWinRate, IMPLIED_GAP_MIN, playChance, playingHurt, WIN, NEXT_MAN_BY_WORK, rangeFor, POSTURE_TIEBREAK, FIRST_BACK, CONSENSUS, consensusPoints } from './fitted.js';
 
 const SEV = { IR: 5, PUP: 5, Sus: 5, NA: 4, DNR: 4, COV: 4, Out: 4, Doubtful: 3, Questionable: 2, Probable: 1 };
 // Practice participation as FP / LP / DNP, whatever the source calls it.
@@ -124,7 +124,16 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       bye,
       locked: !!(game && (game.state !== 'pre' || new Date(game.date).getTime() <= now)),
       avail: bye ? 'bye' : effSev >= 3 ? 'out' : effSev === 2 ? 'q' : 'ok',
-      proj: p.proj?.pts ?? 0,
+      // Sleeper's projection, averaged with the expert consensus where that beat it (E17)
+      projSleeper: p.proj?.pts ?? 0,
+      projExperts: p.ecr ? consensusPoints(p.pos, p.ecr.ecr) : null,
+      proj: (() => {
+        const s = p.proj?.pts ?? 0;
+        if (!p.ecr || !(s > 0) || !CONSENSUS.positions.includes(p.pos)) return s;
+        const e = consensusPoints(p.pos, p.ecr.ecr);
+        return e == null ? s : CONSENSUS.weight * s + (1 - CONSENSUS.weight) * e;
+      })(),
+      blended: !!(p.ecr && (p.proj?.pts ?? 0) > 0 && CONSENSUS.positions.includes(p.pos)),
       projNext: p.next?.pts ?? null,
       ppg: avg(pts),
       ppg3: last3.length ? avg(last3) : null,

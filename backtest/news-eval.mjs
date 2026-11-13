@@ -55,13 +55,16 @@ export function newsEval() {
   runClassify(G.classify, '');
   runClassify(G.heldout || [], 'held-out ');
   runClassify(G.fresh || [], 'fresh ');
+  runClassify(G.fresh2 || [], 'fresh2 ');
   for (const c of G.match) {
     const got = headlineHit(c.p.n, c.t, c.p) && relevant(c.t, c.p);
     tally('matcher', c.about, got);
     if (got !== c.about) misses.push({ field: 'matcher', title: c.t, expected: c.about, got, player: c.p.n });
   }
   const rows = Object.entries(field).map(([k, f]) => [k, f.n, pct(f.right / f.n), pct(f.tp + f.fp ? f.tp / (f.tp + f.fp) : NaN), pct(f.tp + f.fn ? f.tp / (f.tp + f.fn) : NaN)]);
-  const pick = (pre) => Object.entries(field).filter(([k]) => (pre ? k.startsWith(pre) : !k.startsWith('held-out ') && !k.startsWith('fresh ')));
+  const pick = (pre) => Object.entries(field).filter(([k]) => (pre ? k.startsWith(pre) : !k.startsWith('held-out ') && !k.startsWith('fresh')));
+  const f2N = pick('fresh2 ').reduce((s, [, f]) => s + f.n, 0);
+  const f2Right = pick('fresh2 ').reduce((s, [, f]) => s + f.right, 0);
   const frN = pick('fresh ').reduce((s, [, f]) => s + f.n, 0);
   const frRight = pick('fresh ').reduce((s, [, f]) => s + f.right, 0);
   const total = pick('').reduce((s, [, f]) => s + f.n, 0);
@@ -77,9 +80,10 @@ export function newsEval() {
     findings: [
       `Development set: ${pct(right / total)}% of ${total} checks correct (71.3% before the fixes this set prompted, so this number is no longer independent).`,
       `Second set, labelled after the first round of fixes: 76% of 31 checks were correct when first scored (status 74%: four of the five status misses were another player's news pinned on the named one). The clause rule and three more patterns were then added, so it is now ${pct(hoRight / hoN)}% and also no longer independent.`,
+      ...(G.fresh2?.length ? [`Second fresh set (live headlines from 13 Nov, labelled before scoring): 89.2% of 37 checks correct when first scored, status 100%. Its four misses (good-news practice wording, two opinion pieces) were then fixed; it now scores ${pct(f2Right / f2N)}%.`] : []),
       ...(G.fresh?.length ? [`Fresh set (live headlines, labelled after every earlier fix): 78.3% of 46 checks correct when first scored. That is the honest number. Its ten misses were then fixed too, so it now scores ${pct(frRight / frN)}%; the next batch of labelled headlines gives the next honest number.`] : []),
     ],
-    fit: { field, misses: misses.length, accuracy: right / total, heldout: hoN ? hoRight / hoN : null, heldoutN: hoN, heldoutFirst: 0.76, freshFirst: 0.783, fresh: frN ? frRight / frN : null, freshN: frN, before: 0.713 },
+    fit: { field, misses: misses.length, accuracy: right / total, heldout: hoN ? hoRight / hoN : null, heldoutN: hoN, heldoutFirst: 0.76, freshFirst: 0.783, fresh2First: 0.892, fresh: frN ? frRight / frN : null, freshN: frN, before: 0.713 },
   };
 }
 

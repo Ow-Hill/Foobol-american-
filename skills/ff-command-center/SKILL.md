@@ -78,6 +78,9 @@ asking Owen again.
   fallback's projection with the starter's projection times his chance to play.
 - A lead back out: the back with the most recent work (not the depth-chart listing) led the
   backfield 78% of the time and averaged 13 points.
+- Expert consensus (FantasyPros weekly rankings) averaged 50/50 with Sleeper beat Sleeper alone at
+  QB, WR and K. When they disagree on a close WR call, the experts were right about 55% of the
+  time. Wednesday's consensus is nearly as good as Sunday's.
 - Source and full tables: `docs/backtest-report.md` in the dashboard repo.
 
 ## Status-conflict rule

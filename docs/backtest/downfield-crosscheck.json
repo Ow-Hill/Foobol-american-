@@ -276,5 +276,211 @@
    }
   }
  ],
- "note": "'site' is the finder as it was (one typical-week shift for every week); 'siteWeekByWeek' is after the change to week-by-week lineups. This week's points now agree closely with Down Field; rest-of-season player values still differ."
+ "note": "'site' is the finder as it was (one typical-week shift for every week); 'siteWeekByWeek' is after the change to week-by-week lineups. This week's points now agree closely with Down Field; rest-of-season player values still differ.",
+ "rerun_13nov": {
+  "note": "Re-run the next day after adding the expert consensus blend (QB, WR, K). Site: week-by-week trade odds with this week's blended projections. Down Field: forecast run 20261113T000745Z-ppr.",
+  "deals": [
+   {
+    "rank": 1,
+    "give": [
+     "Tee Higgins"
+    ],
+    "get": [
+     "Bucky Irving",
+     "Parker Washington"
+    ],
+    "site": {
+     "me": {
+      "playoff": 0.092,
+      "title": 0.053
+     },
+     "them": {
+      "playoff": -0.001,
+      "title": -0.012
+     },
+     "thisWeek": {
+      "me": -2.5,
+      "them": 2.5
+     }
+    },
+    "downField": {
+     "me": {
+      "playoff": 0.018,
+      "title": 0.004,
+      "band": "toss-up"
+     },
+     "them": {
+      "playoff": 0.0,
+      "title": 0.058
+     },
+     "thisWeek": {
+      "me": -4.43,
+      "them": 3.81
+     },
+     "acceptance": null
+    }
+   },
+   {
+    "rank": 2,
+    "give": [
+     "Chris Olave"
+    ],
+    "get": [
+     "Bucky Irving",
+     "Tre Tucker"
+    ],
+    "site": {
+     "me": {
+      "playoff": 0.054,
+      "title": 0.039
+     },
+     "them": {
+      "playoff": -0.0,
+      "title": -0.007
+     },
+     "thisWeek": {
+      "me": -8.2,
+      "them": 3.0
+     }
+    },
+    "downField": {
+     "me": {
+      "playoff": -0.057,
+      "title": -0.013,
+      "band": "lean, hurts"
+     },
+     "them": {
+      "playoff": 0.0003,
+      "title": 0.075
+     },
+     "thisWeek": {
+      "me": -7.79,
+      "them": 4.29
+     },
+     "acceptance": null
+    }
+   },
+   {
+    "rank": 3,
+    "give": [
+     "Tee Higgins",
+     "A.J. Brown"
+    ],
+    "get": [
+     "Amon-Ra St. Brown",
+     "Chase Brown"
+    ],
+    "site": {
+     "me": {
+      "playoff": 0.092,
+      "title": 0.043
+     },
+     "them": {
+      "playoff": -0.004,
+      "title": 0.002
+     },
+     "thisWeek": {
+      "me": 5.0,
+      "them": -8.0
+     }
+    },
+    "downField": {
+     "me": {
+      "playoff": 0.137,
+      "title": 0.068,
+      "band": "clear"
+     },
+     "them": {
+      "playoff": -0.0033,
+      "title": -0.07
+     },
+     "thisWeek": {
+      "me": 5.18,
+      "them": -10.99
+     },
+     "acceptance": "unlikely"
+    }
+   },
+   {
+    "rank": 4,
+    "give": [
+     "Tee Higgins",
+     "Patrick Mahomes"
+    ],
+    "get": [
+     "Amon-Ra St. Brown",
+     "Chase Brown"
+    ],
+    "site": {
+     "me": {
+      "playoff": 0.024,
+      "title": 0.031
+     },
+     "them": {
+      "playoff": 0.003,
+      "title": 0.009
+     },
+     "thisWeek": {
+      "me": 5.0,
+      "them": -8.0
+     }
+    },
+    "downField": {
+     "me": {
+      "playoff": 0.131,
+      "title": 0.102,
+      "band": "clear"
+     },
+     "them": {
+      "playoff": -0.0057,
+      "title": -0.101
+     },
+     "thisWeek": {
+      "me": 10.82,
+      "them": -12.85
+     },
+     "acceptance": "unlikely"
+    }
+   },
+   {
+    "rank": 5,
+    "give": [
+     "A.J. Brown"
+    ],
+    "get": [
+     "Blake Corum"
+    ],
+    "site": {
+     "me": {
+      "playoff": 0.065,
+      "title": 0.038
+     },
+     "them": {
+      "playoff": -0.001,
+      "title": -0.013
+     },
+     "thisWeek": {
+      "me": 2.4,
+      "them": -1.1
+     }
+    },
+    "downField": {
+     "me": {
+      "playoff": -0.016,
+      "title": -0.004,
+      "band": "toss-up"
+     },
+     "them": {
+      "playoff": 0.0017,
+      "title": 0.019
+     },
+     "thisWeek": {
+      "me": -2.92,
+      "them": 3.27
+     },
+     "acceptance": "plausible"
+    }
+   }
+  ]
+ }
 }

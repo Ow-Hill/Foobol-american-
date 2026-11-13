@@ -816,3 +816,250 @@ export function e14b() {
     fit,
   };
 }
+
+// ================= E17 =================
+// Expert consensus (FantasyPros ECR, archived by dynastyprocess/data) as a second source next to
+// Sleeper's projection. Rank is turned into points with a curve per position fitted on 2022-24.
+// Only Sunday and Monday games: the "final" scrape is Sunday morning, after Thursday's game.
+import fsE17 from 'node:fs';
+import pathE17 from 'node:path';
+const ECR_PAGE = { qb: 'QB', 'ppr-rb': 'RB', 'ppr-wr': 'WR', 'ppr-te': 'TE', k: 'K', dst: 'DEF' };
+let ecrMap = null;
+export function ecrWeek(season, wk, kind = 'final') {
+  const dir = pathE17.join(D.DIR, 'ecr');
+  const f = pathE17.join(dir, `${season}-${wk}-${kind}.json`);
+  if (!fsE17.existsSync(f)) return null;
+  ecrMap ||= JSON.parse(fsE17.readFileSync(pathE17.join(dir, 'fp-to-sleeper.json'), 'utf8'));
+  const j = JSON.parse(fsE17.readFileSync(f, 'utf8'));
+  const out = new Map();
+  for (const r of j.rows) {
+    const pos = ECR_PAGE[r.page];
+    if (!pos) continue;
+    const pid = pos === 'DEF' ? D.fixTeam(r.team) : ecrMap[r.fantasypros_id];
+    if (!pid) continue;
+    out.set(pid, { pos, ecr: Number(r.ecr), sd: Number(r.sd), r2p: r.r2p_pts && r.r2p_pts !== 'NA' ? Number(r.r2p_pts) : null });
+  }
+  return { at: j.scrapedAt, players: out };
+}
+let e17Rows = null;
+function ecrRows() {
+  if (e17Rows) return e17Rows;
+  const rows = [];
+  for (const r of playerWeeks()) {
+    if (r.wk > 17 || !r.played) continue;
+    const S = D.loadSeason(r.season);
+    const g = S.game(r.team, r.wk);
+    const day = g?.kick ? new Date(g.kick.replace(/-05:00$/, 'Z')).getUTCDay() : null;
+    if (day !== 0 && day !== 1) continue; // Sunday or Monday games only
+    const fin = ecrWeek(r.season, r.wk, 'final');
+    const early = ecrWeek(r.season, r.wk, 'early');
+    const e = fin?.players.get(r.id);
+    if (!e) continue;
+    rows.push({ ...r, ecr: e.ecr, ecrSd: e.sd, r2p: e.r2p, ecrEarly: early?.players.get(r.id)?.ecr ?? null });
+  }
+  return (e17Rows = rows);
+}
+// points = a + b * ln(rank), per position, fitted on the training seasons
+let ecrCurve = null;
+export function ecrPointsModel() {
+  if (ecrCurve) return ecrCurve;
+  ecrCurve = {};
+  for (const pos of ['QB', 'RB', 'WR', 'TE', 'K', 'DEF']) {
+    const tr = ecrRows().filter((r) => r.pos === pos && r.split === 'train');
+    if (tr.length < 100) continue;
+    ecrCurve[pos] = ols(tr.map((r) => [Math.log(r.ecr)]), tr.map((r) => r.actual));
+  }
+  return ecrCurve;
+}
+const ecrPts = (pos, ecr) => (ecrPointsModel()[pos] && ecr > 0 ? predict(ecrPointsModel()[pos], [Math.log(ecr)]) : null);
+
+export function e17() {
+  const all = ecrRows();
+  const fit = { curve: Object.fromEntries(Object.entries(ecrPointsModel()).map(([k, b]) => [k, b.map(r3)])), weight: {}, test: {} };
+  const out = [];
+  const pairOut = [];
+  for (const pos of ['QB', 'RB', 'WR', 'TE', 'K', 'DEF']) {
+    if (!ecrPointsModel()[pos]) continue;
+    const rows = all.filter((r) => r.pos === pos).map((r) => ({ ...r, ep: ecrPts(pos, r.ecr), epEarly: r.ecrEarly ? ecrPts(pos, r.ecrEarly) : null }));
+    const tr = rows.filter((r) => r.split === 'train');
+    const te = rows.filter((r) => r.split === 'test');
+    // blend weight on Sleeper's projection, chosen on 2022-24
+    let best = { w: 1, e: Infinity };
+    for (let w = 0; w <= 1.0001; w += 0.05) {
+      const e = mae(tr, (r) => w * r.proj + (1 - w) * r.ep);
+      if (e < best.e - 1e-9) best = { w: Math.round(w * 100) / 100, e };
+    }
+    fit.weight[pos] = best.w;
+    const methods = [
+      ['Sleeper projection (site today)', (r) => r.proj],
+      ['Expert consensus rank, as points', (r) => r.ep],
+      [`Blend: ${Math.round(best.w * 100)}% Sleeper / ${Math.round((1 - best.w) * 100)}% consensus`, (r) => best.w * r.proj + (1 - best.w) * r.ep],
+      ['Half and half', (r) => 0.5 * r.proj + 0.5 * r.ep],
+      ...(te.every((r) => r.r2p != null) ? [["FantasyPros' own points (2024+)", (r) => r.r2p]] : []),
+    ];
+    fit.test[pos] = {};
+    // the rule that ships is decided on 2022-24 alone: 50/50 if it beat Sleeper there
+    fit.train ||= {};
+    fit.train[pos] = { sleeper: r2(mae(tr, (r) => r.proj)), half: r2(mae(tr, (r) => 0.5 * r.proj + 0.5 * r.ep)), sleeperRho: r3(weekly(tr, (r) => r.proj)), halfRho: r3(weekly(tr, (r) => 0.5 * r.proj + 0.5 * r.ep)) };
+    for (const [name, f] of methods) {
+      const m = { mae: mae(te, f), rho: weekly(te, f), bias: bias(te, f) };
+      fit.test[pos][name] = { mae: r2(m.mae), rho: r3(m.rho) };
+      out.push([pos, name, r2(m.mae), r2(m.bias), r3(m.rho), te.length]);
+    }
+    // close calls: pairs Sleeper calls within 2 points. How often does each source pick the winner?
+    if (['RB', 'WR', 'TE'].includes(pos)) {
+      const g = {};
+      for (const r of te) (g[r.season + ':' + r.wk] ||= []).push(r);
+      const tally = { sleeper: [0, 0], consensus: [0, 0], blend: [0, 0], disagree: [0, 0] };
+      for (const list of Object.values(g)) {
+        for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+          const a = list[i];
+          const b = list[j];
+          if (a.actual === b.actual || Math.abs(a.proj - b.proj) >= 2) continue;
+          const win = (x, y) => (x.actual > y.actual ? 1 : 0);
+          const pick = (f) => (f(a) >= f(b) ? win(a, b) : win(b, a));
+          tally.sleeper[0] += pick((r) => r.proj); tally.sleeper[1]++;
+          tally.consensus[0] += pick((r) => r.ep); tally.consensus[1]++;
+          tally.blend[0] += pick((r) => best.w * r.proj + (1 - best.w) * r.ep); tally.blend[1]++;
+          if ((a.proj >= b.proj) !== (a.ep >= b.ep)) {
+            tally.disagree[0] += pick((r) => r.ep);
+            tally.disagree[1]++;
+          }
+        }
+      }
+      const rate = (t) => (t[1] ? t[0] / t[1] : NaN);
+      fit.test[pos].closeCalls = Object.fromEntries(Object.entries(tally).map(([k, t]) => [k, { rate: r3(rate(t)), n: t[1] }]));
+      pairOut.push([pos, pct(rate(tally.sleeper)), pct(rate(tally.consensus)), pct(rate(tally.blend)), tally.sleeper[1], pct(rate(tally.disagree)), tally.disagree[1]]);
+    }
+  }
+  // early week: Wednesday consensus vs Sunday consensus, same players
+  const ew = all.filter((r) => r.split === 'test' && r.ecrEarly && ['QB', 'RB', 'WR', 'TE'].includes(r.pos)).map((r) => ({ ...r, ep: ecrPts(r.pos, r.ecr), epEarly: ecrPts(r.pos, r.ecrEarly) }));
+  const earlyFull = all.filter((r) => r.split === 'test' && ['QB', 'RB', 'WR', 'TE'].includes(r.pos) && r.ecr);
+  const earlyMissing = earlyFull.filter((r) => !r.ecrEarly).length / earlyFull.length;
+  fit.early = { mae: r2(mae(ew, (r) => r.epEarly)), maeFinal: r2(mae(ew, (r) => r.ep)), rho: r3(weekly(ew, (r) => r.epEarly)), rhoFinal: r3(weekly(ew, (r) => r.ep)), n: ew.length, missing: r3(earlyMissing) };
+  const sk = ['RB', 'WR', 'TE'].map((p) => fit.test[p]);
+  const sleeperMae = mean(['QB', 'RB', 'WR', 'TE'].map((p) => fit.test[p]['Sleeper projection (site today)'].mae));
+  const blendKey = (p) => Object.keys(fit.test[p]).find((k) => k.startsWith('Blend'));
+  const blendMae = mean(['QB', 'RB', 'WR', 'TE'].map((p) => fit.test[p][blendKey(p)].mae));
+  // adopt 50/50 where it beat Sleeper alone on 2022-24 (miss and ranking both no worse), then report 2025-26
+  fit.adopt = Object.fromEntries(Object.keys(fit.train).map((p) => [p, fit.train[p].half < fit.train[p].sleeper && fit.train[p].halfRho >= fit.train[p].sleeperRho - 0.005]));
+  fit.confirmed = Object.fromEntries(Object.keys(fit.train).map((p) => [p, fit.test[p]['Half and half'].mae <= fit.test[p]['Sleeper projection (site today)'].mae]));
+  return {
+    id: 'E17', title: 'Does expert consensus beat Sleeper\'s projection, or improve it?',
+    tables: [
+      { caption: 'Hold-out 2025-26, Sunday and Monday games, players ranked by FantasyPros\' weekly consensus and projected by Sleeper. Consensus rank is turned into points with a curve per position fitted on 2022-24.', head: ['Position', 'Method', 'Avg miss (pts)', 'Bias', 'Weekly rank corr.', 'n'], rows: out },
+      { caption: 'Close calls (Sleeper projections within 2 points of each other), 2025-26: how often each source picked the player who scored more. Last columns: only the pairs where Sleeper and the experts disagreed.', head: ['Position', 'Sleeper %', 'Consensus %', 'Blend %', 'Pairs', 'Consensus right when they disagree %', 'Pairs'], rows: pairOut },
+      { caption: 'Early week: the consensus as it stood on Wednesday vs Sunday morning, same players (2025-26).', head: ['Version', 'Avg miss', 'Weekly rank corr.', 'n'], rows: [['Wednesday', fit.early.mae, fit.early.rho, fit.early.n], ['Sunday morning', fit.early.maeFinal, fit.early.rhoFinal, fit.early.n]] },
+    ],
+    findings: [
+      `Average miss, QB-TE on 2025-26: Sleeper alone ${r2(sleeperMae)}, blended with consensus ${r2(blendMae)}. Blend weights on Sleeper (fitted on 2022-24): ${Object.entries(fit.weight).map(([p, w]) => `${p} ${Math.round(w * 100)}%`).join(', ')}.`,
+      `Close calls: ${pairOut.map((r) => `${r[0]} Sleeper ${r[1]}%, consensus ${r[2]}%, blend ${r[3]}% (when they disagree the experts were right ${r[5]}% of ${r[6]})`).join('; ')}.`,
+      `Early week: Wednesday's consensus missed by ${fit.early.mae} vs ${fit.early.maeFinal} on Sunday (rank correlation ${fit.early.rho} vs ${fit.early.rhoFinal}); ${pct(fit.early.missing)}% of Sunday's ranked players were not yet ranked on Wednesday.`,
+      `Rule chosen on 2022-24 alone: average Sleeper's projection 50/50 with the consensus at ${Object.entries(fit.adopt).filter(([, a]) => a).map(([p]) => p).join(', ') || 'no position'}${Object.entries(fit.adopt).some(([, a]) => !a) ? `; Sleeper alone at ${Object.entries(fit.adopt).filter(([, a]) => !a).map(([p]) => p).join(', ')}` : ''}. On 2025-26 the 50/50 average was no worse than Sleeper at ${Object.entries(fit.confirmed).filter(([, a]) => a).map(([p]) => p).join(', ')}.`,
+    ],
+    fit,
+  };
+}
+
+// ================= E18 =================
+// A second volume model: ffopportunity's expected points (built from every play: expected
+// completions, yards, touchdowns and first downs given the situation), re-scored with this
+// league's settings. Does it measure "what this player's usage is worth" better than the site's
+// own XP regression, for rest-of-season value and for buy-low / sell-high?
+let ffoCache = null;
+function ffo() {
+  if (ffoCache) return ffoCache;
+  ffoCache = {};
+  const dir = pathE17.join(D.DIR, 'ffo');
+  const idsFile = pathE17.join(D.DIR, '..', '..', '..', 'dynastyprocess', 'data', 'files', 'db_playerids.csv');
+  const gsis = {};
+  for (const p of Object.values(D.playersDb())) if (p.gsis) gsis[p.gsis] = p.id;
+  if (fsE17.existsSync(idsFile)) for (const r of D.parseCsv(fsE17.readFileSync(idsFile, 'utf8'))) if (r.gsis_id && r.gsis_id !== 'NA' && r.sleeper_id && r.sleeper_id !== 'NA') gsis[r.gsis_id] ||= r.sleeper_id;
+  const S = D.leagueNow().scoring;
+  const n = (v) => (v === '' || v === 'NA' ? 0 : Number(v));
+  for (const s of D.SEASONS) {
+    const f = pathE17.join(dir, `ep_weekly_${s}.csv`);
+    if (!fsE17.existsSync(f)) continue;
+    for (const r of D.parseCsv(fsE17.readFileSync(f, 'utf8'))) {
+      const pid = gsis[r.player_id];
+      if (!pid) continue;
+      const xp =
+        n(r.receptions_exp) * (S.rec || 0) + n(r.rec_yards_gained_exp) * (S.rec_yd || 0) + n(r.rec_touchdown_exp) * (S.rec_td || 0) +
+        n(r.rush_yards_gained_exp) * (S.rush_yd || 0) + n(r.rush_touchdown_exp) * (S.rush_td || 0) +
+        n(r.pass_yards_gained_exp) * (S.pass_yd || 0) + n(r.pass_touchdown_exp) * (S.pass_td || 0) + n(r.pass_interception_exp) * (S.pass_int || 0) +
+        (n(r.pass_two_point_conv_exp) + n(r.rec_two_point_conv_exp) + n(r.rush_two_point_conv_exp)) * 2;
+      ((ffoCache[s] ||= {})[Number(r.week)] ||= {})[pid] = xp;
+    }
+  }
+  return ffoCache;
+}
+const ffoAvg = (season, p, n = 99) => {
+  const F = ffo()[season] || {};
+  const v = p.hist.slice(-n).map((h) => F[h.w]?.[p.id]).filter((x) => x != null);
+  return v.length >= Math.min(3, n) ? mean(v) : null;
+};
+
+export function e18() {
+  const ros = [];
+  const next4 = [];
+  for (const s of D.SEASONS) {
+    const S = D.loadSeason(s);
+    for (let W = 4; W <= Math.min(14, S.lastWeek); W++) {
+      const P = asOf(s, W);
+      for (const p of Object.values(P)) {
+        if (!SKILL.includes(p.pos) || p.inj || p.hist.length < 3) continue;
+        const pg = ppg(p);
+        if (pg < 6) continue;
+        const mine = xpAvg(p);
+        const theirs = ffoAvg(s, p);
+        if (mine == null || theirs == null) continue;
+        // rest of season (through Week 17) and next four weeks
+        const after = [];
+        for (let wk = W; wk <= Math.min(17, S.lastWeek); wk++) {
+          const r = S.weeks[wk]?.get(p.id);
+          if (r?.played) after.push({ wk, pts: r.pts });
+        }
+        if (W <= 11 && after.length >= 3 && s <= 2025) ros.push({ split: split(s), pos: p.pos, pg, proj: p.proj?.pts ?? pg, mine, theirs, y: mean(after.map((x) => x.pts)) });
+        const last4 = p.hist.filter((h) => h.w >= W - 5).slice(-4);
+        const n4 = after.filter((x) => x.wk < W + 4);
+        if (last4.length === 4 && n4.length >= 2) {
+          const T = mean(last4.map((h) => h.pts));
+          const F = ffo()[s] || {};
+          const Xf = last4.map((h) => F[h.w]?.[p.id]).filter((x) => x != null);
+          if (Xf.length === 4) next4.push({ split: split(s), pos: p.pos, T, Xm: mean(last4.map((h) => xpGame(p.pos, h))), Xf: mean(Xf), y: mean(n4.map((x) => x.pts)) });
+        }
+      }
+    }
+  }
+  const fit = { ros: {}, next4: {} };
+  const out = [];
+  for (const pos of SKILL) {
+    const tr = ros.filter((r) => r.pos === pos && r.split === 'train');
+    const te = ros.filter((r) => r.pos === pos && r.split === 'test');
+    const m = (f) => r2(mean(te.map((r) => Math.abs(r.y - f(r)))));
+    const bM = ols(tr.map((r) => [r.pg, r.mine]), tr.map((r) => r.y), 1e-4);
+    const bF = ols(tr.map((r) => [r.pg, r.theirs]), tr.map((r) => r.y), 1e-4);
+    const bB = ols(tr.map((r) => [r.pg, r.mine, r.theirs]), tr.map((r) => r.y), 1e-4);
+    fit.ros[pos] = { seasonAvg: m((r) => r.pg), halfMine: m((r) => 0.5 * r.pg + 0.5 * r.mine), halfTheirs: m((r) => 0.5 * r.pg + 0.5 * r.theirs), fitMine: m((r) => predict(bM, [r.pg, r.mine])), fitTheirs: m((r) => predict(bF, [r.pg, r.theirs])), fitBoth: m((r) => predict(bB, [r.pg, r.mine, r.theirs])), n: te.length };
+    const t2r = next4.filter((r) => r.pos === pos && r.split === 'train');
+    const t2e = next4.filter((r) => r.pos === pos && r.split === 'test');
+    const m2 = (f) => r2(mean(t2e.map((r) => Math.abs(r.y - f(r)))));
+    const cM = ols(t2r.map((r) => [r.T, r.Xm]), t2r.map((r) => r.y), 1e-4);
+    const cF = ols(t2r.map((r) => [r.T, r.Xf]), t2r.map((r) => r.y), 1e-4);
+    fit.next4[pos] = { mine: m2((r) => predict(cM, [r.T, r.Xm])), theirs: m2((r) => predict(cF, [r.T, r.Xf])), coefTheirs: cF.map(r3), n: t2e.length };
+    const R = fit.ros[pos];
+    out.push([pos, R.seasonAvg, R.halfMine, R.halfTheirs, R.fitBoth, R.n, fit.next4[pos].mine, fit.next4[pos].theirs, fit.next4[pos].n]);
+  }
+  const better = (k1, k2) => SKILL.filter((p) => fit.ros[p][k2] < fit.ros[p][k1]).length;
+  fit.switchRos = better('halfMine', 'halfTheirs') >= 3;
+  fit.switchNext4 = SKILL.filter((p) => fit.next4[p].theirs < fit.next4[p].mine).length >= 3;
+  return {
+    id: 'E18', title: 'A second volume model: ffopportunity expected points vs the site\'s own',
+    tables: [{ caption: 'Hold-out (2025 for rest of season, 2025-26 for next four weeks). Average miss in points per game; lower is better. Volume measures are averaged over the season so far (rest of season) or the last four games (next four).', head: ['Position', 'Rest of season: season average', 'Half average, half site volume model', 'Half average, half ffopportunity', 'Fitted: average + both', 'n', 'Next 4: with site volume model', 'Next 4: with ffopportunity', 'n'], rows: out }],
+    findings: [
+      `Rest of season: ffopportunity in place of the site's volume model ${fit.switchRos ? 'did better' : 'did not do better'} (${SKILL.map((p) => `${p} ${fit.ros[p].halfTheirs} vs ${fit.ros[p].halfMine}`).join(', ')}).`,
+      `Next four weeks (buy/sell): ${SKILL.map((p) => `${p} ${fit.next4[p].theirs} vs ${fit.next4[p].mine}`).join(', ')}. ${fit.switchNext4 ? 'ffopportunity is better at most positions.' : 'No consistent gain.'}`,
+    ],
+    fit,
+  };
+}

@@ -13,7 +13,7 @@ const args = process.argv.slice(2);
 const label = args.find((a) => !a.startsWith('--')) || 'current';
 if (args.includes('--fetch')) await fetchAll();
 
-const ORDER = [A.e1, A.e2, A.e3, A.e4, A.e5, A.e6, B.e7, B.e8, B.e9, A.e10, B.e11, B.e12, B.e13, B.e14, A.e14b, B.e15, A.e16, newsEval];
+const ORDER = [A.e1, A.e2, A.e3, A.e4, A.e5, A.e6, B.e7, B.e8, B.e9, A.e10, B.e11, B.e12, B.e13, B.e14, A.e14b, B.e15, A.e16, A.e17, A.e18, newsEval];
 const out = { label, generated: new Date().toISOString().slice(0, 10), seasons: D.SEASONS, train: D.TRAIN, test: D.TEST, coverage: {}, experiments: {} };
 for (const s of D.SEASONS) {
   const S = D.loadSeason(s);
@@ -66,7 +66,9 @@ if (label === 'current') {
     picks: E.E15.fit.rounds,
     ranges: { ALL: E.E16.fit.ALL, posture: E.E16.fit.posture },
     firstBack: E.E14b.fit.factors,
-    news: { before: E.N1.fit.before, heldoutFirst: E.N1.fit.heldoutFirst, freshFirst: E.N1.fit.freshFirst, freshN: E.N1.fit.freshN, dev: E.N1.fit.accuracy },
+    ecr: E.E8.fit.ecr,
+    consensus: { early: E.E17.fit.early, closeCalls: E.E17.fit.test.WR.closeCalls },
+    news: { before: E.N1.fit.before, heldoutFirst: E.N1.fit.heldoutFirst, freshFirst: E.N1.fit.freshFirst, fresh2First: E.N1.fit.fresh2First, freshN: E.N1.fit.freshN, dev: E.N1.fit.accuracy },
     now: pick(E),
     before: B ? pick(B) : null,
   };

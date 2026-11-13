@@ -178,3 +178,17 @@ export const POSTURE_TIEBREAK = false;
 // E14b: first game back after missing 2-3 games, players scored 86% of their projection in both
 // periods; after 1 or 4+ games the projection already allowed for it.
 export const FIRST_BACK = { 1: 1, 2: 0.86, 3: 0.86, 4: 1 };
+
+// E17: expert consensus (FantasyPros weekly rankings). Rank becomes points as a + b * ln(rank),
+// fitted per position on 2022-24. Averaging it 50/50 with Sleeper's projection beat Sleeper alone
+// on 2022-24 at QB, WR, K and DEF; on 2025-26 it held for QB, WR and K (not DEF), so those three
+// use it. RB and TE stay on Sleeper alone.
+export const CONSENSUS = {
+  positions: ['QB', 'WR', 'K'],
+  weight: 0.5,
+  curve: { QB: [26.37, -3.902], RB: [23.621, -3.843], WR: [24.092, -3.817], TE: [15.633, -2.553], K: [9.108, -0.466], DEF: [11.909, -1.488] },
+};
+export function consensusPoints(pos, ecr) {
+  const c = CONSENSUS.curve[pos];
+  return c && ecr > 0 ? Math.max(0, c[0] + c[1] * Math.log(ecr)) : null;
+}

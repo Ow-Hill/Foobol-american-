@@ -6,7 +6,7 @@ before this work is in [`tables-before.md`](backtest/tables-before.md).
 
 ## Method in five lines
 
-- **Data:** Sleeper's projections and stats for every week of 2022–2026 (to Week 9 of 2026), the
+- **Data:** Sleeper's projections and stats for every week of 2022–2026 (to Week 9 of 2026), FantasyPros' weekly expert consensus (twice-daily archive by dynastyprocess/data), the
   NFL's official injury reports with practice status, closing betting lines and wind, depth charts,
   and this league's own 2025 and 2026 seasons (lineups, 50 two-team trades, both drafts).
 - **Replay:** for each past week the harness rebuilds what the site would have known beforehand and
@@ -33,10 +33,12 @@ before this work is in [`tables-before.md`](backtest/tables-before.md).
 | Teammate estimates, QB out | −10% top target, −20% others | 0% and −10% | Top target scored 99% of expected, others 89% | Old rule too harsh |
 | Confidence labels on estimates | "clear" 43.5%, "lean" 51.5%, "toss" 53.3% (upside down) | lean 66%, toss 52% | — | Fixed: the label now tracks accuracy |
 | Win probability | Brier 0.245; said 75% when the side won 59% | 0.235; says 74%, wins 73% | Coin flip 0.250 | Was barely better than guessing; now calibrated. The season simulation now uses each team's projected lineup for the current week too |
+| Projection source | Sleeper only | Sleeper averaged 50/50 with FantasyPros' expert consensus at QB, WR, K | Replayed lineups: +0.57 pts/week (90% range 0.15 to 1.09); changed 50 of 208 team-weeks and scored more 60% of those times | Rule chosen on 2022–24, confirmed on 2025–26. RB, TE, DEF stay on Sleeper (no gain) |
+| Early-week advice | Unmeasured | Wednesday's consensus missed by 5.91 pts vs 5.88 on Sunday morning | — | Answered: early-week rankings are nearly as good as the final ones |
 | Floor / ceiling | Middle half of the last 6 games: held the actual score 35% of the time (should be 50%) | Projection-based: 49.5% | — | Fixed |
 | Posture tiebreak (favoured → floor, underdog → ceiling) | Used | **Removed** | Recent floor avoided busts 59.3% vs 60.3% for the higher projection; recent ceiling boomed 22.8% vs 23.0% | Did not work |
 | First game back | Full projection | 86% after missing 2–3 games | Projection alone: 86% of it scored in both periods | Fixed where both periods agree |
-| News classifier (labelled headlines) | 71% of checks right on the first labelled set; 78% on fresh live headlines | 100% on all three sets after the fixes they prompted | — | **78% is the honest number**: each set stopped being independent once it was used to fix the code |
+| News classifier (labelled headlines) | 71% on the first labelled set; 78% on fresh live headlines | **89% on a second fresh batch** (labelled before scoring; status 100%) | — | Improving; each batch is scored once, then used to fix, then retired as a test set |
 | Headlines that name two players | One player's status pinned on the other (e.g. "Malik Willis on IR, Kyle McCord in line to start" marked McCord IR) | Status read only from the parts of the headline about that player | — | Fixed |
 | Trade odds vs Down Field (5 deals, this week) | Agreed on direction for you in 3 of 5 | This week's points now match Down Field within about 1–4 points; season effect still disagrees on 3 of 5 | — | **Partly fixed**: player values for the rest of the season differ between the models |
 | Next man up (RB) | Depth chart order | Recent work first | Depth chart led the backfield 71%, recent work 78%; when they disagreed 25% vs 55% | Changed |
@@ -175,6 +177,61 @@ still disagree about the season, because they value some players differently for
 Neither can be shown right from this league's 17 decided trades. The Trades page says so and points
 to the second-opinion button.
 
+**E17 — Expert consensus.** FantasyPros' weekly consensus rankings have been archived twice a day
+since 2021 by dynastyprocess/data. The test used the last version before each Sunday (and a
+Wednesday version) for every week of 2022 to 2026. Ranks become points through a curve per
+position (points = a + b·ln(rank), fitted on 2022–24).
+
+On 2025–26, Sunday and Monday games:
+
+| Position | Sleeper avg miss | Consensus | 50/50 | Rank corr. Sleeper → 50/50 |
+| --- | --- | --- | --- | --- |
+| QB | 6.14 | 6.12 | **6.10** | 0.287 → 0.304 |
+| RB | 6.09 | 6.10 | 6.05 | 0.457 → 0.464 |
+| WR | 5.88 | 5.84 | **5.83** | 0.395 → 0.405 |
+| TE | 5.34 | 5.26 | 5.28 | 0.328 → 0.326 |
+| K | 3.80 | 3.74 | **3.76** | 0.065 → 0.107 |
+| DEF | 4.55 | 4.69 | 4.57 | 0.222 → 0.228 |
+
+**Choosing the rule.** It was picked on 2022–24 alone: 50/50 at QB, WR, K and DEF. It then held on
+2025–26 for QB, WR and K but not DEF. Those three ship. RB and TE did as well either way and stay
+on Sleeper. This matches the outside research: averaging sources gives a small but steady gain.
+
+**Close calls.** When Sleeper and the experts disagreed on a close receiver call (2,289 pairs),
+the experts were right 54.9% of the time. The Lineup page now shows both numbers and highlights
+gaps of 3+ points.
+
+**Early week.** Wednesday's consensus was almost as accurate as Sunday's (5.91 vs 5.88;
+rank correlation 0.467 vs 0.487), and 99.7% of Sunday's ranked players were already ranked on
+Wednesday. That answers the open question about early-week advice, at least for the consensus
+half.
+
+**E18 — A second volume model.** ffopportunity publishes expected points for every player-game,
+built from the plays themselves, and it was re-scored with this league's settings. In place of the
+site's own volume model it did slightly worse for rest-of-season value (QB 3.50 vs 3.25, RB 3.15
+vs 3.10, WR 3.48 vs 3.49, TE 2.83 vs 2.72) and the same for the next four weeks. The site keeps
+its own model.
+
+**Down Field, re-run 13 Nov.** The re-run used the expert consensus blend and both models' newest
+forecasts (`downfield-crosscheck.json`, `rerun_13nov`).
+
+| Deal | Site: your title odds | Down Field | This week, you (site / DF) | Partner title (site / DF) |
+| --- | --- | --- | --- | --- |
+| Higgins → Irving + P. Washington | +5.3 | +0.4 (noise) | −2.5 / −4.4 | −1.2 / +5.8 |
+| Olave → Irving + Tucker | +3.9 | −1.3 (hurts) | −8.2 / −7.8 | −0.7 / +7.5 |
+| Higgins + A.J. Brown → St. Brown + C. Brown | +4.3 | +6.8 (clear) | +5.0 / +5.2 | +0.2 / −7.0 |
+| Higgins + Mahomes → St. Brown + C. Brown | +3.1 | +10.2 (clear) | +5.0 / +10.8 | +0.9 / −10.1 |
+| A.J. Brown → Corum | +3.8 | −0.4 (noise) | +2.4 / −2.9 | −1.3 / +1.9 |
+
+This week's points mostly agree. The exceptions are deals that move A.J. Brown (experts and Sleeper
+disagree on him by 6 points) and Mahomes's bench value. Over the rest of the season the two models
+still disagree on 3 of 5 deals:
+- The site values Irving and Higgins more than Down Field does.
+- It values St. Brown and Chase Brown less.
+
+The consensus blend changes this week only, so it was never going to settle a rest-of-season
+dispute.
+
 ## What changed in the code
 
 | Change | Where |
@@ -190,28 +247,29 @@ to the second-opinion button.
 | Classifier fixes and the clause rule; labelled headline set; headline lag behind official changes | `public/js/playernews.js`, `lib/playernews.js`, `backtest/news-*`, `lib/snapshot.js` |
 | Official status and practice changes in the status log, News items and alerts | `lib/snapshot.js`, `public/js/playernews.js`, `lib/alerts.js` |
 | Wind at kickoff for outdoor games (Open-Meteo), shown with its measured effect | `lib/weather.js`, `public/js/views/lineup.js` |
+| Expert consensus fetched daily and averaged into QB/WR/K projections; both numbers shown | `lib/consensus.js`, `public/js/{fitted,model}.js`, `public/js/views/lineup.js` |
+| Weekly consensus history for the backtest; E17, E18 | `backtest/fetch-ecr.mjs`, `backtest/experiments-a.mjs` |
 | Deadline lead on the Trades page; priced sweeteners; future horizon from measured value retention; Buy/Hold/Sell on Values | `public/js/views/{trades,finder,values}.js`, `public/js/values.js` |
 | Matchup label shown for QBs only | `public/js/views/lineup.js` |
 | The harness itself | `backtest/` |
 
 ## Not solved
 
-- **A second projection source.** This is the root of the trade disagreement with Down Field and
-  the most valuable thing still missing. Only Sleeper's projections are archived, so averaging
-  could not be tested here.
-- **Early-week accuracy.** The archive holds final projections only. The live call log measures it
-  from now on.
-- **Trade verdicts and acceptance.** 17 decided trades cannot prove the trade values either way,
-  and refused offers are never recorded. Acceptance stays a heuristic anchored to accepted deals.
-- **News accuracy, going forward.** 78% on fresh headlines before the last fixes. It needs a new
-  labelled batch every few weeks to stay honest. Headline lag behind official changes is now
-  measured live (Track record page); it had no data yet on the first day.
+- **Rest-of-season player values.** This is where the site and Down Field still disagree on trades.
+  Weekly consensus helps this week only. A rest-of-season consensus exists (FantasyPros "ROS"
+  rankings, archived through 2024), and testing it on trade values is the next step.
+- **Early-week accuracy of the site's full advice.** The consensus half is measured: Wednesday is
+  nearly as good as Sunday. Sleeper's half is still unarchived; the live call log measures it from
+  now on.
+- **Trade verdicts and acceptance.** There are only 17 decided trades, and refused offers are never
+  recorded.
+- **News accuracy.** 89% on the latest fresh batch. Keep labelling a batch every few weeks.
 - **Wind in this environment.** Open-Meteo's free daily limit is shared by everyone on the same
-  outgoing address, and it ran out here after two stadiums. From your own machine it is per user.
-- **Season-odds calibration.** Using this week's lineups in the season simulation is a consistency
-  fix. Two seasons of one league is too little to score season odds on their own.
-- **Playoff-schedule adjustment for trades.** Dropped: matchup strength showed no signal to build
-  it on, except weakly for quarterbacks.
+  outgoing address. From your own machine it is per user.
+- **Season-odds calibration.** Two seasons of one league is too little to score season odds on
+  their own.
+- **Playoff-schedule adjustment for trades.** Dropped: no signal in matchup strength beyond the
+  projection.
 
 ## Sources
 

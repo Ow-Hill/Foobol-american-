@@ -1,6 +1,6 @@
 {
  "label": "current",
- "generated": "2026-11-12",
+ "generated": "2026-11-13",
  "seasons": [
   2022,
   2023,
@@ -4057,10 +4057,18 @@
    "findings": [
     "Across 208 team-weeks the site's lineup scored 2.36 points a week more than the lineup the manager set (90% range 0.74 to 4.21). For your team: 4.84 (0.26 to 9.4).",
     "Managers reached 87.5% of the perfect lineup, the site 89.2%.",
+    "Blending in the expert consensus (QB, WR, K) changed the site's lineup in 50 of 208 team-weeks and moved its score by 0.57 points a week on average (90% range 0.15 to 1.09); where it changed something, it scored more 60% of the time.",
     "Managers started 0.05 players a week who did not play; the site lineup 0.01. Caveat: Sleeper's stored projections are the final pre-kickoff ones, so the site lineup here knows about Sunday-morning inactives. It is what the site would say if checked 90 minutes before each game, not on Tuesday.",
     "Check on the scorer: my re-scored lineup totals differ from Sleeper's official ones by 0.15 points a week on average."
    ],
    "fit": {
+    "ecr": {
+     "diff": 0.57,
+     "range": "0.15 to 1.09",
+     "changed": 50,
+     "n": 208,
+     "betterWhenChanged": 0.6
+    },
     "diff": 2.36,
     "range": "0.74 to 4.21",
     "mine": 4.84,
@@ -4153,6 +4161,19 @@
        25,
        90.2,
        92.4
+      ],
+      [
+       "All teams, site lineup with expert consensus blended in",
+       208,
+       135.1,
+       138,
+       154.3,
+       2.93,
+       "1.3 to 4.98",
+       39.4,
+       27.4,
+       87.5,
+       89.6
       ]
      ]
     },
@@ -6839,11 +6860,779 @@
     }
    ]
   },
+  "E17": {
+   "title": "Does expert consensus beat Sleeper's projection, or improve it?",
+   "findings": [
+    "Average miss, QB-TE on 2025-26: Sleeper alone 5.86, blended with consensus 5.83. Blend weights on Sleeper (fitted on 2022-24): QB 0%, RB 85%, WR 45%, TE 75%, K 0%, DEF 60%.",
+    "Close calls: RB Sleeper 55%, consensus 55.5%, blend 55.2% (when they disagree the experts were right 50.9% of 984); WR Sleeper 53.4%, consensus 56.1%, blend 55.1% (when they disagree the experts were right 54.9% of 2289); TE Sleeper 52.3%, consensus 52.5%, blend 51.8% (when they disagree the experts were right 50.4% of 417).",
+    "Early week: Wednesday's consensus missed by 5.91 vs 5.88 on Sunday (rank correlation 0.467 vs 0.487); 0.3% of Sunday's ranked players were not yet ranked on Wednesday.",
+    "Rule chosen on 2022-24 alone: average Sleeper's projection 50/50 with the consensus at QB, WR, K, DEF; Sleeper alone at RB, TE. On 2025-26 the 50/50 average was no worse than Sleeper at QB, RB, WR, TE, K."
+   ],
+   "fit": {
+    "curve": {
+     "QB": [
+      26.37,
+      -3.902
+     ],
+     "RB": [
+      23.621,
+      -3.843
+     ],
+     "WR": [
+      24.092,
+      -3.817
+     ],
+     "TE": [
+      15.633,
+      -2.553
+     ],
+     "K": [
+      9.108,
+      -0.466
+     ],
+     "DEF": [
+      11.909,
+      -1.488
+     ]
+    },
+    "weight": {
+     "QB": 0,
+     "RB": 0.85,
+     "WR": 0.45,
+     "TE": 0.75,
+     "K": 0,
+     "DEF": 0.6
+    },
+    "test": {
+     "QB": {
+      "Sleeper projection (site today)": {
+       "mae": 6.14,
+       "rho": 0.287
+      },
+      "Expert consensus rank, as points": {
+       "mae": 6.12,
+       "rho": 0.291
+      },
+      "Blend: 0% Sleeper / 100% consensus": {
+       "mae": 6.12,
+       "rho": 0.291
+      },
+      "Half and half": {
+       "mae": 6.1,
+       "rho": 0.304
+      },
+      "FantasyPros' own points (2024+)": {
+       "mae": 6.12,
+       "rho": 0.291
+      }
+     },
+     "RB": {
+      "Sleeper projection (site today)": {
+       "mae": 6.09,
+       "rho": 0.457
+      },
+      "Expert consensus rank, as points": {
+       "mae": 6.1,
+       "rho": 0.457
+      },
+      "Blend: 85% Sleeper / 15% consensus": {
+       "mae": 6.07,
+       "rho": 0.458
+      },
+      "Half and half": {
+       "mae": 6.05,
+       "rho": 0.464
+      },
+      "FantasyPros' own points (2024+)": {
+       "mae": 6.02,
+       "rho": 0.459
+      },
+      "closeCalls": {
+       "sleeper": {
+        "rate": 0.55,
+        "n": 3173
+       },
+       "consensus": {
+        "rate": 0.555,
+        "n": 3173
+       },
+       "blend": {
+        "rate": 0.552,
+        "n": 3173
+       },
+       "disagree": {
+        "rate": 0.509,
+        "n": 984
+       }
+      }
+     },
+     "WR": {
+      "Sleeper projection (site today)": {
+       "mae": 5.88,
+       "rho": 0.395
+      },
+      "Expert consensus rank, as points": {
+       "mae": 5.84,
+       "rho": 0.41
+      },
+      "Blend: 45% Sleeper / 55% consensus": {
+       "mae": 5.83,
+       "rho": 0.405
+      },
+      "Half and half": {
+       "mae": 5.83,
+       "rho": 0.405
+      },
+      "FantasyPros' own points (2024+)": {
+       "mae": 5.82,
+       "rho": 0.408
+      },
+      "closeCalls": {
+       "sleeper": {
+        "rate": 0.534,
+        "n": 8322
+       },
+       "consensus": {
+        "rate": 0.561,
+        "n": 8322
+       },
+       "blend": {
+        "rate": 0.551,
+        "n": 8322
+       },
+       "disagree": {
+        "rate": 0.549,
+        "n": 2289
+       }
+      }
+     },
+     "TE": {
+      "Sleeper projection (site today)": {
+       "mae": 5.34,
+       "rho": 0.328
+      },
+      "Expert consensus rank, as points": {
+       "mae": 5.26,
+       "rho": 0.325
+      },
+      "Blend: 75% Sleeper / 25% consensus": {
+       "mae": 5.3,
+       "rho": 0.327
+      },
+      "Half and half": {
+       "mae": 5.28,
+       "rho": 0.326
+      },
+      "FantasyPros' own points (2024+)": {
+       "mae": 5.32,
+       "rho": 0.326
+      },
+      "closeCalls": {
+       "sleeper": {
+        "rate": 0.523,
+        "n": 1676
+       },
+       "consensus": {
+        "rate": 0.525,
+        "n": 1676
+       },
+       "blend": {
+        "rate": 0.518,
+        "n": 1676
+       },
+       "disagree": {
+        "rate": 0.504,
+        "n": 417
+       }
+      }
+     },
+     "K": {
+      "Sleeper projection (site today)": {
+       "mae": 3.8,
+       "rho": 0.065
+      },
+      "Expert consensus rank, as points": {
+       "mae": 3.74,
+       "rho": 0.132
+      },
+      "Blend: 0% Sleeper / 100% consensus": {
+       "mae": 3.74,
+       "rho": 0.132
+      },
+      "Half and half": {
+       "mae": 3.76,
+       "rho": 0.107
+      },
+      "FantasyPros' own points (2024+)": {
+       "mae": 3.8,
+       "rho": 0.138
+      }
+     },
+     "DEF": {
+      "Sleeper projection (site today)": {
+       "mae": 4.55,
+       "rho": 0.222
+      },
+      "Expert consensus rank, as points": {
+       "mae": 4.69,
+       "rho": 0.19
+      },
+      "Blend: 60% Sleeper / 40% consensus": {
+       "mae": 4.56,
+       "rho": 0.234
+      },
+      "Half and half": {
+       "mae": 4.57,
+       "rho": 0.228
+      },
+      "FantasyPros' own points (2024+)": {
+       "mae": 4.58,
+       "rho": 0.19
+      }
+     }
+    },
+    "train": {
+     "QB": {
+      "sleeper": 5.91,
+      "half": 5.8,
+      "sleeperRho": 0.362,
+      "halfRho": 0.387
+     },
+     "RB": {
+      "sleeper": 5.88,
+      "half": 5.9,
+      "sleeperRho": 0.431,
+      "halfRho": 0.435
+     },
+     "WR": {
+      "sleeper": 5.98,
+      "half": 5.95,
+      "sleeperRho": 0.394,
+      "halfRho": 0.41
+     },
+     "TE": {
+      "sleeper": 5.2,
+      "half": 5.2,
+      "sleeperRho": 0.297,
+      "halfRho": 0.295
+     },
+     "K": {
+      "sleeper": 3.74,
+      "half": 3.72,
+      "sleeperRho": 0.072,
+      "halfRho": 0.118
+     },
+     "DEF": {
+      "sleeper": 4.76,
+      "half": 4.74,
+      "sleeperRho": 0.191,
+      "halfRho": 0.197
+     }
+    },
+    "early": {
+     "mae": 5.91,
+     "maeFinal": 5.88,
+     "rho": 0.467,
+     "rhoFinal": 0.487,
+     "n": 2524,
+     "missing": 0.003
+    },
+    "adopt": {
+     "QB": true,
+     "RB": false,
+     "WR": true,
+     "TE": false,
+     "K": true,
+     "DEF": true
+    },
+    "confirmed": {
+     "QB": true,
+     "RB": true,
+     "WR": true,
+     "TE": true,
+     "K": true,
+     "DEF": false
+    }
+   },
+   "tables": [
+    {
+     "caption": "Hold-out 2025-26, Sunday and Monday games, players ranked by FantasyPros' weekly consensus and projected by Sleeper. Consensus rank is turned into points with a curve per position fitted on 2022-24.",
+     "head": [
+      "Position",
+      "Method",
+      "Avg miss (pts)",
+      "Bias",
+      "Weekly rank corr.",
+      "n"
+     ],
+     "rows": [
+      [
+       "QB",
+       "Sleeper projection (site today)",
+       6.14,
+       -0.32,
+       0.287,
+       433
+      ],
+      [
+       "QB",
+       "Expert consensus rank, as points",
+       6.12,
+       0.35,
+       0.291,
+       433
+      ],
+      [
+       "QB",
+       "Blend: 0% Sleeper / 100% consensus",
+       6.12,
+       0.35,
+       0.291,
+       433
+      ],
+      [
+       "QB",
+       "Half and half",
+       6.1,
+       0.02,
+       0.304,
+       433
+      ],
+      [
+       "QB",
+       "FantasyPros' own points (2024+)",
+       6.12,
+       0.05,
+       0.291,
+       433
+      ],
+      [
+       "RB",
+       "Sleeper projection (site today)",
+       6.09,
+       -0.2,
+       0.457,
+       725
+      ],
+      [
+       "RB",
+       "Expert consensus rank, as points",
+       6.1,
+       0.16,
+       0.457,
+       725
+      ],
+      [
+       "RB",
+       "Blend: 85% Sleeper / 15% consensus",
+       6.07,
+       -0.15,
+       0.458,
+       725
+      ],
+      [
+       "RB",
+       "Half and half",
+       6.05,
+       -0.02,
+       0.464,
+       725
+      ],
+      [
+       "RB",
+       "FantasyPros' own points (2024+)",
+       6.02,
+       0.31,
+       0.459,
+       725
+      ],
+      [
+       "WR",
+       "Sleeper projection (site today)",
+       5.88,
+       -0.65,
+       0.395,
+       1009
+      ],
+      [
+       "WR",
+       "Expert consensus rank, as points",
+       5.84,
+       -0.64,
+       0.41,
+       1009
+      ],
+      [
+       "WR",
+       "Blend: 45% Sleeper / 55% consensus",
+       5.83,
+       -0.65,
+       0.405,
+       1009
+      ],
+      [
+       "WR",
+       "Half and half",
+       5.83,
+       -0.65,
+       0.405,
+       1009
+      ],
+      [
+       "WR",
+       "FantasyPros' own points (2024+)",
+       5.82,
+       -0.47,
+       0.408,
+       1009
+      ],
+      [
+       "TE",
+       "Sleeper projection (site today)",
+       5.34,
+       -0.38,
+       0.328,
+       364
+      ],
+      [
+       "TE",
+       "Expert consensus rank, as points",
+       5.26,
+       0.36,
+       0.325,
+       364
+      ],
+      [
+       "TE",
+       "Blend: 75% Sleeper / 25% consensus",
+       5.3,
+       -0.2,
+       0.327,
+       364
+      ],
+      [
+       "TE",
+       "Half and half",
+       5.28,
+       -0.01,
+       0.326,
+       364
+      ],
+      [
+       "TE",
+       "FantasyPros' own points (2024+)",
+       5.32,
+       -0.24,
+       0.326,
+       364
+      ],
+      [
+       "K",
+       "Sleeper projection (site today)",
+       3.8,
+       0.13,
+       0.065,
+       253
+      ],
+      [
+       "K",
+       "Expert consensus rank, as points",
+       3.74,
+       0.63,
+       0.132,
+       253
+      ],
+      [
+       "K",
+       "Blend: 0% Sleeper / 100% consensus",
+       3.74,
+       0.63,
+       0.132,
+       253
+      ],
+      [
+       "K",
+       "Half and half",
+       3.76,
+       0.38,
+       0.107,
+       253
+      ],
+      [
+       "K",
+       "FantasyPros' own points (2024+)",
+       3.8,
+       0.9,
+       0.138,
+       253
+      ],
+      [
+       "DEF",
+       "Sleeper projection (site today)",
+       4.55,
+       0.5,
+       0.222,
+       287
+      ],
+      [
+       "DEF",
+       "Expert consensus rank, as points",
+       4.69,
+       -0.69,
+       0.19,
+       287
+      ],
+      [
+       "DEF",
+       "Blend: 60% Sleeper / 40% consensus",
+       4.56,
+       0.03,
+       0.234,
+       287
+      ],
+      [
+       "DEF",
+       "Half and half",
+       4.57,
+       -0.09,
+       0.228,
+       287
+      ],
+      [
+       "DEF",
+       "FantasyPros' own points (2024+)",
+       4.58,
+       0.78,
+       0.19,
+       287
+      ]
+     ]
+    },
+    {
+     "caption": "Close calls (Sleeper projections within 2 points of each other), 2025-26: how often each source picked the player who scored more. Last columns: only the pairs where Sleeper and the experts disagreed.",
+     "head": [
+      "Position",
+      "Sleeper %",
+      "Consensus %",
+      "Blend %",
+      "Pairs",
+      "Consensus right when they disagree %",
+      "Pairs"
+     ],
+     "rows": [
+      [
+       "RB",
+       55,
+       55.5,
+       55.2,
+       3173,
+       50.9,
+       984
+      ],
+      [
+       "WR",
+       53.4,
+       56.1,
+       55.1,
+       8322,
+       54.9,
+       2289
+      ],
+      [
+       "TE",
+       52.3,
+       52.5,
+       51.8,
+       1676,
+       50.4,
+       417
+      ]
+     ]
+    },
+    {
+     "caption": "Early week: the consensus as it stood on Wednesday vs Sunday morning, same players (2025-26).",
+     "head": [
+      "Version",
+      "Avg miss",
+      "Weekly rank corr.",
+      "n"
+     ],
+     "rows": [
+      [
+       "Wednesday",
+       5.91,
+       0.467,
+       2524
+      ],
+      [
+       "Sunday morning",
+       5.88,
+       0.487,
+       2524
+      ]
+     ]
+    }
+   ]
+  },
+  "E18": {
+   "title": "A second volume model: ffopportunity expected points vs the site's own",
+   "findings": [
+    "Rest of season: ffopportunity in place of the site's volume model did not do better (QB 3.5 vs 3.25, RB 3.15 vs 3.1, WR 3.48 vs 3.49, TE 2.83 vs 2.72).",
+    "Next four weeks (buy/sell): QB 4.06 vs 4.06, RB 3.92 vs 3.9, WR 3.82 vs 3.82, TE 3.53 vs 3.5. No consistent gain."
+   ],
+   "fit": {
+    "ros": {
+     "QB": {
+      "seasonAvg": 3.87,
+      "halfMine": 3.25,
+      "halfTheirs": 3.5,
+      "fitMine": 3.41,
+      "fitTheirs": 3.28,
+      "fitBoth": 3.31,
+      "n": 218
+     },
+     "RB": {
+      "seasonAvg": 3.32,
+      "halfMine": 3.1,
+      "halfTheirs": 3.15,
+      "fitMine": 3.15,
+      "fitTheirs": 3.21,
+      "fitBoth": 3.15,
+      "n": 314
+     },
+     "WR": {
+      "seasonAvg": 3.74,
+      "halfMine": 3.49,
+      "halfTheirs": 3.48,
+      "fitMine": 3.4,
+      "fitTheirs": 3.36,
+      "fitBoth": 3.4,
+      "n": 489
+     },
+     "TE": {
+      "seasonAvg": 2.95,
+      "halfMine": 2.72,
+      "halfTheirs": 2.83,
+      "fitMine": 2.88,
+      "fitTheirs": 2.9,
+      "fitBoth": 2.91,
+      "n": 203
+     }
+    },
+    "next4": {
+     "QB": {
+      "mine": 4.06,
+      "theirs": 4.06,
+      "coefTheirs": [
+       6.918,
+       0.301,
+       0.299
+      ],
+      "n": 330
+     },
+     "RB": {
+      "mine": 3.9,
+      "theirs": 3.92,
+      "coefTheirs": [
+       3.332,
+       0.309,
+       0.391
+      ],
+      "n": 502
+     },
+     "WR": {
+      "mine": 3.82,
+      "theirs": 3.82,
+      "coefTheirs": [
+       2.827,
+       0.143,
+       0.601
+      ],
+      "n": 698
+     },
+     "TE": {
+      "mine": 3.5,
+      "theirs": 3.53,
+      "coefTheirs": [
+       4.238,
+       0.236,
+       0.32
+      ],
+      "n": 320
+     }
+    },
+    "switchRos": false,
+    "switchNext4": false
+   },
+   "tables": [
+    {
+     "caption": "Hold-out (2025 for rest of season, 2025-26 for next four weeks). Average miss in points per game; lower is better. Volume measures are averaged over the season so far (rest of season) or the last four games (next four).",
+     "head": [
+      "Position",
+      "Rest of season: season average",
+      "Half average, half site volume model",
+      "Half average, half ffopportunity",
+      "Fitted: average + both",
+      "n",
+      "Next 4: with site volume model",
+      "Next 4: with ffopportunity",
+      "n"
+     ],
+     "rows": [
+      [
+       "QB",
+       3.87,
+       3.25,
+       3.5,
+       3.31,
+       218,
+       4.06,
+       4.06,
+       330
+      ],
+      [
+       "RB",
+       3.32,
+       3.1,
+       3.15,
+       3.15,
+       314,
+       3.9,
+       3.92,
+       502
+      ],
+      [
+       "WR",
+       3.74,
+       3.49,
+       3.48,
+       3.4,
+       489,
+       3.82,
+       3.82,
+       698
+      ],
+      [
+       "TE",
+       2.95,
+       2.72,
+       2.83,
+       2.91,
+       203,
+       3.5,
+       3.53,
+       320
+      ]
+     ]
+    }
+   ]
+  },
   "N1": {
    "title": "News scanner: how well does it read headlines?",
    "findings": [
     "Development set: 100% of 143 checks correct (71.3% before the fixes this set prompted, so this number is no longer independent).",
     "Second set, labelled after the first round of fixes: 76% of 31 checks were correct when first scored (status 74%: four of the five status misses were another player's news pinned on the named one). The clause rule and three more patterns were then added, so it is now 100% and also no longer independent.",
+    "Second fresh set (live headlines from 13 Nov, labelled before scoring): 89.2% of 37 checks correct when first scored, status 100%. Its four misses (good-news practice wording, two opinion pieces) were then fixed; it now scores 100%.",
     "Fresh set (live headlines, labelled after every earlier fix): 78.3% of 46 checks correct when first scored. That is the honest number. Its ten misses were then fixed too, so it now scores 100%; the next batch of labelled headlines gives the next honest number."
    ],
    "fit": {
@@ -6946,6 +7735,41 @@
       "fp": 0,
       "fn": 0
      },
+     "fresh2 status": {
+      "n": 20,
+      "right": 20,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0
+     },
+     "fresh2 speculative": {
+      "n": 5,
+      "right": 5,
+      "tp": 5,
+      "fp": 0,
+      "fn": 0
+     },
+     "fresh2 better": {
+      "n": 3,
+      "right": 3,
+      "tp": 3,
+      "fp": 0,
+      "fn": 0
+     },
+     "fresh2 injury": {
+      "n": 8,
+      "right": 8,
+      "tp": 2,
+      "fp": 0,
+      "fn": 0
+     },
+     "fresh2 practice": {
+      "n": 1,
+      "right": 1,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+     },
      "matcher": {
       "n": 18,
       "right": 18,
@@ -6960,6 +7784,7 @@
     "heldoutN": 31,
     "heldoutFirst": 0.76,
     "freshFirst": 0.783,
+    "fresh2First": 0.892,
     "fresh": 1,
     "freshN": 46,
     "before": 0.713
@@ -7069,6 +7894,41 @@
       [
        "fresh speculative",
        4,
+       100,
+       100,
+       100
+      ],
+      [
+       "fresh2 status",
+       20,
+       100,
+       null,
+       null
+      ],
+      [
+       "fresh2 speculative",
+       5,
+       100,
+       100,
+       100
+      ],
+      [
+       "fresh2 better",
+       3,
+       100,
+       100,
+       100
+      ],
+      [
+       "fresh2 injury",
+       8,
+       100,
+       100,
+       100
+      ],
+      [
+       "fresh2 practice",
+       1,
        100,
        100,
        100

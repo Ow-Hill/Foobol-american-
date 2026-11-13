@@ -9,7 +9,7 @@ A live roster-management dashboard for the Sleeper league **James Cook Lovers**.
 ```bash
 cd ff-roster-monitor
 node server.js        # Node 18+, no dependencies
-npm test              # 64 tests
+npm test              # 68 tests
 # open http://localhost:4321
 ```
 
@@ -94,7 +94,10 @@ two players once you know their projections, so that tiebreak was removed.
 Floor and ceiling now come from the projection and how far players like him usually miss it
 (the old last-six-games range held the actual score 35% of the time instead of 50%). The news
 classifier is checked against hand-labelled headlines (`node backtest/news-eval.mjs`); on fresh
-live headlines it read 78% correctly before the fixes they prompted.
+live headlines it read 89% correctly on the latest batch, before the fixes it prompted. Expert
+consensus averaged into QB, WR and K projections added about half a point a week to replayed
+lineups; the backtest's consensus history is built with `node backtest/fetch-ecr.mjs <clone>`
+(see the script header).
 
 ## Matchup strength
 
@@ -158,6 +161,7 @@ recorded (`data/ripple-log.json`) and scored after the games. Rules:
 
 * **Sleeper** (public API): league settings, rosters, matchups, transactions, picks, players, projections, weekly stats.
 * **ESPN** (public API): injury report with RotoWire notes, news, NFL schedule and betting lines.
+* **FantasyPros expert consensus** (weekly rankings via dynastyprocess/data, refreshed daily): averaged 50/50 with Sleeper's projection at QB, WR and K, where that beat Sleeper alone in the backtest; shown next to Sleeper's number everywhere.
 * **Open-Meteo** (free, no key): wind at kickoff for outdoor games, shown as a flag with its measured effect.
 * **nflverse** (public release files): the NFL's official injury report with practice status, used directly for chance-to-play; the backtest also uses its closing lines, wind and depth charts.
 * Projections are scored with the league's exact scoring settings (checked against Sleeper's own points: 145/145 match).
