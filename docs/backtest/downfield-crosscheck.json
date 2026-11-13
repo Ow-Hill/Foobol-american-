@@ -481,6 +481,76 @@
      "acceptance": "plausible"
     }
    }
-  ]
+  ],
+  "afterRosConsensus": {
+   "note": "Same day, after blending the experts' rest-of-season rank into RB/WR/TE values (E19). Compare with downField in the same rows.",
+   "deals": [
+    {
+     "rank": 1,
+     "site": {
+      "me": {
+       "playoff": 0.091,
+       "title": 0.055
+      },
+      "them": {
+       "playoff": -0.003,
+       "title": -0.024
+      }
+     }
+    },
+    {
+     "rank": 2,
+     "site": {
+      "me": {
+       "playoff": -0.0,
+       "title": 0.011
+      },
+      "them": {
+       "playoff": 0.002,
+       "title": 0.013
+      }
+     }
+    },
+    {
+     "rank": 3,
+     "site": {
+      "me": {
+       "playoff": 0.101,
+       "title": 0.052
+      },
+      "them": {
+       "playoff": -0.007,
+       "title": -0.023
+      }
+     }
+    },
+    {
+     "rank": 4,
+     "site": {
+      "me": {
+       "playoff": 0.035,
+       "title": 0.04
+      },
+      "them": {
+       "playoff": 0.0,
+       "title": -0.016
+      }
+     }
+    },
+    {
+     "rank": 5,
+     "site": {
+      "me": {
+       "playoff": 0.063,
+       "title": 0.035
+      },
+      "them": {
+       "playoff": -0.0,
+       "title": -0.022
+      }
+     }
+    }
+   ]
+  }
  }
 }

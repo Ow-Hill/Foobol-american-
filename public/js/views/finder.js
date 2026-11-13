@@ -73,7 +73,7 @@ export function evaluateDeal(M, partner, give, get, horizon = 'now') {
 
 // ---------- rough acceptance likelihood (heuristic, not a prediction) ----------
 // Value balance is judged against what this league has actually accepted (backtest E13): the
-// median accepted deal had the smaller side at 45% of the larger, so imbalance only starts to
+// median accepted deal had the smaller side at 54% of the larger, so imbalance only starts to
 // cost once it is past what managers here routinely agree to.
 const overpay = (d) => (d.bal > 0 ? 1 - d.gv / Math.max(d.rv, 0.01) : 0); // how far my side falls short of theirs
 const vetoRisk = (d) => d.bal > 0 && d.gv / Math.max(d.rv, 0.01) < TRADE_BALANCE.p25 * 0.6 && d.dThem < 0;

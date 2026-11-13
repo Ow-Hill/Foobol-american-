@@ -24,12 +24,13 @@ function rankingsBody(M, ui) {
     .filter((r) => !q || M.P(r.pid).n.toLowerCase().includes(q))
     .slice(0, 60);
   return table(
-    ['#', 'Player', 'Value', 'Trend', 'Pos rank', 'PPG est.', 'This week', 'Games left', 'ROS pts', 'ADP'],
+    ['#', 'Player', 'Value', 'Trend', 'Experts ROS', 'Pos rank', 'PPG est.', 'This week', 'Games left', 'ROS pts', 'ADP'],
     rows.map((r) => {
       const p = M.P(r.pid);
       const s = M.V.signal(r.pid);
       const trend = !s ? '<span class="dim">–</span>' : `<span class="chip ${s.tag === 'Sell' ? 'chip-amber' : s.tag === 'Buy' ? 'chip-fa' : ''}" title="${esc(s.why)}">${s.tag}</span>`;
-      return [`<span class="num">${r.rank}</span>`, playerName(M, r.pid, { owner: true }), `<span class="num"><b>${n1(r.value)}</b></span> ${bar(r.value / 100)}`, trend, `<span class="num">${p.pos}${r.posRank}</span>`, `<span class="num">${n1(r.ppg)}</span>`, `<span class="num">${p.avail === 'bye' ? 'bye' : n1(p.proj)}</span>`, `<span class="num">${n1(r.games)}</span>`, `<span class="num">${n0(r.ros)}</span>`, `<span class="num dim">${p.adp ? n0(p.adp[0]) : '–'}</span>`];
+      const rr = M.V.rosRank(r.pid);
+      return [`<span class="num">${r.rank}</span>`, playerName(M, r.pid, { owner: true }), `<span class="num"><b>${n1(r.value)}</b></span> ${bar(r.value / 100)}`, trend, rr ? `<span class="num">${p.pos}${Math.round(rr)}</span>` : '<span class="dim">–</span>', `<span class="num">${p.pos}${r.posRank}</span>`, `<span class="num">${n1(r.ppg)}</span>`, `<span class="num">${p.avail === 'bye' ? 'bye' : n1(p.proj)}</span>`, `<span class="num">${n1(r.games)}</span>`, `<span class="num">${n0(r.ros)}</span>`, `<span class="num dim">${p.adp ? n0(p.adp[0]) : '–'}</span>`];
     }),
     { empty: 'No players match.' },
   );

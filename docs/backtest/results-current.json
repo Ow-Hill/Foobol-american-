@@ -4450,10 +4450,10 @@
    "title": "Do trade values predict the rest of the season?",
    "findings": [
     "QB: the site's value misses rest-of-season points per game by 3.07; best method is \"Half site value, half volume-based\" at 3.02.",
-    "RB: the site's value misses rest-of-season points per game by 3; best method is \"Site value today (values.js)\" at 3.",
-    "WR: the site's value misses rest-of-season points per game by 2.87; best method is \"Site value today (values.js)\" at 2.87.",
-    "TE: the site's value misses rest-of-season points per game by 2.21; best method is \"Half site value, half volume-based\" at 2.19.",
-    "Health factors are far from what the site assumes: Questionable: played 79.1% of remaining games (site assumes 97%); Doubtful: played 57.1% of remaining games (site assumes 92%); Out (official), first or second week: played 57.2% of remaining games (site assumes 85%); Out, already missed 2+: played 56.6% of remaining games (site assumes 85%); Off the report, just went down: played 22.9% of remaining games (site assumes 50%); Off the report, missed 2-3: played 29.4% of remaining games (site assumes 50%); Off the report, missed 4+ (long-term IR): played 9% of remaining games (site assumes 50%)."
+    "RB: the site's value misses rest-of-season points per game by 2.73; best method is \"Site value today (values.js)\" at 2.73.",
+    "WR: the site's value misses rest-of-season points per game by 2.67; best method is \"Site value today (values.js)\" at 2.67.",
+    "TE: the site's value misses rest-of-season points per game by 2.11; best method is \"Half site value, half volume-based\" at 2.1.",
+    "Health factors are far from what the site assumes: Questionable: played 79.5% of remaining games (site assumes 97%); Doubtful: played 58.1% of remaining games (site assumes 92%); Out (official), first or second week: played 58% of remaining games (site assumes 85%); Out, already missed 2+: played 56.6% of remaining games (site assumes 85%); Off the report, just went down: played 22.9% of remaining games (site assumes 50%); Off the report, missed 2-3: played 28.7% of remaining games (site assumes 50%); Off the report, missed 4+ (long-term IR): played 8.6% of remaining games (site assumes 50%)."
    ],
    "fit": {
     "beta": {
@@ -4473,44 +4473,44 @@
      },
      "RB": {
       "all": [
-       1.674,
-       0.158,
-       0.35,
-       0.118,
-       0.189
+       1.693,
+       0.159,
+       0.341,
+       0.114,
+       0.208
       ],
       "ppgXp": [
-       1.808,
-       0.515,
-       0.268
+       1.833,
+       0.506,
+       0.284
       ]
      },
      "WR": {
       "all": [
-       1.443,
-       0.143,
-       0.528,
-       -0.044,
-       0.206
+       1.476,
+       0.16,
+       0.527,
+       -0.05,
+       0.2
       ],
       "ppgXp": [
-       1.619,
-       0.522,
-       0.273
+       1.679,
+       0.52,
+       0.275
       ]
      },
      "TE": {
       "all": [
-       1.413,
-       0.221,
-       0.679,
-       0.066,
-       -0.096
+       1.389,
+       0.195,
+       0.631,
+       0.041,
+       0.017
       ],
       "ppgXp": [
-       1.517,
-       0.834,
-       -0.007
+       1.499,
+       0.754,
+       0.093
       ]
      }
     },
@@ -4558,153 +4558,153 @@
     },
     "RB": {
      "Site value today (values.js)": {
-      "mae": 3,
-      "rho": 0.814,
-      "bias": 0.12
+      "mae": 2.73,
+      "rho": 0.843,
+      "bias": 0.57
      },
      "Season average": {
-      "mae": 3.34,
-      "rho": 0.783,
-      "bias": 0.17
+      "mae": 3.28,
+      "rho": 0.794,
+      "bias": 0.15
      },
      "Last 3 games": {
-      "mae": 3.97,
-      "rho": 0.72,
+      "mae": 3.87,
+      "rho": 0.739,
       "bias": -0.22
      },
      "This week's projection": {
-      "mae": 3.96,
-      "rho": 0.655,
-      "bias": 0.87
+      "mae": 3.84,
+      "rho": 0.673,
+      "bias": 0.93
      },
      "Volume-based expected points": {
-      "mae": 3.15,
-      "rho": 0.81,
+      "mae": 3.13,
+      "rho": 0.811,
       "bias": 0.58
      },
      "Half site value, half volume-based": {
-      "mae": 3.03,
-      "rho": 0.821,
-      "bias": 0.35
+      "mae": 2.79,
+      "rho": 0.832,
+      "bias": 0.57
      },
      "Season average + volume (fitted)": {
-      "mae": 3.13,
-      "rho": 0.798,
-      "bias": 1.05
+      "mae": 3.06,
+      "rho": 0.805,
+      "bias": 0.94
      },
      "Fitted blend of all": {
-      "mae": 3.1,
-      "rho": 0.795,
-      "bias": 0.84
+      "mae": 3.01,
+      "rho": 0.809,
+      "bias": 0.74
      }
     },
     "WR": {
      "Site value today (values.js)": {
-      "mae": 2.87,
-      "rho": 0.799,
-      "bias": -1.14
+      "mae": 2.67,
+      "rho": 0.819,
+      "bias": -0.92
      },
      "Season average": {
-      "mae": 3.33,
-      "rho": 0.753,
-      "bias": -1.3
+      "mae": 3.28,
+      "rho": 0.76,
+      "bias": -1.16
      },
      "Last 3 games": {
-      "mae": 3.6,
-      "rho": 0.763,
-      "bias": -1.48
+      "mae": 3.51,
+      "rho": 0.773,
+      "bias": -1.29
      },
      "This week's projection": {
-      "mae": 3.55,
-      "rho": 0.651,
-      "bias": -0.01
+      "mae": 3.56,
+      "rho": 0.649,
+      "bias": 0.04
      },
      "Volume-based expected points": {
-      "mae": 3.02,
-      "rho": 0.77,
-      "bias": -0.97
+      "mae": 2.96,
+      "rho": 0.772,
+      "bias": -0.82
      },
      "Half site value, half volume-based": {
-      "mae": 2.92,
-      "rho": 0.788,
-      "bias": -1.05
+      "mae": 2.77,
+      "rho": 0.802,
+      "bias": -0.87
      },
      "Season average + volume (fitted)": {
-      "mae": 2.94,
-      "rho": 0.768,
-      "bias": -0.65
+      "mae": 2.92,
+      "rho": 0.772,
+      "bias": -0.58
      },
      "Fitted blend of all": {
-      "mae": 2.94,
-      "rho": 0.769,
-      "bias": -0.71
+      "mae": 2.91,
+      "rho": 0.772,
+      "bias": -0.65
      }
     },
     "TE": {
      "Site value today (values.js)": {
-      "mae": 2.21,
-      "rho": 0.83,
-      "bias": -0.06
+      "mae": 2.11,
+      "rho": 0.879,
+      "bias": 0.16
      },
      "Season average": {
-      "mae": 2.6,
-      "rho": 0.812,
-      "bias": -0.23
+      "mae": 2.63,
+      "rho": 0.836,
+      "bias": -0.1
      },
      "Last 3 games": {
-      "mae": 3.03,
-      "rho": 0.781,
-      "bias": -0.67
+      "mae": 3.06,
+      "rho": 0.801,
+      "bias": -0.44
      },
      "This week's projection": {
-      "mae": 2.88,
-      "rho": 0.678,
-      "bias": 0.73
+      "mae": 2.84,
+      "rho": 0.695,
+      "bias": 0.66
      },
      "Volume-based expected points": {
-      "mae": 2.23,
-      "rho": 0.805,
-      "bias": 0.28
+      "mae": 2.28,
+      "rho": 0.827,
+      "bias": 0.38
      },
      "Half site value, half volume-based": {
-      "mae": 2.19,
-      "rho": 0.812,
-      "bias": 0.11
+      "mae": 2.1,
+      "rho": 0.859,
+      "bias": 0.27
      },
      "Season average + volume (fitted)": {
-      "mae": 2.63,
-      "rho": 0.81,
+      "mae": 2.67,
+      "rho": 0.836,
       "bias": -0.39
      },
      "Fitted blend of all": {
-      "mae": 2.6,
-      "rho": 0.826,
-      "bias": -0.48
+      "mae": 2.63,
+      "rho": 0.848,
+      "bias": -0.46
      }
     },
     "health": {
      "Healthy": {
-      "share": 0.87,
-      "prod": 0.931,
-      "n": 3106,
+      "share": 0.867,
+      "prod": 0.936,
+      "n": 3071,
       "site": 1
      },
      "Questionable": {
-      "share": 0.791,
-      "prod": 0.853,
-      "n": 220,
+      "share": 0.795,
+      "prod": 0.856,
+      "n": 228,
       "site": 0.97
      },
      "Doubtful": {
-      "share": 0.571,
-      "prod": 1.015,
-      "n": 25,
+      "share": 0.581,
+      "prod": 1.034,
+      "n": 26,
       "site": 0.92
      },
      "Out (official), first or second week": {
-      "share": 0.572,
-      "prod": 0.884,
-      "n": 116,
+      "share": 0.58,
+      "prod": 0.902,
+      "n": 123,
       "site": 0.85
      },
      "Out, already missed 2+": {
@@ -4715,20 +4715,20 @@
      },
      "Off the report, just went down": {
       "share": 0.229,
-      "prod": 0.762,
-      "n": 107,
+      "prod": 0.768,
+      "n": 111,
       "site": 0.5
      },
      "Off the report, missed 2-3": {
-      "share": 0.294,
+      "share": 0.287,
       "prod": 0.735,
-      "n": 82,
+      "n": 84,
       "site": 0.5
      },
      "Off the report, missed 4+ (long-term IR)": {
-      "share": 0.09,
+      "share": 0.086,
       "prod": 0.746,
-      "n": 38,
+      "n": 40,
       "site": 0.5
      }
     }
@@ -4812,194 +4812,194 @@
       [
        "RB",
        "Site value today (values.js)",
-       3,
-       0.12,
-       0.814,
-       292
+       2.73,
+       0.57,
+       0.843,
+       289
       ],
       [
        "RB",
        "Season average",
-       3.34,
-       0.17,
-       0.783,
-       292
+       3.28,
+       0.15,
+       0.794,
+       289
       ],
       [
        "RB",
        "Last 3 games",
-       3.97,
+       3.87,
        -0.22,
-       0.72,
-       292
+       0.739,
+       289
       ],
       [
        "RB",
        "This week's projection",
-       3.96,
-       0.87,
-       0.655,
-       292
+       3.84,
+       0.93,
+       0.673,
+       289
       ],
       [
        "RB",
        "Volume-based expected points",
-       3.15,
-       0.58,
-       0.81,
-       292
-      ],
-      [
-       "RB",
-       "Half site value, half volume-based",
-       3.03,
-       0.35,
-       0.821,
-       292
-      ],
-      [
-       "RB",
-       "Season average + volume (fitted)",
        3.13,
-       1.05,
-       0.798,
-       292
+       0.58,
+       0.811,
+       289
+      ],
+      [
+       "RB",
+       "Half site value, half volume-based",
+       2.79,
+       0.57,
+       0.832,
+       289
+      ],
+      [
+       "RB",
+       "Season average + volume (fitted)",
+       3.06,
+       0.94,
+       0.805,
+       289
       ],
       [
        "RB",
        "Fitted blend of all",
-       3.1,
-       0.84,
-       0.795,
-       292
+       3.01,
+       0.74,
+       0.809,
+       289
       ],
       [
        "WR",
        "Site value today (values.js)",
-       2.87,
-       -1.14,
-       0.799,
-       404
+       2.67,
+       -0.92,
+       0.819,
+       399
       ],
       [
        "WR",
        "Season average",
-       3.33,
-       -1.3,
-       0.753,
-       404
+       3.28,
+       -1.16,
+       0.76,
+       399
       ],
       [
        "WR",
        "Last 3 games",
-       3.6,
-       -1.48,
-       0.763,
-       404
+       3.51,
+       -1.29,
+       0.773,
+       399
       ],
       [
        "WR",
        "This week's projection",
-       3.55,
-       -0.01,
-       0.651,
-       404
+       3.56,
+       0.04,
+       0.649,
+       399
       ],
       [
        "WR",
        "Volume-based expected points",
-       3.02,
-       -0.97,
-       0.77,
-       404
+       2.96,
+       -0.82,
+       0.772,
+       399
       ],
       [
        "WR",
        "Half site value, half volume-based",
+       2.77,
+       -0.87,
+       0.802,
+       399
+      ],
+      [
+       "WR",
+       "Season average + volume (fitted)",
        2.92,
-       -1.05,
-       0.788,
-       404
-      ],
-      [
-       "WR",
-       "Season average + volume (fitted)",
-       2.94,
-       -0.65,
-       0.768,
-       404
+       -0.58,
+       0.772,
+       399
       ],
       [
        "WR",
        "Fitted blend of all",
-       2.94,
-       -0.71,
-       0.769,
-       404
+       2.91,
+       -0.65,
+       0.772,
+       399
       ],
       [
        "TE",
        "Site value today (values.js)",
-       2.21,
-       -0.06,
-       0.83,
-       164
+       2.11,
+       0.16,
+       0.879,
+       160
       ],
       [
        "TE",
        "Season average",
-       2.6,
-       -0.23,
-       0.812,
-       164
+       2.63,
+       -0.1,
+       0.836,
+       160
       ],
       [
        "TE",
        "Last 3 games",
-       3.03,
-       -0.67,
-       0.781,
-       164
+       3.06,
+       -0.44,
+       0.801,
+       160
       ],
       [
        "TE",
        "This week's projection",
-       2.88,
-       0.73,
-       0.678,
-       164
+       2.84,
+       0.66,
+       0.695,
+       160
       ],
       [
        "TE",
        "Volume-based expected points",
-       2.23,
-       0.28,
-       0.805,
-       164
+       2.28,
+       0.38,
+       0.827,
+       160
       ],
       [
        "TE",
        "Half site value, half volume-based",
-       2.19,
-       0.11,
-       0.812,
-       164
+       2.1,
+       0.27,
+       0.859,
+       160
       ],
       [
        "TE",
        "Season average + volume (fitted)",
-       2.63,
+       2.67,
        -0.39,
-       0.81,
-       164
+       0.836,
+       160
       ],
       [
        "TE",
        "Fitted blend of all",
-       2.6,
-       -0.48,
-       0.826,
-       164
+       2.63,
+       -0.46,
+       0.848,
+       160
       ]
      ]
     },
@@ -5017,38 +5017,38 @@
      "rows": [
       [
        "Healthy",
-       3106,
-       87,
+       3071,
        86.7,
-       88,
-       0.93,
+       86.3,
+       87.6,
+       0.94,
        1
       ],
       [
        "Questionable",
-       220,
-       79.1,
-       80.8,
-       72.8,
-       0.85,
+       228,
+       79.5,
+       81.1,
+       73.5,
+       0.86,
        0.97
       ],
       [
        "Doubtful",
-       25,
-       57.1,
+       26,
+       58.1,
        59.2,
-       10,
-       1.01,
+       45,
+       1.03,
        0.92
       ],
       [
        "Out (official), first or second week",
-       116,
-       57.2,
-       59.1,
-       52.4,
-       0.88,
+       123,
+       58,
+       59.8,
+       54.1,
+       0.9,
        0.85
       ],
       [
@@ -5062,27 +5062,27 @@
       ],
       [
        "Off the report, just went down",
-       107,
+       111,
        22.9,
-       24.5,
+       24.4,
        18.7,
-       0.76,
+       0.77,
        0.5
       ],
       [
        "Off the report, missed 2-3",
-       82,
-       29.4,
-       32.8,
+       84,
+       28.7,
+       31.9,
        17.9,
        0.73,
        0.5
       ],
       [
        "Off the report, missed 4+ (long-term IR)",
-       38,
-       9,
-       8.7,
+       40,
+       8.6,
+       8,
        9.7,
        0.75,
        0.5
@@ -5477,19 +5477,19 @@
   "E13": {
    "title": "Would the site have called this league's real trades right?",
    "findings": [
-    "50 two-team trades with players on both sides, 31 of them from Week 4 on. Where one side clearly won in hindsight (17 trades), the side the site valued higher was the side that won 52.9% of the time; correlation between the site's value gap and the delivered gap: 0.091.",
-    "Accepted player-only trades were rarely even on the site's numbers: the median deal had the smaller side at 45% of the larger, and a quarter were below 34%. The finder's \"within 15%\" fairness test would have called most real, accepted trades unfair."
+    "50 two-team trades with players on both sides, 31 of them from Week 4 on. Where one side clearly won in hindsight (17 trades), the side the site valued higher was the side that won 47.1% of the time; correlation between the site's value gap and the delivered gap: -0.089.",
+    "Accepted player-only trades were rarely even on the site's numbers: the median deal had the smaller side at 54% of the larger, and a quarter were below 37%. The finder's \"within 15%\" fairness test would have called most real, accepted trades unfair."
    ],
    "fit": {
     "n": 50,
     "decided": 17,
-    "agree": 0.529,
-    "corr": 0.091,
+    "agree": 0.471,
+    "corr": -0.089,
     "balance": {
      "p10": 0.19,
-     "p25": 0.34,
-     "median": 0.45,
-     "p75": 0.8
+     "p25": 0.37,
+     "median": 0.54,
+     "p75": 0.78
     },
     "withPicks": 0,
     "shape": {
@@ -5542,77 +5542,55 @@
        2025,
        13,
        "Jackblacknine: Michael Pittman Jr. + Jameson Williams + Michael Wilson",
-       16.1,
-       74.3,
+       20.3,
+       80.7,
        "CadeCermak: George Pickens",
-       66.8,
-       17.8,
+       54.2,
+       19.4,
        "no"
-      ],
-      [
-       2025,
-       4,
-       "ARY3R: James Cook III",
-       46.4,
-       88.5,
-       "Thisowenguy: CeeDee Lamb",
-       12,
-       41,
-       "yes"
       ],
       [
        2025,
        5,
        "Jackblacknine: George Pickens",
-       42,
-       75.1,
+       30.5,
+       79.8,
        "CadeCermak: Emeka Egbuka",
-       19.6,
-       29.6,
+       22.6,
+       30.7,
        "yes"
       ],
       [
        2025,
        7,
        "ColinHill: Omarion Hampton",
-       10.7,
-       13.8,
+       12.3,
+       14.6,
        "CadeCermak: George Kittle",
-       26.3,
-       57.2,
+       22,
+       61.5,
+       "yes"
+      ],
+      [
+       2025,
+       4,
+       "ARY3R: James Cook III",
+       38.6,
+       88.5,
+       "Thisowenguy: CeeDee Lamb",
+       15.1,
+       43.1,
        "yes"
       ],
       [
        2026,
        4,
        "JamesKnowsBalls: Drake London",
-       22.3,
-       19.6,
+       34.1,
+       21.9,
        "JohnTerno: Alvin Kamara + DK Metcalf + Jameson Williams",
-       11.7,
-       62.7,
-       "no"
-      ],
-      [
-       2026,
-       6,
-       "CadeCermak: Player 5850",
-       0,
-       43.8,
-       "HyperFire12: Josh Downs",
-       4.3,
-       0.9,
-       "no"
-      ],
-      [
-       2025,
-       14,
-       "Thisowenguy: Javonte Williams",
-       38.4,
-       4.8,
-       "CadeCermak: Chris Olave",
-       34.7,
-       45.7,
+       11.5,
+       66.4,
        "no"
       ],
       [
@@ -5622,19 +5600,52 @@
        4.4,
        0,
        "andbums: D'Andre Swift",
-       39.4,
-       40.7,
+       33.3,
+       43.8,
        "yes"
+      ],
+      [
+       2026,
+       6,
+       "CadeCermak: Player 5850",
+       0,
+       43.8,
+       "HyperFire12: Josh Downs",
+       4.3,
+       1.2,
+       "no"
+      ],
+      [
+       2025,
+       14,
+       "Thisowenguy: Javonte Williams",
+       38.5,
+       6.1,
+       "CadeCermak: Chris Olave",
+       34.7,
+       46.6,
+       "no"
+      ],
+      [
+       2026,
+       8,
+       "CadeCermak: James Cook III",
+       52.8,
+       12.3,
+       "HyperFire12: Chuba Hubbard + Michael Wilson + Jonah Coleman",
+       49.7,
+       49.2,
+       "no"
       ],
       [
        2025,
        12,
        "CMC_and_Bums: Kyle Pitts Sr. + Zay Flowers",
-       14.5,
-       70.3,
+       12.2,
+       69.8,
        "CadeCermak: Jameson Williams",
-       4.9,
-       33,
+       4.8,
+       33.4,
        "yes"
       ],
       [
@@ -5644,30 +5655,19 @@
        7.3,
        4.5,
        "CadeCermak: Brock Purdy",
-       10.9,
+       11.7,
        40.6,
-       "yes"
-      ],
-      [
-       2026,
-       8,
-       "CadeCermak: James Cook III",
-       48.8,
-       11.1,
-       "HyperFire12: Chuba Hubbard + Michael Wilson + Jonah Coleman",
-       61.3,
-       45.6,
        "yes"
       ],
       [
        2025,
        8,
        "ARY3R: Travis Kelce + J.K. Dobbins",
-       10.3,
-       34.9,
+       8.7,
+       38.2,
        "CMC_and_Bums: Alvin Kamara",
-       10.1,
-       2,
+       4.7,
+       2.3,
        "yes"
       ]
      ]
@@ -5693,7 +5693,7 @@
       ],
       [
        "Smaller side as a share of the larger (site value), player-only trades: 10th / 25th / median / 75th percentile",
-       "0.19 / 0.34 / 0.45 / 0.8"
+       "0.19 / 0.37 / 0.54 / 0.78"
       ],
       [
        "Most frequent partners",
@@ -7622,6 +7622,361 @@
        3.5,
        3.53,
        320
+      ]
+     ]
+    }
+   ]
+  },
+  "E19": {
+   "title": "Does the experts' rest-of-season ranking improve trade values?",
+   "findings": [
+    "QB: site value misses by 3.07, experts' ROS rank 3.08, half and half 2.99, fitted blend (0% site) 3.08.",
+    "RB: site value misses by 3.06, experts' ROS rank 3.01, half and half 2.84, fitted blend (50% site) 2.84.",
+    "WR: site value misses by 3, experts' ROS rank 2.77, half and half 2.8, fitted blend (45% site) 2.79.",
+    "TE: site value misses by 2.7, experts' ROS rank 2.65, half and half 2.56, fitted blend (30% site) 2.56.",
+    "Rule chosen on 2022-24 (blend where it beat the site value by more than 0.02 a game): QB blend, RB blend, WR blend, TE blend. Confirmed on 2025 at: RB, WR, TE."
+   ],
+   "fit": {
+    "curve": {
+     "QB": [
+      25.853,
+      -3.5
+     ],
+     "RB": [
+      24.545,
+      -4.444
+     ],
+     "WR": [
+      25.708,
+      -4.349
+     ],
+     "TE": [
+      17.751,
+      -3.537
+     ]
+    },
+    "weight": {
+     "QB": 0,
+     "RB": 0.5,
+     "WR": 0.45,
+     "TE": 0.3
+    },
+    "test": {
+     "QB": {
+      "Site value today": {
+       "mae": 3.07,
+       "rho": 0.46,
+       "po": 0.367
+      },
+      "Expert ROS rank, as points": {
+       "mae": 3.08,
+       "rho": 0.48,
+       "po": 0.305
+      },
+      "Half and half": {
+       "mae": 2.99,
+       "rho": 0.479,
+       "po": 0.328
+      },
+      "Fitted: 0% site": {
+       "mae": 3.08,
+       "rho": 0.48,
+       "po": 0.305
+      }
+     },
+     "RB": {
+      "Site value today": {
+       "mae": 3.06,
+       "rho": 0.795,
+       "po": 0.618
+      },
+      "Expert ROS rank, as points": {
+       "mae": 3.01,
+       "rho": 0.812,
+       "po": 0.649
+      },
+      "Half and half": {
+       "mae": 2.84,
+       "rho": 0.817,
+       "po": 0.649
+      },
+      "Fitted: 50% site": {
+       "mae": 2.84,
+       "rho": 0.817,
+       "po": 0.649
+      }
+     },
+     "WR": {
+      "Site value today": {
+       "mae": 3,
+       "rho": 0.739,
+       "po": 0.582
+      },
+      "Expert ROS rank, as points": {
+       "mae": 2.77,
+       "rho": 0.77,
+       "po": 0.576
+      },
+      "Half and half": {
+       "mae": 2.8,
+       "rho": 0.77,
+       "po": 0.589
+      },
+      "Fitted: 45% site": {
+       "mae": 2.79,
+       "rho": 0.774,
+       "po": 0.594
+      }
+     },
+     "TE": {
+      "Site value today": {
+       "mae": 2.7,
+       "rho": 0.655,
+       "po": 0.41
+      },
+      "Expert ROS rank, as points": {
+       "mae": 2.65,
+       "rho": 0.716,
+       "po": 0.339
+      },
+      "Half and half": {
+       "mae": 2.56,
+       "rho": 0.704,
+       "po": 0.381
+      },
+      "Fitted: 30% site": {
+       "mae": 2.56,
+       "rho": 0.715,
+       "po": 0.364
+      }
+     }
+    },
+    "train": {
+     "QB": {
+      "Site value today": {
+       "mae": 3.22,
+       "rho": 0.525
+      },
+      "Expert ROS rank, as points": {
+       "mae": 2.95,
+       "rho": 0.596
+      },
+      "Half and half": {
+       "mae": 3.04,
+       "rho": 0.586
+      },
+      "Fitted: 0% site": {
+       "mae": 2.95,
+       "rho": 0.596
+      }
+     },
+     "RB": {
+      "Site value today": {
+       "mae": 3.05,
+       "rho": 0.767
+      },
+      "Expert ROS rank, as points": {
+       "mae": 3.07,
+       "rho": 0.802
+      },
+      "Half and half": {
+       "mae": 2.84,
+       "rho": 0.798
+      },
+      "Fitted: 50% site": {
+       "mae": 2.84,
+       "rho": 0.798
+      }
+     },
+     "WR": {
+      "Site value today": {
+       "mae": 2.82,
+       "rho": 0.821
+      },
+      "Expert ROS rank, as points": {
+       "mae": 2.73,
+       "rho": 0.853
+      },
+      "Half and half": {
+       "mae": 2.6,
+       "rho": 0.851
+      },
+      "Fitted: 45% site": {
+       "mae": 2.59,
+       "rho": 0.852
+      }
+     },
+     "TE": {
+      "Site value today": {
+       "mae": 2.59,
+       "rho": 0.769
+      },
+      "Expert ROS rank, as points": {
+       "mae": 2.45,
+       "rho": 0.804
+      },
+      "Half and half": {
+       "mae": 2.43,
+       "rho": 0.795
+      },
+      "Fitted: 30% site": {
+       "mae": 2.41,
+       "rho": 0.798
+      }
+     }
+    },
+    "adopt": {
+     "QB": true,
+     "RB": true,
+     "WR": true,
+     "TE": true
+    },
+    "confirmed": {
+     "QB": false,
+     "RB": true,
+     "WR": true,
+     "TE": true
+    }
+   },
+   "tables": [
+    {
+     "caption": "Predicting points per game from that week to Week 17, taken at Weeks 4-11. Fitted on 2022-24, hold-out 2025; healthy players who went on to play 3+ games and had an expert ROS rank. Last column: rank correlation with points scored in Weeks 15-17 alone.",
+     "head": [
+      "Position",
+      "Method",
+      "Avg miss (pts/game)",
+      "Rank corr.",
+      "Rank corr., Weeks 15-17",
+      "n"
+     ],
+     "rows": [
+      [
+       "QB",
+       "Site value today",
+       3.07,
+       0.46,
+       0.367,
+       180
+      ],
+      [
+       "QB",
+       "Expert ROS rank, as points",
+       3.08,
+       0.48,
+       0.305,
+       180
+      ],
+      [
+       "QB",
+       "Half and half",
+       2.99,
+       0.479,
+       0.328,
+       180
+      ],
+      [
+       "QB",
+       "Fitted: 0% site",
+       3.08,
+       0.48,
+       0.305,
+       180
+      ],
+      [
+       "RB",
+       "Site value today",
+       3.06,
+       0.795,
+       0.618,
+       282
+      ],
+      [
+       "RB",
+       "Expert ROS rank, as points",
+       3.01,
+       0.812,
+       0.649,
+       282
+      ],
+      [
+       "RB",
+       "Half and half",
+       2.84,
+       0.817,
+       0.649,
+       282
+      ],
+      [
+       "RB",
+       "Fitted: 50% site",
+       2.84,
+       0.817,
+       0.649,
+       282
+      ],
+      [
+       "WR",
+       "Site value today",
+       3,
+       0.739,
+       0.582,
+       352
+      ],
+      [
+       "WR",
+       "Expert ROS rank, as points",
+       2.77,
+       0.77,
+       0.576,
+       352
+      ],
+      [
+       "WR",
+       "Half and half",
+       2.8,
+       0.77,
+       0.589,
+       352
+      ],
+      [
+       "WR",
+       "Fitted: 45% site",
+       2.79,
+       0.774,
+       0.594,
+       352
+      ],
+      [
+       "TE",
+       "Site value today",
+       2.7,
+       0.655,
+       0.41,
+       125
+      ],
+      [
+       "TE",
+       "Expert ROS rank, as points",
+       2.65,
+       0.716,
+       0.339,
+       125
+      ],
+      [
+       "TE",
+       "Half and half",
+       2.56,
+       0.704,
+       0.381,
+       125
+      ],
+      [
+       "TE",
+       "Fitted: 30% site",
+       2.56,
+       0.715,
+       0.364,
+       125
       ]
      ]
     }

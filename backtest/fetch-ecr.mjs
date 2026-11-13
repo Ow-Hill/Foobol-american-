@@ -54,6 +54,36 @@ for (const [season, weeks] of Object.entries(sundays)) {
     }
   }
 }
+// ----- rest-of-season rankings, from the weekly-ish db_fpecr_latest.csv -----
+const ROS_FILE = 'files/db_fpecr_latest.csv';
+const ROS_PAGE = { '/nfl/rankings/ros-qb.php': 'QB', '/nfl/rankings/ros-ppr-rb.php': 'RB', '/nfl/rankings/ros-ppr-wr.php': 'WR', '/nfl/rankings/ros-ppr-te.php': 'TE', '/nfl/rankings/ros-k.php': 'K', '/nfl/rankings/ros-dst.php': 'DEF' };
+const rosCommits = git('log', '--format=%H %cI', '--', ROS_FILE).trim().split('\n').map((l) => {
+  const [h, t] = l.split(' ');
+  return { h, t: Date.parse(t) };
+}).reverse();
+const blobCache = new Map();
+let nRos = 0;
+for (const [season, weeks] of Object.entries(sundays)) {
+  for (const [wk, day] of Object.entries(weeks)) {
+    if (Number(wk) < 3 || Number(wk) > 14) continue;
+    const f = path.join(OUT, `ros-${season}-${wk}.json`);
+    if (fs.existsSync(f)) continue;
+    const sun = Date.parse(`${day}T17:00:00Z`);
+    let c = null;
+    for (const x of rosCommits) if (x.t < sun) c = x;
+    if (!c || sun - c.t > 9 * 86400000) continue;
+    if (!blobCache.has(c.h)) {
+      const rows = parseCsv(git('show', `${c.h}:${ROS_FILE}`)).filter((r) => ROS_PAGE[r.fp_page]);
+      blobCache.set(c.h, rows.map((r) => ({ pos: ROS_PAGE[r.fp_page], id: r.id, team: r.team || r.tm, player: r.player, ecr: r.ecr, sd: r.sd, scrape_date: r.scrape_date })));
+    }
+    const rows = blobCache.get(c.h);
+    if (!rows.length) continue;
+    fs.writeFileSync(f, JSON.stringify({ season: Number(season), week: Number(wk), scrapedAt: new Date(c.t).toISOString(), rows }));
+    nRos++;
+  }
+}
+console.log(`wrote ${nRos} rest-of-season versions`);
+
 // FantasyPros id -> Sleeper id
 const ids = parseCsv(fs.readFileSync(path.join(repo, '..', 'data', 'files', 'db_playerids.csv'), 'utf8'));
 const map = {};

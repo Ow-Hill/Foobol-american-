@@ -35,6 +35,7 @@ results. Do not restate those numbers from memory; read the file.
 | Tiebreak order | Health → implied total (4+ apart only) → kickoff → keep the higher projection (matchup posture removed: recent floors/ceilings did no better than the projection, E16) |
 | Ranges | floor/ceiling = projection × measured 25th/75th percentile ratio by position and projection band (`rangeFor` in fitted.js) |
 | First game back | 86% of projection after missing 2-3 games (E14b) |
+| Trade value | RB/WR/TE, healthy: blend with experts' ROS rank as points (weight on site 0.5 / 0.45 / 0.3; `ROS_CONSENSUS`, E19) |
 | Projection | QB, WR, K: 0.5 × Sleeper + 0.5 × consensus points (a + b·ln(ECR), `consensusPoints`); RB, TE, DEF: Sleeper (E17) |
 | Questionable | value = projection × 0.91 (0.80 after no practice); chance to play FP 0.90 / LP 0.68 / DNP 0.55 / QB 0.42 |
 | Win probability | projected lineups: 48-point spread; season averages pulled 40% toward the league mean |

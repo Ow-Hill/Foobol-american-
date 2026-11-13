@@ -413,10 +413,10 @@ Outdoor games: actual minus projected points, calm (under 10 mph) vs windy (15+ 
 ## E11. Do trade values predict the rest of the season?
 
 - QB: the site's value misses rest-of-season points per game by 3.07; best method is "Half site value, half volume-based" at 3.02.
-- RB: the site's value misses rest-of-season points per game by 3; best method is "Site value today (values.js)" at 3.
-- WR: the site's value misses rest-of-season points per game by 2.87; best method is "Site value today (values.js)" at 2.87.
-- TE: the site's value misses rest-of-season points per game by 2.21; best method is "Half site value, half volume-based" at 2.19.
-- Health factors are far from what the site assumes: Questionable: played 79.1% of remaining games (site assumes 97%); Doubtful: played 57.1% of remaining games (site assumes 92%); Out (official), first or second week: played 57.2% of remaining games (site assumes 85%); Out, already missed 2+: played 56.6% of remaining games (site assumes 85%); Off the report, just went down: played 22.9% of remaining games (site assumes 50%); Off the report, missed 2-3: played 29.4% of remaining games (site assumes 50%); Off the report, missed 4+ (long-term IR): played 9% of remaining games (site assumes 50%).
+- RB: the site's value misses rest-of-season points per game by 2.73; best method is "Site value today (values.js)" at 2.73.
+- WR: the site's value misses rest-of-season points per game by 2.67; best method is "Site value today (values.js)" at 2.67.
+- TE: the site's value misses rest-of-season points per game by 2.11; best method is "Half site value, half volume-based" at 2.1.
+- Health factors are far from what the site assumes: Questionable: played 79.5% of remaining games (site assumes 97%); Doubtful: played 58.1% of remaining games (site assumes 92%); Out (official), first or second week: played 58% of remaining games (site assumes 85%); Out, already missed 2+: played 56.6% of remaining games (site assumes 85%); Off the report, just went down: played 22.9% of remaining games (site assumes 50%); Off the report, missed 2-3: played 28.7% of remaining games (site assumes 50%); Off the report, missed 4+ (long-term IR): played 8.6% of remaining games (site assumes 50%).
 
 Predicting a player's points per game from that week to Week 17, taken at Weeks 4-11. Hold-out season 2025; healthy players who went on to play 3+ games.
 
@@ -430,43 +430,43 @@ Predicting a player's points per game from that week to Week 17, taken at Weeks 
 | QB | Half site value, half volume-based | 3.02 | -0.26 | 0.454 | 180 |
 | QB | Season average + volume (fitted) | 3.33 | -1.26 | 0.397 | 180 |
 | QB | Fitted blend of all | 3.29 | -1.22 | 0.394 | 180 |
-| RB | Site value today (values.js) | 3 | 0.12 | 0.814 | 292 |
-| RB | Season average | 3.34 | 0.17 | 0.783 | 292 |
-| RB | Last 3 games | 3.97 | -0.22 | 0.72 | 292 |
-| RB | This week's projection | 3.96 | 0.87 | 0.655 | 292 |
-| RB | Volume-based expected points | 3.15 | 0.58 | 0.81 | 292 |
-| RB | Half site value, half volume-based | 3.03 | 0.35 | 0.821 | 292 |
-| RB | Season average + volume (fitted) | 3.13 | 1.05 | 0.798 | 292 |
-| RB | Fitted blend of all | 3.1 | 0.84 | 0.795 | 292 |
-| WR | Site value today (values.js) | 2.87 | -1.14 | 0.799 | 404 |
-| WR | Season average | 3.33 | -1.3 | 0.753 | 404 |
-| WR | Last 3 games | 3.6 | -1.48 | 0.763 | 404 |
-| WR | This week's projection | 3.55 | -0.01 | 0.651 | 404 |
-| WR | Volume-based expected points | 3.02 | -0.97 | 0.77 | 404 |
-| WR | Half site value, half volume-based | 2.92 | -1.05 | 0.788 | 404 |
-| WR | Season average + volume (fitted) | 2.94 | -0.65 | 0.768 | 404 |
-| WR | Fitted blend of all | 2.94 | -0.71 | 0.769 | 404 |
-| TE | Site value today (values.js) | 2.21 | -0.06 | 0.83 | 164 |
-| TE | Season average | 2.6 | -0.23 | 0.812 | 164 |
-| TE | Last 3 games | 3.03 | -0.67 | 0.781 | 164 |
-| TE | This week's projection | 2.88 | 0.73 | 0.678 | 164 |
-| TE | Volume-based expected points | 2.23 | 0.28 | 0.805 | 164 |
-| TE | Half site value, half volume-based | 2.19 | 0.11 | 0.812 | 164 |
-| TE | Season average + volume (fitted) | 2.63 | -0.39 | 0.81 | 164 |
-| TE | Fitted blend of all | 2.6 | -0.48 | 0.826 | 164 |
+| RB | Site value today (values.js) | 2.73 | 0.57 | 0.843 | 289 |
+| RB | Season average | 3.28 | 0.15 | 0.794 | 289 |
+| RB | Last 3 games | 3.87 | -0.22 | 0.739 | 289 |
+| RB | This week's projection | 3.84 | 0.93 | 0.673 | 289 |
+| RB | Volume-based expected points | 3.13 | 0.58 | 0.811 | 289 |
+| RB | Half site value, half volume-based | 2.79 | 0.57 | 0.832 | 289 |
+| RB | Season average + volume (fitted) | 3.06 | 0.94 | 0.805 | 289 |
+| RB | Fitted blend of all | 3.01 | 0.74 | 0.809 | 289 |
+| WR | Site value today (values.js) | 2.67 | -0.92 | 0.819 | 399 |
+| WR | Season average | 3.28 | -1.16 | 0.76 | 399 |
+| WR | Last 3 games | 3.51 | -1.29 | 0.773 | 399 |
+| WR | This week's projection | 3.56 | 0.04 | 0.649 | 399 |
+| WR | Volume-based expected points | 2.96 | -0.82 | 0.772 | 399 |
+| WR | Half site value, half volume-based | 2.77 | -0.87 | 0.802 | 399 |
+| WR | Season average + volume (fitted) | 2.92 | -0.58 | 0.772 | 399 |
+| WR | Fitted blend of all | 2.91 | -0.65 | 0.772 | 399 |
+| TE | Site value today (values.js) | 2.11 | 0.16 | 0.879 | 160 |
+| TE | Season average | 2.63 | -0.1 | 0.836 | 160 |
+| TE | Last 3 games | 3.06 | -0.44 | 0.801 | 160 |
+| TE | This week's projection | 2.84 | 0.66 | 0.695 | 160 |
+| TE | Volume-based expected points | 2.28 | 0.38 | 0.827 | 160 |
+| TE | Half site value, half volume-based | 2.1 | 0.27 | 0.859 | 160 |
+| TE | Season average + volume (fitted) | 2.67 | -0.39 | 0.836 | 160 |
+| TE | Fitted blend of all | 2.63 | -0.46 | 0.848 | 160 |
 
 Health: share of the remaining games (to Week 17) actually played, by status when the value was taken. Players averaging 7+ points.
 
 | Status at the time | n | Games played % | 2022-24 | 2025 | Points per game when back vs before | Site assumes |
 | --- | --- | --- | --- | --- | --- | --- |
-| Healthy | 3106 | 87 | 86.7 | 88 | 0.93 | 1 |
-| Questionable | 220 | 79.1 | 80.8 | 72.8 | 0.85 | 0.97 |
-| Doubtful | 25 | 57.1 | 59.2 | 10 | 1.01 | 0.92 |
-| Out (official), first or second week | 116 | 57.2 | 59.1 | 52.4 | 0.88 | 0.85 |
+| Healthy | 3071 | 86.7 | 86.3 | 87.6 | 0.94 | 1 |
+| Questionable | 228 | 79.5 | 81.1 | 73.5 | 0.86 | 0.97 |
+| Doubtful | 26 | 58.1 | 59.2 | 45 | 1.03 | 0.92 |
+| Out (official), first or second week | 123 | 58 | 59.8 | 54.1 | 0.9 | 0.85 |
 | Out, already missed 2+ | 33 | 56.6 | 55.4 | 58.1 | 0.89 | 0.85 |
-| Off the report, just went down | 107 | 22.9 | 24.5 | 18.7 | 0.76 | 0.5 |
-| Off the report, missed 2-3 | 82 | 29.4 | 32.8 | 17.9 | 0.73 | 0.5 |
-| Off the report, missed 4+ (long-term IR) | 38 | 9 | 8.7 | 9.7 | 0.75 | 0.5 |
+| Off the report, just went down | 111 | 22.9 | 24.4 | 18.7 | 0.77 | 0.5 |
+| Off the report, missed 2-3 | 84 | 28.7 | 31.9 | 17.9 | 0.73 | 0.5 |
+| Off the report, missed 4+ (long-term IR) | 40 | 8.6 | 8 | 9.7 | 0.75 | 0.5 |
 
 ## E12. Do buy-low / sell-high signals work?
 
@@ -502,25 +502,25 @@ What happened next to players scoring well above or below their usage. "Beyond t
 
 ## E13. Would the site have called this league's real trades right?
 
-- 50 two-team trades with players on both sides, 31 of them from Week 4 on. Where one side clearly won in hindsight (17 trades), the side the site valued higher was the side that won 52.9% of the time; correlation between the site's value gap and the delivered gap: 0.091.
-- Accepted player-only trades were rarely even on the site's numbers: the median deal had the smaller side at 45% of the larger, and a quarter were below 34%. The finder's "within 15%" fairness test would have called most real, accepted trades unfair.
+- 50 two-team trades with players on both sides, 31 of them from Week 4 on. Where one side clearly won in hindsight (17 trades), the side the site valued higher was the side that won 47.1% of the time; correlation between the site's value gap and the delivered gap: -0.089.
+- Accepted player-only trades were rarely even on the site's numbers: the median deal had the smaller side at 54% of the larger, and a quarter were below 37%. The finder's "within 15%" fairness test would have called most real, accepted trades unfair.
 
 The twelve most lopsided trades in hindsight. "Value then" is the site's trade value on the day; "Delivered" is points above a replacement player from the trade to Week 17.
 
 | Season | Week | Side A got | Value then | Delivered | Side B got | Value then | Delivered | Site picked the right side |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2025 | 13 | Jackblacknine: Michael Pittman Jr. + Jameson Williams + Michael Wilson | 16.1 | 74.3 | CadeCermak: George Pickens | 66.8 | 17.8 | no |
-| 2025 | 4 | ARY3R: James Cook III | 46.4 | 88.5 | Thisowenguy: CeeDee Lamb | 12 | 41 | yes |
-| 2025 | 5 | Jackblacknine: George Pickens | 42 | 75.1 | CadeCermak: Emeka Egbuka | 19.6 | 29.6 | yes |
-| 2025 | 7 | ColinHill: Omarion Hampton | 10.7 | 13.8 | CadeCermak: George Kittle | 26.3 | 57.2 | yes |
-| 2026 | 4 | JamesKnowsBalls: Drake London | 22.3 | 19.6 | JohnTerno: Alvin Kamara + DK Metcalf + Jameson Williams | 11.7 | 62.7 | no |
-| 2026 | 6 | CadeCermak: Player 5850 | 0 | 43.8 | HyperFire12: Josh Downs | 4.3 | 0.9 | no |
-| 2025 | 14 | Thisowenguy: Javonte Williams | 38.4 | 4.8 | CadeCermak: Chris Olave | 34.7 | 45.7 | no |
-| 2026 | 5 | Thisowenguy: A.J. Brown | 4.4 | 0 | andbums: D'Andre Swift | 39.4 | 40.7 | yes |
-| 2025 | 12 | CMC_and_Bums: Kyle Pitts Sr. + Zay Flowers | 14.5 | 70.3 | CadeCermak: Jameson Williams | 4.9 | 33 | yes |
-| 2025 | 8 | Jackblacknine: Daniel Jones | 7.3 | 4.5 | CadeCermak: Brock Purdy | 10.9 | 40.6 | yes |
-| 2026 | 8 | CadeCermak: James Cook III | 48.8 | 11.1 | HyperFire12: Chuba Hubbard + Michael Wilson + Jonah Coleman | 61.3 | 45.6 | yes |
-| 2025 | 8 | ARY3R: Travis Kelce + J.K. Dobbins | 10.3 | 34.9 | CMC_and_Bums: Alvin Kamara | 10.1 | 2 | yes |
+| 2025 | 13 | Jackblacknine: Michael Pittman Jr. + Jameson Williams + Michael Wilson | 20.3 | 80.7 | CadeCermak: George Pickens | 54.2 | 19.4 | no |
+| 2025 | 5 | Jackblacknine: George Pickens | 30.5 | 79.8 | CadeCermak: Emeka Egbuka | 22.6 | 30.7 | yes |
+| 2025 | 7 | ColinHill: Omarion Hampton | 12.3 | 14.6 | CadeCermak: George Kittle | 22 | 61.5 | yes |
+| 2025 | 4 | ARY3R: James Cook III | 38.6 | 88.5 | Thisowenguy: CeeDee Lamb | 15.1 | 43.1 | yes |
+| 2026 | 4 | JamesKnowsBalls: Drake London | 34.1 | 21.9 | JohnTerno: Alvin Kamara + DK Metcalf + Jameson Williams | 11.5 | 66.4 | no |
+| 2026 | 5 | Thisowenguy: A.J. Brown | 4.4 | 0 | andbums: D'Andre Swift | 33.3 | 43.8 | yes |
+| 2026 | 6 | CadeCermak: Player 5850 | 0 | 43.8 | HyperFire12: Josh Downs | 4.3 | 1.2 | no |
+| 2025 | 14 | Thisowenguy: Javonte Williams | 38.5 | 6.1 | CadeCermak: Chris Olave | 34.7 | 46.6 | no |
+| 2026 | 8 | CadeCermak: James Cook III | 52.8 | 12.3 | HyperFire12: Chuba Hubbard + Michael Wilson + Jonah Coleman | 49.7 | 49.2 | no |
+| 2025 | 12 | CMC_and_Bums: Kyle Pitts Sr. + Zay Flowers | 12.2 | 69.8 | CadeCermak: Jameson Williams | 4.8 | 33.4 | yes |
+| 2025 | 8 | Jackblacknine: Daniel Jones | 7.3 | 4.5 | CadeCermak: Brock Purdy | 11.7 | 40.6 | yes |
+| 2025 | 8 | ARY3R: Travis Kelce + J.K. Dobbins | 8.7 | 38.2 | CMC_and_Bums: Alvin Kamara | 4.7 | 2.3 | yes |
 
 What accepted trades in this league look like.
 
@@ -529,7 +529,7 @@ What accepted trades in this league look like.
 | Trades with players on both sides | 50 |
 | Shapes | 1-for-1: 25, 2-for-2: 4, 3-for-3: 2, 1-for-2: 12, 2-for-3: 4, 1-for-3: 3 |
 | Included draft picks | 0 |
-| Smaller side as a share of the larger (site value), player-only trades: 10th / 25th / median / 75th percentile | 0.19 / 0.34 / 0.45 / 0.8 |
+| Smaller side as a share of the larger (site value), player-only trades: 10th / 25th / median / 75th percentile | 0.19 / 0.37 / 0.54 / 0.78 |
 | Most frequent partners | CadeCermak / Jackblacknine (5); CMC_and_Bums / CadeCermak (4); CMC_and_Bums / Thisowenguy (4); Thisowenguy / andbums (3); CadeCermak / HyperFire12 (3) |
 
 ## E14. How long are players out, and what are they worth when they return?
@@ -723,6 +723,35 @@ Hold-out (2025 for rest of season, 2025-26 for next four weeks). Average miss in
 | RB | 3.32 | 3.1 | 3.15 | 3.15 | 314 | 3.9 | 3.92 | 502 |
 | WR | 3.74 | 3.49 | 3.48 | 3.4 | 489 | 3.82 | 3.82 | 698 |
 | TE | 2.95 | 2.72 | 2.83 | 2.91 | 203 | 3.5 | 3.53 | 320 |
+
+## E19. Does the experts' rest-of-season ranking improve trade values?
+
+- QB: site value misses by 3.07, experts' ROS rank 3.08, half and half 2.99, fitted blend (0% site) 3.08.
+- RB: site value misses by 3.06, experts' ROS rank 3.01, half and half 2.84, fitted blend (50% site) 2.84.
+- WR: site value misses by 3, experts' ROS rank 2.77, half and half 2.8, fitted blend (45% site) 2.79.
+- TE: site value misses by 2.7, experts' ROS rank 2.65, half and half 2.56, fitted blend (30% site) 2.56.
+- Rule chosen on 2022-24 (blend where it beat the site value by more than 0.02 a game): QB blend, RB blend, WR blend, TE blend. Confirmed on 2025 at: RB, WR, TE.
+
+Predicting points per game from that week to Week 17, taken at Weeks 4-11. Fitted on 2022-24, hold-out 2025; healthy players who went on to play 3+ games and had an expert ROS rank. Last column: rank correlation with points scored in Weeks 15-17 alone.
+
+| Position | Method | Avg miss (pts/game) | Rank corr. | Rank corr., Weeks 15-17 | n |
+| --- | --- | --- | --- | --- | --- |
+| QB | Site value today | 3.07 | 0.46 | 0.367 | 180 |
+| QB | Expert ROS rank, as points | 3.08 | 0.48 | 0.305 | 180 |
+| QB | Half and half | 2.99 | 0.479 | 0.328 | 180 |
+| QB | Fitted: 0% site | 3.08 | 0.48 | 0.305 | 180 |
+| RB | Site value today | 3.06 | 0.795 | 0.618 | 282 |
+| RB | Expert ROS rank, as points | 3.01 | 0.812 | 0.649 | 282 |
+| RB | Half and half | 2.84 | 0.817 | 0.649 | 282 |
+| RB | Fitted: 50% site | 2.84 | 0.817 | 0.649 | 282 |
+| WR | Site value today | 3 | 0.739 | 0.582 | 352 |
+| WR | Expert ROS rank, as points | 2.77 | 0.77 | 0.576 | 352 |
+| WR | Half and half | 2.8 | 0.77 | 0.589 | 352 |
+| WR | Fitted: 45% site | 2.79 | 0.774 | 0.594 | 352 |
+| TE | Site value today | 2.7 | 0.655 | 0.41 | 125 |
+| TE | Expert ROS rank, as points | 2.65 | 0.716 | 0.339 | 125 |
+| TE | Half and half | 2.56 | 0.704 | 0.381 | 125 |
+| TE | Fitted: 30% site | 2.56 | 0.715 | 0.364 | 125 |
 
 ## N1. News scanner: how well does it read headlines?
 

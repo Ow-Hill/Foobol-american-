@@ -9,7 +9,7 @@ A live roster-management dashboard for the Sleeper league **James Cook Lovers**.
 ```bash
 cd ff-roster-monitor
 node server.js        # Node 18+, no dependencies
-npm test              # 68 tests
+npm test              # 69 tests
 # open http://localhost:4321
 ```
 
@@ -162,6 +162,7 @@ recorded (`data/ripple-log.json`) and scored after the games. Rules:
 * **Sleeper** (public API): league settings, rosters, matchups, transactions, picks, players, projections, weekly stats.
 * **ESPN** (public API): injury report with RotoWire notes, news, NFL schedule and betting lines.
 * **FantasyPros expert consensus** (weekly rankings via dynastyprocess/data, refreshed daily): averaged 50/50 with Sleeper's projection at QB, WR and K, where that beat Sleeper alone in the backtest; shown next to Sleeper's number everywhere.
+  The rest-of-season rankings are blended into RB, WR and TE trade values (they cut the rest-of-season miss by about a tenth).
 * **Open-Meteo** (free, no key): wind at kickoff for outdoor games, shown as a flag with its measured effect.
 * **nflverse** (public release files): the NFL's official injury report with practice status, used directly for chance-to-play; the backtest also uses its closing lines, wind and depth charts.
 * Projections are scored with the league's exact scoring settings (checked against Sleeper's own points: 145/145 match).
@@ -170,6 +171,7 @@ recorded (`data/ripple-log.json`) and scored after the games. Rules:
 ## How the trade finder decides
 
 * **Points per game** is half results (projection and recent scoring, small samples shrunk) and half what the player's volume normally produces (targets, air yards on catches, carries, red-zone work). That mix predicted the rest of the season better than results alone at every position.
+* **Experts' rest-of-season rank** is blended in for healthy RBs, WRs and TEs (50% / 55% / 70% weight on the experts). On 2025 it cut the miss to 2.73 / 2.67 / 2.11 points a game from 3.00 / 2.87 / 2.21.
 * **Health** uses measured odds: a Questionable player delivers about 83% of a healthy player's rest-of-season points, an officially Out player 62%, a player on injured reserve 8–27% depending on how long he has been out.
 * **Playoff weeks** count by each team's own chance of reaching them, so a contender values Weeks 15–17 more than a team that is out, and the same player is worth different amounts to the two sides.
 * **Buy / Hold / Sell** flags players scoring 4+ a game above or below what their volume supports, with what happened next to players like them.

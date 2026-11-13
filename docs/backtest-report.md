@@ -40,11 +40,11 @@ before this work is in [`tables-before.md`](backtest/tables-before.md).
 | First game back | Full projection | 86% after missing 2–3 games | Projection alone: 86% of it scored in both periods | Fixed where both periods agree |
 | News classifier (labelled headlines) | 71% on the first labelled set; 78% on fresh live headlines | **89% on a second fresh batch** (labelled before scoring; status 100%) | — | Improving; each batch is scored once, then used to fix, then retired as a test set |
 | Headlines that name two players | One player's status pinned on the other (e.g. "Malik Willis on IR, Kyle McCord in line to start" marked McCord IR) | Status read only from the parts of the headline about that player | — | Fixed |
-| Trade odds vs Down Field (5 deals, this week) | Agreed on direction for you in 3 of 5 | This week's points now match Down Field within about 1–4 points; season effect still disagrees on 3 of 5 | — | **Partly fixed**: player values for the rest of the season differ between the models |
+| Trade odds vs Down Field (5 deals) | Agreed on direction for you in 3 of 5; partner side 1 of 5 | This week's points match; season effect for the partner now agrees in direction on 3 of 5 after the rest-of-season blend | — | **Improved, not closed**: two deals (Higgins → Irving + Washington, A.J. Brown → Corum) still disagree |
 | Next man up (RB) | Depth chart order | Recent work first | Depth chart led the backfield 71%, recent work 78%; when they disagreed 25% vs 55% | Changed |
-| Trade values (rest-of-season pts/game miss) | QB 3.43, RB 3.15, WR 2.93, TE 2.45 | 3.07, 3.00, 2.87, 2.21 | Season average: 3.82, 3.26, 3.31, 2.68 | Better at every position |
+| Trade values (rest-of-season pts/game miss) | QB 3.43, RB 3.15, WR 2.93, TE 2.45 | **3.07, 2.73, 2.67, 2.11** (usage, then the experts' rest-of-season rank blended in at RB/WR/TE) | Season average: 3.82, 3.26, 3.31, 2.68 | Better at every position; rank correlation RB 0.84, WR 0.82, TE 0.88 |
 | Trade values: injured players | IR counted as 50% of healthy, Out 85%, Questionable 97% | 8–27%, 62%, 83% | Measured: IR players played 9–30% of remaining games | Largest single error found |
-| Trade verdicts on this league's real trades | Right side in 12 of 19 | 9 of 17 | — | **Unproven.** Too few trades to tell either from luck |
+| Trade verdicts on this league's real trades | Right side in 12 of 19 | 8 of 17 | — | **Unproven.** Too few trades to tell good from lucky; the rest-of-season test above is the evidence |
 
 ## What the other tools do, and where this one stands
 
@@ -232,6 +232,40 @@ still disagree on 3 of 5 deals:
 The consensus blend changes this week only, so it was never going to settle a rest-of-season
 dispute.
 
+**E19 — Experts' rest-of-season rank in trade values.** FantasyPros' rest-of-season rankings are
+in dynastyprocess/data's `db_fpecr_latest.csv`, updated about weekly since 2021. For each week 4–11
+the version from before Sunday was taken. Rank becomes points per game through a + b·ln(rank) per
+position, fitted on 2022–24.
+
+On 2025 (hold-out), predicting points per game for the rest of the season, healthy players with an
+expert rank:
+
+| Position | Site value | Experts' rank as points | Blend (weight on site, fitted on 2022–24) |
+| --- | --- | --- | --- |
+| QB | 3.07 | 3.08 | 3.08 (0%): **not confirmed** |
+| RB | 3.06 | 3.01 | **2.84** (50%) |
+| WR | 3.00 | 2.77 | **2.79** (45%) |
+| TE | 2.70 | 2.65 | **2.56** (30%) |
+
+The blend ships for RB, WR and TE, healthy players only: an injured player's health is priced
+separately, and the experts' rank already reflects it. In the full value code (E11) the
+rest-of-season miss is now RB 2.73, WR 2.67, TE 2.11, down from 3.00 / 2.87 / 2.21.
+
+**Same-day Down Field re-run with the blend.**
+
+| Deal | Site, your title odds (before → after) | Down Field | Site, partner (before → after) | Down Field partner |
+| --- | --- | --- | --- | --- |
+| Higgins → Irving + P. Washington | +5.3 → +5.5 | +0.4 | −1.2 → −2.4 | +5.8 |
+| Olave → Irving + Tucker | +3.9 → **+1.1** | −1.3 | −0.7 → **+1.3** | +7.5 |
+| Higgins + A.J. Brown → St. Brown + C. Brown | +4.3 → +5.2 | +6.8 | +0.2 → **−2.3** | −7.0 |
+| Higgins + Mahomes → St. Brown + C. Brown | +3.1 → +4.0 | +10.2 | +0.9 → **−1.6** | −10.1 |
+| A.J. Brown → Corum | +3.8 → +3.5 | −0.4 | −1.3 → −2.2 | +1.9 |
+
+The partner's side now points the same way as Down Field on 3 of 5 deals (1 of 5 before). The
+Olave deal, which Down Field says hurts you, dropped to near zero. Two deals still disagree:
+- The site values Irving more than Down Field does.
+- The site sees A.J. Brown → Corum as a gain for you, while Down Field calls it noise.
+
 ## What changed in the code
 
 | Change | Where |
@@ -247,6 +281,7 @@ dispute.
 | Classifier fixes and the clause rule; labelled headline set; headline lag behind official changes | `public/js/playernews.js`, `lib/playernews.js`, `backtest/news-*`, `lib/snapshot.js` |
 | Official status and practice changes in the status log, News items and alerts | `lib/snapshot.js`, `public/js/playernews.js`, `lib/alerts.js` |
 | Wind at kickoff for outdoor games (Open-Meteo), shown with its measured effect | `lib/weather.js`, `public/js/views/lineup.js` |
+| Experts' rest-of-season rank fetched daily and blended into RB/WR/TE trade values; shown on Values and trade checks | `lib/consensus.js`, `public/js/values.js`, `public/js/views/{values,trades}.js` |
 | Expert consensus fetched daily and averaged into QB/WR/K projections; both numbers shown | `lib/consensus.js`, `public/js/{fitted,model}.js`, `public/js/views/lineup.js` |
 | Weekly consensus history for the backtest; E17, E18 | `backtest/fetch-ecr.mjs`, `backtest/experiments-a.mjs` |
 | Deadline lead on the Trades page; priced sweeteners; future horizon from measured value retention; Buy/Hold/Sell on Values | `public/js/views/{trades,finder,values}.js`, `public/js/values.js` |
@@ -255,9 +290,8 @@ dispute.
 
 ## Not solved
 
-- **Rest-of-season player values.** This is where the site and Down Field still disagree on trades.
-  Weekly consensus helps this week only. A rest-of-season consensus exists (FantasyPros "ROS"
-  rankings, archived through 2024), and testing it on trade values is the next step.
+- **Rest-of-season player values.** The experts' rank closed much of the gap with Down Field, not
+  all of it. Irving and A.J. Brown are still valued differently. A QB blend did not hold up on 2025.
 - **Early-week accuracy of the site's full advice.** The consensus half is measured: Wednesday is
   nearly as good as Sunday. Sleeper's half is still unarchived; the live call log measures it from
   now on.

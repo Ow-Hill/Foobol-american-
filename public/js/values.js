@@ -2,7 +2,7 @@
 // points/game (blend of projection + recent form) x games left (byes) x health,
 // measured against replacement level for THIS league: its scoring, its lineup slots, its 10 teams.
 import { avg, sum } from './util.js';
-import { rosHealth, xpGame, VALUE_USAGE_WEIGHT, NEXT4, BUY_SELL_GAP, PICK_POINTS, keepShare } from './fitted.js';
+import { rosHealth, xpGame, VALUE_USAGE_WEIGHT, NEXT4, BUY_SELL_GAP, PICK_POINTS, keepShare, ROS_CONSENSUS, rosPoints } from './fitted.js';
 
 // How much a playoff week counts next to a regular-season week for a team certain to be in it.
 // Three games decide the title; a judgment, not a fitted number.
@@ -113,6 +113,15 @@ export function buildValues(M) {
     const p = M.P(pid);
     let v = ppgRaw(pid);
     if (cap[p.pos]) v = Math.min(v, cap[p.pos] * 1.1);
+    // Blend with the experts' rest-of-season rank where that beat the site alone (E19). Healthy
+    // players only: an injured player's health is priced separately, and the experts' rank
+    // already reflects the injury.
+    const w = ROS_CONSENSUS.weight[p.pos];
+    const sp = snap.players[pid];
+    if (w != null && sp?.ros && !p.eff && v > 0) {
+      const r = rosPoints(p.pos, sp.ros.ecr);
+      if (r != null) v = w * v + (1 - w) * r;
+    }
     return (rawPpg[pid] = v);
   }
 
@@ -192,7 +201,9 @@ export function buildValues(M) {
   }
 
   const V = {
-    rows, by, rep, games, finalWeek, weeksFor, missedGames, usagePpg, signal, pickValue, keeperValue, playoffChance,
+    rows, by, rep, games, finalWeek, weeksFor,
+    rosRank: (pid) => snap.players[pid]?.ros?.ecr ?? null,
+    rosExperts: (pid) => (snap.players[pid]?.ros ? rosPoints(M.P(pid).pos, snap.players[pid].ros.ecr) : null), missedGames, usagePpg, signal, pickValue, keeperValue, playoffChance,
     ppg: (pid) => by[pid]?.ppg ?? ppg(pid),
     avail,
     value: (pid) => by[pid]?.value ?? 0,

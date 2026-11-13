@@ -22,7 +22,7 @@ function deadlineLead(M) {
       <div style="font-size:12.5px">You: playoffs ${f(d.odds.me.playoff)} · title ${f(d.odds.me.title)}<br /><span class="dim">Them: playoffs ${f(d.odds.them.playoff)}</span></div>
       <div><button class="btn btn-ghost" data-load="${d.partner.id}|${d.give.join(',')}|${d.get.join(',')}">Open in builder</button></div></div>`).join('');
   const body = good.length ? rows : '<p class="empty" style="margin:0">No deal found this week raises your odds without lowering your partner\'s. Standing pat is a fine answer; the Trade finder can search with looser settings.</p>';
-  return card('Best deals before the deadline', `<div style="padding:12px 16px">${stand}${body}<p class="source" style="margin-top:8px">Win-win search across every team (up to 2 players a side), ranked by the title and playoff odds you gain in this site's season simulation. <b>Check a deal with a second model before sending it</b> (Copy second-opinion prompt, top right): in the 12 Nov cross-check, Down Field agreed on this week's points but disagreed on the season effect for 3 of the top 5 deals, because the two models value some players differently for the rest of the season.</p></div>`, { cls: 'flush', sub: `Accept by ${M.acceptBy ? fmtDayTime(M.acceptBy) : 'the day before the deadline'} (${countdown(Math.max(0, M.acceptBy - M.now))} left)` });
+  return card('Best deals before the deadline', `<div style="padding:12px 16px">${stand}${body}<p class="source" style="margin-top:8px">Win-win search across every team (up to 2 players a side), ranked by the title and playoff odds you gain in this site's season simulation. <b>Check a deal with a second model before sending it</b> (Copy second-opinion prompt, top right): in the 13 Nov cross-check, after the experts' rest-of-season rank was blended into values, Down Field agreed on this week's points and on the partner's direction for 3 of the top 5 deals, but still valued two deals differently.</p></div>`, { cls: 'flush', sub: `Accept by ${M.acceptBy ? fmtDayTime(M.acceptBy) : 'the day before the deadline'} (${countdown(Math.max(0, M.acceptBy - M.now))} left)` });
 }
 
 function pickLabel(p) {
@@ -37,6 +37,8 @@ export function diligence(M, id) {
     const a = M.V.avail(id);
     bits.push(`<span class="chip ${p.effSev >= 3 ? 'chip-red' : 'chip-amber'}" title="Players with this status delivered about ${Math.round(a * 100)}% of a healthy player's rest-of-season points (2022-2025)">${esc(p.eff)} · worth ~${Math.round(a * 100)}% of healthy</span>`);
   }
+  const rr = M.V.rosRank(id);
+  if (rr) bits.push(`<span class="chip" title="FantasyPros consensus, rest of season. Blended into trade value at RB/WR/TE, where that made values more accurate in the 2022-2025 backtest.">experts ROS: ${esc(M.P(id).pos)}${Math.round(rr)}</span>`);
   const sig = M.V.signal(id);
   if (sig && sig.tag === 'Sell') bits.push(`<span class="chip chip-amber" title="${esc(sig.why)}">running hot: ${n1(sig.last4)}/g, volume supports ${n1(sig.usage)}</span>`);
   if (sig && sig.tag === 'Buy') bits.push(`<span class="chip chip-fa" title="${esc(sig.why)}">buy low: ${n1(sig.last4)}/g, volume supports ${n1(sig.usage)}</span>`);

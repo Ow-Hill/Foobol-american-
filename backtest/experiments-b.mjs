@@ -42,6 +42,7 @@ function leagueWeeks() {
 function modelFor(lw, withEcr = false) {
   const teams = lw.mu.map((m) => ({ id: m.rid, owner: lw.owners[m.rid], players: m.players || [], starters: m.starters || [], reserve: [] }));
   const players = structuredClone(asOf(lw.L.season, lw.wk));
+  attachRosBt(players, lw.L.season, lw.wk);
   if (withEcr) {
     const e = ecrWeek(lw.L.season, lw.wk, 'final');
     for (const [pid, x] of e?.players || []) if (players[pid] && players[pid].pos === x.pos) players[pid].ecr = { ecr: x.ecr, sd: x.sd, pos: x.pos };
@@ -259,6 +260,7 @@ export function e9() {
 // A plain 10-team league drafted by projection, so the real value code has rosters to work with.
 function genericModel(season, W) {
   const P = structuredClone(asOf(season, W));
+  if (USE_ROS) attachRosBt(P, season, W);
   const ids = Object.values(P).filter((p) => p.proj && p.pos !== 'K' && p.pos !== 'DEF').sort((a, b) => (ppg(b) ?? b.proj.pts) - (ppg(a) ?? a.proj.pts)).slice(0, 150).map((p) => p.id);
   const ks = (pos) => Object.values(P).filter((p) => p.proj && p.pos === pos).sort((a, b) => b.proj.pts - a.proj.pts).slice(0, 10).map((p) => p.id);
   const K = ks('K');
@@ -602,6 +604,97 @@ export function e15() {
     findings: [
       `Value kept year to year: ${ages.filter((a) => a[2] >= 20).map((a) => `${a[0]} ${a[1]} ${Math.round(a[5] * 100)}%`).join(', ')}.`,
       `Draft picks in this league: round 1 returned ${roundRows[0]?.[3]} season points above replacement, round 2 ${roundRows[1]?.[3]}, round 3 ${roundRows[2]?.[3]}; by round 6 it is ${roundRows[5]?.[3]}.`,
+    ],
+    fit,
+  };
+}
+
+// ================= E19 =================
+// USE_ROS: attach the experts' rest-of-season rank in E11/E13, as the live site does (values.js).
+let USE_ROS = true;
+export function setUseRos(v) {
+  USE_ROS = v;
+  e11Cache = null;
+}
+function attachRosBt(players, season, wk) {
+  if (!USE_ROS) return;
+  const m = rosWeek(season, wk);
+  for (const [pid, x] of m || []) if (players[pid] && players[pid].pos === x.pos) players[pid].ros = { ecr: x.ecr, pos: x.pos };
+}
+// Rest-of-season expert consensus (FantasyPros ROS rankings, archived about weekly by
+// dynastyprocess/data) as a second opinion on trade values. Same frame as E11.
+import fsE19 from 'node:fs';
+let rosMapCache = null;
+function rosWeek(season, wk) {
+  const dir = path.join(DIR, 'ecr');
+  rosMapCache ||= JSON.parse(fsE19.readFileSync(path.join(dir, 'fp-to-sleeper.json'), 'utf8'));
+  for (let w = wk; w >= Math.max(1, wk - 2); w--) {
+    const f = path.join(dir, `ros-${season}-${w}.json`);
+    if (!fsE19.existsSync(f)) continue;
+    const j = JSON.parse(fsE19.readFileSync(f, 'utf8'));
+    const out = new Map();
+    for (const r of j.rows) {
+      const pid = r.pos === 'DEF' ? D.fixTeam(r.team) : rosMapCache[r.id];
+      if (pid) out.set(pid, { ecr: Number(r.ecr), pos: r.pos });
+    }
+    return out;
+  }
+  return null;
+}
+export function e19() {
+  setUseRos(false);
+  const base = valueRows();
+  setUseRos(true);
+  const rows = base
+    .filter((r) => r.o.ppg != null && !r.inj)
+    .map((r) => ({ ...r, ros: rosWeek(r.season, r.wk)?.get(r.id) }))
+    .filter((r) => r.ros && r.ros.pos === r.pos);
+  const fit = { curve: {}, weight: {}, test: {}, train: {} };
+  const out = [];
+  for (const pos of SKILL) {
+    const tr = rows.filter((r) => r.pos === pos && r.split === 'train');
+    const te = rows.filter((r) => r.pos === pos && r.split === 'test');
+    if (tr.length < 80 || te.length < 30) continue;
+    const curve = ols(tr.map((r) => [Math.log(r.ros.ecr)]), tr.map((r) => r.o.ppg));
+    fit.curve[pos] = curve.map(r3);
+    const rp = (r) => Math.max(0, predict(curve, [Math.log(r.ros.ecr)]));
+    let best = { w: 1, e: Infinity };
+    for (let w = 0; w <= 1.0001; w += 0.05) {
+      const e = mean(tr.map((r) => Math.abs(r.o.ppg - (w * r.site + (1 - w) * rp(r)))));
+      if (e < best.e - 1e-9) best = { w: Math.round(w * 100) / 100, e };
+    }
+    fit.weight[pos] = best.w;
+    const wkRho = (set, f) => {
+      const g = {};
+      for (const r of set) (g[r.season + ':' + r.wk] ||= []).push(r);
+      return mean(Object.values(g).filter((x) => x.length >= 6).map((x) => spearman(x.map(f), x.map((r) => r.o.ppg))));
+    };
+    const poRho = (set, f) => {
+      const x = set.filter((r) => r.o.po > 0);
+      const g = {};
+      for (const r of x) (g[r.season + ':' + r.wk] ||= []).push(r);
+      return mean(Object.values(g).filter((y) => y.length >= 6).map((y) => spearman(y.map(f), y.map((r) => r.o.po))));
+    };
+    const methods = [['Site value today', (r) => r.site], ['Expert ROS rank, as points', rp], ['Half and half', (r) => 0.5 * r.site + 0.5 * rp(r)], [`Fitted: ${Math.round(best.w * 100)}% site`, (r) => best.w * r.site + (1 - best.w) * rp(r)]];
+    fit.test[pos] = {};
+    fit.train[pos] = {};
+    for (const [name, f] of methods) {
+      const m = { mae: mean(te.map((r) => Math.abs(r.o.ppg - f(r)))), rho: wkRho(te, f), po: poRho(te, f) };
+      fit.test[pos][name] = { mae: r2(m.mae), rho: r3(m.rho), po: r3(m.po) };
+      fit.train[pos][name] = { mae: r2(mean(tr.map((r) => Math.abs(r.o.ppg - f(r))))), rho: r3(wkRho(tr, f)) };
+      out.push([pos, name, r2(m.mae), r3(m.rho), r3(m.po), te.length]);
+    }
+  }
+  // the rule is chosen on 2022-24: the fitted weight, if it beat the site value there; then checked on 2025
+  const fk = (p) => Object.keys(fit.test[p]).find((k) => k.startsWith('Fitted'));
+  fit.adopt = Object.fromEntries(Object.keys(fit.test).map((p) => [p, fit.train[p][fk(p)].mae < fit.train[p]['Site value today'].mae - 0.02]));
+  fit.confirmed = Object.fromEntries(Object.keys(fit.test).map((p) => [p, fit.test[p][fk(p)].mae <= fit.test[p]['Site value today'].mae && fit.test[p][fk(p)].rho >= fit.test[p]['Site value today'].rho - 0.01]));
+  return {
+    id: 'E19', title: 'Does the experts\' rest-of-season ranking improve trade values?',
+    tables: [{ caption: 'Predicting points per game from that week to Week 17, taken at Weeks 4-11. Fitted on 2022-24, hold-out 2025; healthy players who went on to play 3+ games and had an expert ROS rank. Last column: rank correlation with points scored in Weeks 15-17 alone.', head: ['Position', 'Method', 'Avg miss (pts/game)', 'Rank corr.', 'Rank corr., Weeks 15-17', 'n'], rows: out }],
+    findings: [
+      ...Object.keys(fit.test).map((p) => `${p}: site value misses by ${fit.test[p]['Site value today'].mae}, experts' ROS rank ${fit.test[p]['Expert ROS rank, as points'].mae}, half and half ${fit.test[p]['Half and half'].mae}, fitted blend (${Math.round(fit.weight[p] * 100)}% site) ${fit.test[p][fk(p)].mae}.`),
+      `Rule chosen on 2022-24 (blend where it beat the site value by more than 0.02 a game): ${Object.entries(fit.adopt).map(([p, a]) => `${p} ${a ? 'blend' : 'site value'}`).join(', ')}. Confirmed on 2025 at: ${Object.entries(fit.confirmed).filter(([p, c]) => c && fit.adopt[p]).map(([p]) => p).join(', ') || 'none'}.`,
     ],
     fit,
   };

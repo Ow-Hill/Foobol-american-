@@ -144,9 +144,9 @@ export function keepShare(pos, age) {
 }
 
 // E13: accepted trades in this league are rarely even on the site's values: the median deal had
-// the smaller side at 45% of the larger, a quarter were under 34%. (Measured with the current
+// the smaller side at 54% of the larger, a quarter were under 37%. (Measured with the current
 // value formula; docs/backtest/results-current.json.)
-export const TRADE_BALANCE = { p25: 0.34, median: 0.45, p75: 0.8 };
+export const TRADE_BALANCE = { p25: 0.37, median: 0.54, p75: 0.78 };
 
 // E16: 25th-75th percentile range as a share of the projection, by position and projection band
 // (bands: 0-5, 5-8, 8-11, 11-14, 14-18, 18+). The last-six-games range held the actual score only
@@ -190,5 +190,18 @@ export const CONSENSUS = {
 };
 export function consensusPoints(pos, ecr) {
   const c = CONSENSUS.curve[pos];
+  return c && ecr > 0 ? Math.max(0, c[0] + c[1] * Math.log(ecr)) : null;
+}
+
+// E19: experts' rest-of-season rank (FantasyPros ROS), turned into points per game with
+// a + b * ln(rank) fitted on 2022-24, blended with the site's own value at the weight fitted there.
+// Confirmed on 2025 for RB (3.06 -> 2.84 points a game missed), WR (3.00 -> 2.79), TE (2.70 -> 2.56).
+// QB: chosen on 2022-24 but not confirmed on 2025, so QBs keep the site value.
+export const ROS_CONSENSUS = {
+  weight: { RB: 0.5, WR: 0.45, TE: 0.3 }, // share kept on the site's own value
+  curve: { QB: [25.853, -3.5], RB: [24.545, -4.444], WR: [25.708, -4.349], TE: [17.751, -3.537] },
+};
+export function rosPoints(pos, ecr) {
+  const c = ROS_CONSENSUS.curve[pos];
   return c && ecr > 0 ? Math.max(0, c[0] + c[1] * Math.log(ecr)) : null;
 }

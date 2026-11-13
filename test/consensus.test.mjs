@@ -58,3 +58,32 @@ test('live consensus: rows joined to Sleeper ids, stale weeks and position misma
   assert.equal(players[1].ecr.ecr, 4);
   assert.ok(!players[2].ecr, 'a WR rank is not attached to an RB');
 });
+
+test('rest-of-season consensus: constants match E19; blended into healthy RB/WR/TE values only', async () => {
+  const { ROS_CONSENSUS, rosPoints } = await import('../public/js/fitted.js');
+  const f = path.join(root, 'docs', 'backtest', 'results-current.json');
+  const E = JSON.parse(fs.readFileSync(f, 'utf8')).experiments.E19;
+  if (E) {
+    for (const [pos, w] of Object.entries(ROS_CONSENSUS.weight)) {
+      assert.equal(w, E.fit.weight[pos], pos);
+      assert.ok(E.fit.adopt[pos] && E.fit.confirmed[pos], pos);
+    }
+    assert.ok(!('QB' in ROS_CONSENSUS.weight) && !E.fit.confirmed.QB);
+  }
+  assert.ok(rosPoints('WR', 1) > rosPoints('WR', 20));
+  const { attachRos } = require('../lib/consensus.js');
+  const pl = (id, pos, team, proj, extra = {}) => ({ id, n: id, pos, team, depth: 1, inj: null, hist: [1, 2, 3, 4, 5].map((w) => ({ w, pts: proj })), proj: { pts: proj }, own: 1, ...extra });
+  const players = { w: pl('w', 'WR', 'CIN', 12), h: pl('h', 'WR', 'DAL', 12, { inj: 'Questionable' }), q: pl('q', 'QB', 'BUF', 18) };
+  attachRos(players, { w: { ecr: 2, pos: 'WR' }, h: { ecr: 2, pos: 'WR' }, q: { ecr: 1, pos: 'QB' } });
+  const snap = {
+    meta: { week: 6, tz: 'America/Toronto', builtAt: Date.now(), playoffWeeks: [15, 16, 17] },
+    league: { name: 'T', rosterPositions: ['QB', 'WR', 'BN'], settings: { reserve_slots: 0, playoff_week_start: 15, playoff_teams: 2, trade_deadline: 11, num_teams: 2 }, scoring: {} },
+    teams: [{ id: 1, owner: 'me', isMe: true, w: 0, l: 0, players: ['w', 'h', 'q'], starters: ['q', 'w'], reserve: [], taxi: [] }, { id: 2, owner: 'x', w: 0, l: 0, players: [], starters: [], reserve: [], taxi: [] }],
+    players, schedule: { 6: { games: [], byes: [] } }, results: {}, matchups: {}, transactions: [], picks: [], notes: [], articles: [], playerNews: { items: [] },
+  };
+  const M = buildModel(snap, 1, Date.now());
+  // same history and projection; the healthy WR with a top-2 ROS rank is pulled toward the experts
+  assert.ok(M.V.ppg('w') > M.V.ppg('h') + 1, `${M.V.ppg('w')} vs ${M.V.ppg('h')}`);
+  assert.equal(M.V.rosRank('q'), 1);
+  assert.ok(Math.abs(M.V.rosExperts('w') - rosPoints('WR', 2)) < 1e-9);
+});

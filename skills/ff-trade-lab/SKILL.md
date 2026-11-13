@@ -60,6 +60,9 @@ Optional: Scout-Squad `gut_check` question_type `trade` (Pro) for a saved receip
 - **Playoff schedule strength is weak evidence.** Points allowed to a position predicted little
   for RB/WR/TE once projections were known; treat a "brutal Weeks 15-17 slate" as a tiebreak for
   quarterbacks, not a deal-breaker. A playoff-week **bye** is still a deal-breaker.
+- **Experts' rest-of-season rank improves values.** Blending FantasyPros' ROS rank into the
+  dashboard's value cut the rest-of-season miss by about a tenth for RB, WR and TE (not QB). When
+  the dashboard and Down Field disagree on a deal, check both players' ROS ranks first.
 - **This league accepts uneven trades.** The median accepted deal had one side worth under half
   the other on the dashboard's values; 25 of 50 were 1-for-1, 12 were 1-for-2, none used picks.
 
