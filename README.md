@@ -9,7 +9,7 @@ A live roster-management dashboard for the Sleeper league **James Cook Lovers**.
 ```bash
 cd ff-roster-monitor
 node server.js        # Node 18+, no dependencies
-npm test              # 69 tests
+npm test              # 70 tests
 # open http://localhost:4321
 ```
 
@@ -96,7 +96,9 @@ Floor and ceiling now come from the projection and how far players like him usua
 classifier is checked against hand-labelled headlines (`node backtest/news-eval.mjs`); on fresh
 live headlines it read 89% correctly on the latest batch, before the fixes it prompted. Expert
 consensus averaged into QB, WR and K projections added about half a point a week to replayed
-lineups; the backtest's consensus history is built with `node backtest/fetch-ecr.mjs <clone>`
+lineups. Waiver claims are ranked by projection: in a replay of this league's 2025-26 seasons the
+top claim added about 8 lineup points over three weeks (the old ranking, led by injured stashes and
+rookies, added 2). The backtest's consensus history is built with `node backtest/fetch-ecr.mjs <clone>`
 (see the script header).
 
 ## Matchup strength

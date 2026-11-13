@@ -87,3 +87,26 @@ test('rest-of-season consensus: constants match E19; blended into healthy RB/WR/
   assert.equal(M.V.rosRank('q'), 1);
   assert.ok(Math.abs(M.V.rosExperts('w') - rosPoints('WR', 2)) < 1e-9);
 });
+
+test('waivers: the best-projected free agents lead the risers; injured stashes are not a claim', () => {
+  const pl = (id, pos, team, proj, extra = {}) => ({ id, n: id, pos, team, depth: 2, inj: null, hist: [1, 2, 3, 4].map((w) => ({ w, pts: proj, att: 5, tgt: 3 })), proj: { pts: proj }, own: null, exp: 4, ...extra });
+  const mine = ['m1', 'm2', 'm3'];
+  const players = {
+    m1: pl('m1', 'WR', 'CIN', 14, { own: 1 }), m2: pl('m2', 'WR', 'DAL', 6, { own: 1 }), m3: pl('m3', 'RB', 'DET', 12, { own: 1 }),
+    fa1: pl('fa1', 'WR', 'NYJ', 11), fa2: pl('fa2', 'RB', 'MIA', 9), rook: pl('rook', 'WR', 'CHI', 4, { exp: 0 }),
+    hurt: pl('hurt', 'RB', 'SEA', 0, { inj: 'IR', hist: [1, 2, 3].map((w) => ({ w, pts: 15, att: 15, tgt: 2 })) }),
+  };
+  const snap = {
+    meta: { week: 6, tz: 'America/Toronto', builtAt: Date.now(), playoffWeeks: [15, 16, 17] },
+    league: { name: 'T', rosterPositions: ['RB', 'WR', 'BN', 'BN'], settings: { reserve_slots: 1, playoff_week_start: 15, playoff_teams: 2, trade_deadline: 11, num_teams: 2, waiver_day_of_week: 2 }, scoring: {} },
+    teams: [{ id: 1, owner: 'me', isMe: true, w: 0, l: 0, players: mine, starters: ['m3', 'm1'], reserve: [], taxi: [] }, { id: 2, owner: 'x', w: 0, l: 0, players: [], starters: [], reserve: [], taxi: [] }],
+    players, schedule: { 6: { games: [], byes: [] } }, results: {}, matchups: {}, transactions: [], picks: [], notes: [], articles: [], playerNews: { items: [] },
+  };
+  const w = buildModel(snap, 1, Date.now()).waiverPlan();
+  assert.equal(w.groups.risers[0].id, 'fa1', 'highest projection first');
+  assert.ok(w.groups.risers[0].why.includes('top projected free agent'));
+  const stash = w.groups.lottery.find((c) => c.id === 'hurt');
+  if (stash) assert.equal(stash.tier, 4);
+  const rook = w.groups.lottery.find((c) => c.id === 'rook');
+  if (rook) assert.ok(rook.tier >= 3, 'a young player alone is not a tier 2 claim');
+});

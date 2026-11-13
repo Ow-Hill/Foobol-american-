@@ -753,6 +753,42 @@ Predicting points per game from that week to Week 17, taken at Weeks 4-11. Fitte
 | TE | Half and half | 2.56 | 0.704 | 0.381 | 125 |
 | TE | Fitted: 30% site | 2.56 | 0.715 | 0.364 | 125 |
 
+## E20. Would the site's waiver suggestions have helped?
+
+- The site's top waiver suggestion gained 8.1 lineup points over three weeks on average and helped 85.3% of the time. The best-projected free agent gained 5.4; managers' actual adds 9.5 (741 adds). Doing nothing: 0.
+- By tier: Tier 1 (riser) 4 (n=20), Tier 2 (riser) 7.4 (n=24), Tier 3 (riser) 9 (n=112).
+- Ranking candidates: best rule on 2025 was "Impact this week only" (9.3), which gained 7.4 on 2026; the site's own order gained 8.7 and 7.4.
+
+Every team-week, Weeks 3-14 of this league's 2025 and 2026 seasons. Gain = best-lineup points over the next three weeks with real scores, the add in and the suggested drop out, against the roster as it stood.
+
+| Move | Team-weeks | Lineup points gained, next 3 weeks (avg) | 90% range | Helped % | Added 10+ points % |
+| --- | --- | --- | --- | --- | --- |
+| Site's top suggestion | 156 | 8.1 | 6.2 to 10.4 | 85.3 | 34.6 |
+| Naive: best-projected free agent | 156 | 5.4 | 3.8 to 8 | 58.3 | 23.1 |
+| Naive: best season average free agent | 138 | 6.3 | 3.9 to 9.3 | 55.1 | 26.8 |
+| Managers' actual adds (each add) | 741 | 9.5 |  | 74.6 | 39.7 |
+| Doing nothing | 156 | 0 |  | 0 | 0 |
+| Injured stash (separately, over 8 weeks) | 138 | 1.9 |  | 14.5 | 13 |
+
+Site suggestions by tier and group. Last column: how often the player the site said to drop then outscored the player it said to add.
+
+| Tier | n | Avg gain | Helped % | Drop outscored the add % |
+| --- | --- | --- | --- | --- |
+| Tier 1 (riser) | 20 | 4 | 75 | 25 |
+| Tier 2 (riser) | 24 | 7.4 | 83.3 | 11.1 |
+| Tier 3 (riser) | 112 | 9 | 87.5 | 7.7 |
+
+Which rule picks the best of the site's candidates? Average gain of the top pick, 2025 and 2026 separately.
+
+| Ranking rule | 2025 avg gain | n | 2026 avg gain | n |
+| --- | --- | --- | --- | --- |
+| Site order (tier, then impact) | 8.7 | 96 | 7.4 | 60 |
+| Impact this week only | 9.3 | 96 | 7.4 | 60 |
+| Recent scoring (last 3) | 3 | 96 | 2.3 | 60 |
+| Season average | 2.9 | 96 | 4.6 | 60 |
+| Projection this week | 8.6 | 96 | 7.3 | 60 |
+| Impact + 0.3 x last 3 | 3.7 | 96 | 3.6 | 60 |
+
 ## N1. News scanner: how well does it read headlines?
 
 - Development set: 100% of 143 checks correct (71.3% before the fixes this set prompted, so this number is no longer independent).

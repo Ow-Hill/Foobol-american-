@@ -87,7 +87,7 @@ export function render(M, ctx) {
     <div class="stack">
       ${card('Needs, in priority order', w.needs.length ? table(['#', 'Need', 'Detail', ''], needRows) : `<div class="allclear"><span class="dot dot-green"></span> No need — holding is a real option.</div>`, { cls: 'flush', sub: 'Empty slot → starter out → bye → thin spot → insurance' })}
       ${card('Bye look-ahead', look)}
-      ${group(M, 'Proven risers', 'Rising scoring or snap share, trending adds, or a lineup upgrade', w.groups.risers, w, 'No unrostered player clears the bar this week.')}
+      ${group(M, 'Proven risers', 'The best-projected free agents this week, plus rising scoring, snap share, trending adds or a lineup upgrade. Ranked by projection: in the 2025-26 replay this order gained about 8 lineup points over three weeks per claim', w.groups.risers, w, 'No unrostered player clears the bar this week.')}
       ${group(M, 'Handcuff stashes', 'The next man up behind your starting backs', w.groups.cuffs, w, 'No unrostered handcuffs for your backs.')}
       ${group(M, 'Lottery tickets', 'Trending, young and ascending, or a talented player stashable on IR', w.groups.lottery, w, 'Nothing interesting beyond the lists above.')}
       <div class="grid g2">
@@ -95,7 +95,7 @@ export function render(M, ctx) {
         ${card('Kicker streams', streamTable(M, w.streams.K, 'K'), { cls: 'flush', sub: 'Long-range kickers in domes or calm weather earn more (4/5/6 for 40+/50+/60+)' })}
       </div>
       ${card('Recent drops by rivals', drops, { cls: 'flush', sub: 'Last 7 days — worth a no-cost claim if still unclaimed' })}
-      ${card('How the tiers work', Object.keys(tierName).map((k) => `<p style="margin-bottom:6px"><span class="chip chip-tier${k}">T${k} · ${tierName[k]}</span> <span class="muted">${tierHelp[k]}</span></p>`).join('') + `<p class="note">Tier is set from how much the player would raise your best legal lineup (this week and next), plus role changes. These are the site's heuristics, not a model's verdict — a candidate list was triaged by projection and usage, not background-checked player by player. Always check the news before a claim is final.</p>`)}
+      ${card('How the tiers work', Object.keys(tierName).map((k) => `<p style="margin-bottom:6px"><span class="chip chip-tier${k}">T${k} · ${tierName[k]}</span> <span class="muted">${tierHelp[k]}</span></p>`).join('') + `<p class="note">Tier is set from how much the player would raise your best legal lineup (this week and next), plus role changes. Candidates are ranked by this week's projection, which beat the old signal-based order in a replay of this league's 2025-26 seasons (about 8 lineup points per claim over three weeks vs 2). Injured stashes are free-agency adds, not claims. Always check the news before a claim is final.</p>`)}
     </div>`;
 }
 const me_count = (M) => M.me.players.length;

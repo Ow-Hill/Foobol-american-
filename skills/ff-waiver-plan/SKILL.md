@@ -49,6 +49,15 @@ pool was triaged, not every player background-checked.
   odds change per move. Relay the band and noise.
 - Optional: Scout-Squad `gut_check` add_drop (free) for a receipt on the top move.
 
+## Step 5a — What the dashboard's waiver replay found (this league, 2025-26)
+
+- Ranking free agents by **this week's projection** was the best simple rule: the top claim added
+  about 8 lineup points over the next three weeks, against 5.4 for the best-projected free agent
+  overall and 0 for standing pat.
+- **Injured stashes** added 1.9 points over eight weeks on average and helped 15% of the time.
+  Treat them as free-agency adds when IR is open, never as a claim.
+- **"Young, ascending"** alone is not a reason to spend priority.
+
 ## Step 6 — Tier and spend priority
 
 | Tier | Meaning | Priority |

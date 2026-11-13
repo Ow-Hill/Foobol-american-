@@ -7982,6 +7982,226 @@
     }
    ]
   },
+  "E20": {
+   "title": "Would the site's waiver suggestions have helped?",
+   "findings": [
+    "The site's top waiver suggestion gained 8.1 lineup points over three weeks on average and helped 85.3% of the time. The best-projected free agent gained 5.4; managers' actual adds 9.5 (741 adds). Doing nothing: 0.",
+    "By tier: Tier 1 (riser) 4 (n=20), Tier 2 (riser) 7.4 (n=24), Tier 3 (riser) 9 (n=112).",
+    "Ranking candidates: best rule on 2025 was \"Impact this week only\" (9.3), which gained 7.4 on 2026; the site's own order gained 8.7 and 7.4."
+   ],
+   "fit": {
+    "site": {
+     "mean": 8.1,
+     "hit": 0.853,
+     "n": 156
+    },
+    "naive": {
+     "mean": 5.44,
+     "hit": 0.583,
+     "n": 156
+    },
+    "real": {
+     "mean": 9.5,
+     "n": 741
+    },
+    "tiers": {
+     "Tier 1 (riser)": {
+      "n": 20,
+      "mean": 4,
+      "hit": 75,
+      "dropBeat": 25
+     },
+     "Tier 2 (riser)": {
+      "n": 24,
+      "mean": 7.4,
+      "hit": 83.3,
+      "dropBeat": 11.1
+     },
+     "Tier 3 (riser)": {
+      "n": 112,
+      "mean": 9,
+      "hit": 87.5,
+      "dropBeat": 7.7
+     }
+    },
+    "rules": {
+     "Site order (tier, then impact)": {
+      "y2025": 8.7,
+      "y2026": 7.4
+     },
+     "Impact this week only": {
+      "y2025": 9.3,
+      "y2026": 7.4
+     },
+     "Recent scoring (last 3)": {
+      "y2025": 3,
+      "y2026": 2.3
+     },
+     "Season average": {
+      "y2025": 2.9,
+      "y2026": 4.6
+     },
+     "Projection this week": {
+      "y2025": 8.6,
+      "y2026": 7.3
+     },
+     "Impact + 0.3 x last 3": {
+      "y2025": 3.7,
+      "y2026": 3.6
+     }
+    }
+   },
+   "tables": [
+    {
+     "caption": "Every team-week, Weeks 3-14 of this league's 2025 and 2026 seasons. Gain = best-lineup points over the next three weeks with real scores, the add in and the suggested drop out, against the roster as it stood.",
+     "head": [
+      "Move",
+      "Team-weeks",
+      "Lineup points gained, next 3 weeks (avg)",
+      "90% range",
+      "Helped %",
+      "Added 10+ points %"
+     ],
+     "rows": [
+      [
+       "Site's top suggestion",
+       156,
+       8.1,
+       "6.2 to 10.4",
+       85.3,
+       34.6
+      ],
+      [
+       "Naive: best-projected free agent",
+       156,
+       5.4,
+       "3.8 to 8",
+       58.3,
+       23.1
+      ],
+      [
+       "Naive: best season average free agent",
+       138,
+       6.3,
+       "3.9 to 9.3",
+       55.1,
+       26.8
+      ],
+      [
+       "Managers' actual adds (each add)",
+       741,
+       9.5,
+       "",
+       74.6,
+       39.7
+      ],
+      [
+       "Doing nothing",
+       156,
+       0,
+       "",
+       0,
+       0
+      ],
+      [
+       "Injured stash (separately, over 8 weeks)",
+       138,
+       1.9,
+       "",
+       14.5,
+       13
+      ]
+     ]
+    },
+    {
+     "caption": "Site suggestions by tier and group. Last column: how often the player the site said to drop then outscored the player it said to add.",
+     "head": [
+      "Tier",
+      "n",
+      "Avg gain",
+      "Helped %",
+      "Drop outscored the add %"
+     ],
+     "rows": [
+      [
+       "Tier 1 (riser)",
+       20,
+       4,
+       75,
+       25
+      ],
+      [
+       "Tier 2 (riser)",
+       24,
+       7.4,
+       83.3,
+       11.1
+      ],
+      [
+       "Tier 3 (riser)",
+       112,
+       9,
+       87.5,
+       7.7
+      ]
+     ]
+    },
+    {
+     "caption": "Which rule picks the best of the site's candidates? Average gain of the top pick, 2025 and 2026 separately.",
+     "head": [
+      "Ranking rule",
+      "2025 avg gain",
+      "n",
+      "2026 avg gain",
+      "n"
+     ],
+     "rows": [
+      [
+       "Site order (tier, then impact)",
+       8.7,
+       96,
+       7.4,
+       60
+      ],
+      [
+       "Impact this week only",
+       9.3,
+       96,
+       7.4,
+       60
+      ],
+      [
+       "Recent scoring (last 3)",
+       3,
+       96,
+       2.3,
+       60
+      ],
+      [
+       "Season average",
+       2.9,
+       96,
+       4.6,
+       60
+      ],
+      [
+       "Projection this week",
+       8.6,
+       96,
+       7.3,
+       60
+      ],
+      [
+       "Impact + 0.3 x last 3",
+       3.7,
+       96,
+       3.6,
+       60
+      ]
+     ]
+    }
+   ]
+  },
   "N1": {
    "title": "News scanner: how well does it read headlines?",
    "findings": [

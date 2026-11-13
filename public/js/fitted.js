@@ -205,3 +205,12 @@ export function rosPoints(pos, ecr) {
   const c = ROS_CONSENSUS.curve[pos];
   return c && ecr > 0 ? Math.max(0, c[0] + c[1] * Math.log(ecr)) : null;
 }
+
+// E20: waiver replay, this league 2025-26. The old ranking (signal score, lottery tickets in tier 2)
+// gained 2.1 lineup points per suggestion over three weeks; adding the best-projected free agent
+// gained 5.4. Ranking by this week's projection was best on 2025 and held on 2026.
+// The top claim (best riser by projection, QBs only when short of one, injured stashes excluded)
+// gained 8.1 (90% range 6.2-10.4): 8.6 vs 6.6 for the best-projected free agent in 2025, 7.4 vs 3.6
+// in 2026. Injured stashes gained
+// 1.9 over eight weeks and are no longer a claim tier.
+export const WAIVER = { topProjected: 5 };

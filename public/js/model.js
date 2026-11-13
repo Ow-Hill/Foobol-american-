@@ -3,7 +3,7 @@
 // league IR rules, rolling waivers, Week-11 deadline, advice only.
 import { avg, sum, quantile, clamp, fmtKick, setTz } from './util.js';
 import { buildValues } from './values.js';
-import { BANDS, gapGroup, gapWinRate, IMPLIED_GAP_MIN, playChance, playingHurt, WIN, NEXT_MAN_BY_WORK, rangeFor, POSTURE_TIEBREAK, FIRST_BACK, CONSENSUS, consensusPoints } from './fitted.js';
+import { BANDS, gapGroup, gapWinRate, IMPLIED_GAP_MIN, playChance, playingHurt, WIN, NEXT_MAN_BY_WORK, rangeFor, POSTURE_TIEBREAK, FIRST_BACK, CONSENSUS, consensusPoints, WAIVER } from './fitted.js';
 
 const SEV = { IR: 5, PUP: 5, Sus: 5, NA: 4, DNR: 4, COV: 4, Out: 4, Doubtful: 3, Questionable: 2, Probable: 1 };
 // Practice participation as FP / LP / DNP, whatever the source calls it.
@@ -834,17 +834,26 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       }
     }
     // proven risers
+    // The best-projected free agents always make the list: ranking by this week's projection beat
+    // the old signal score in the 2025-26 waiver replay (E20).
+    // In a one-QB league a quarterback is only worth a claim when you are short of one: fewer than
+    // two on the roster, or none healthy and playing this week.
+    const qbs = l.active.filter((id) => P(id).pos === 'QB');
+    const qbNeed = qbs.length < 2 || !qbs.some((id) => canStartNow(id));
+    const posOk = (c) => ['RB', 'WR', 'TE'].includes(c.p.pos) || (c.p.pos === 'QB' && (qbNeed || slotNames.includes('SUPER_FLEX')));
+    const topProj = new Set(cards.filter((c) => posOk(c) && c.p.avail === 'ok').sort((a, b) => b.p.proj - a.p.proj).slice(0, WAIVER.topProjected).map((c) => c.id));
     const risers = cards
-      .filter((c) => !used.has(c.id) && ['RB', 'WR', 'TE', 'QB'].includes(c.p.pos) && c.p.avail !== 'out')
+      .filter((c) => !used.has(c.id) && posOk(c) && c.p.avail !== 'out')
       .map((c) => {
         const up = [];
         if (c.p.ppg3 != null && c.p.ppg != null && c.p.gp >= 3 && c.p.ppg3 >= 1.2 * (avg(c.p.hist.slice(0, -3).map((h) => h.pts)) || c.p.ppg) && c.p.ppg3 >= 7) up.push('scoring up');
         if (c.p.snpTrend != null && c.p.snpTrend >= 8) up.push('snaps up');
         if (c.p.trend?.add && c.p.trend.add.rank <= 20) up.push('trending add');
         if (c.impact >= 2) up.push('lineup upgrade');
-        return { c, up, score: c.impact * 2 + c.impactNext + (c.p.ppg3 || 0) * 0.3 + up.length * 2 };
+        if (topProj.has(c.id)) up.push('top projected free agent');
+        return { c, up, score: c.p.proj };
       })
-      .filter((x) => x.up.length >= 2 || x.c.impact >= 3)
+      .filter((x) => x.up.length >= 2 || x.c.impact >= 3 || topProj.has(x.c.id))
       .sort((a, b) => b.score - a.score)
       .slice(0, 5)
       .map((x) => (used.add(x.c.id), mk(x.c, 'riser', { why: x.up })));
@@ -903,10 +912,14 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
 
   function tierFor(c, openIr = 0) {
     if (c.group === 'cuff' || c.group === 'stream') return 4;
-    if (c.p.avail === 'out' && (c.p.ppg || 0) >= 10 && openIr > 0) return 2;
+    // Injured stashes gained 1.9 lineup points over the next 8 weeks on average (E20): add one
+    // with an open IR slot if you like, but it is not worth a waiver claim.
+    if (c.p.avail === 'out') return 4;
     const takeover = c.p.depth === 1 && c.p.pos === 'RB' && (c.p.ppg3 || 0) >= 12;
     if (c.impact >= 3 || takeover) return 1;
-    if (c.impact >= 1 || (c.group === 'lottery' && (c.p.exp ?? 9) <= 1)) return 2;
+    // Lottery tickets were the top pick in 120 of 156 replayed weeks and gained 0.9 points on
+    // average (E20): a young player alone is no longer a reason to spend a claim.
+    if (c.impact >= 1) return 2;
     return 3;
   }
 

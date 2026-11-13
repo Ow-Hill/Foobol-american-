@@ -33,6 +33,7 @@ before this work is in [`tables-before.md`](backtest/tables-before.md).
 | Teammate estimates, QB out | −10% top target, −20% others | 0% and −10% | Top target scored 99% of expected, others 89% | Old rule too harsh |
 | Confidence labels on estimates | "clear" 43.5%, "lean" 51.5%, "toss" 53.3% (upside down) | lean 66%, toss 52% | — | Fixed: the label now tracks accuracy |
 | Win probability | Brier 0.245; said 75% when the side won 59% | 0.235; says 74%, wins 73% | Coin flip 0.250 | Was barely better than guessing; now calibrated. The season simulation now uses each team's projected lineup for the current week too |
+| Waiver claims (156 team-weeks, this league) | Top suggestion gained 2.1 lineup points over 3 weeks, helped 26% (young "lottery tickets" and injured stashes ranked tier 2) | **8.1** (90% range 6.2–10.4), helped 85% | Best-projected free agent: 5.4; doing nothing: 0 | Fixed. Ranked by projection; QBs only for teams short of one; stashes and rookies no longer outrank real adds. Beat the naive pick in both seasons (8.6 vs 6.6, 7.4 vs 3.6) |
 | Projection source | Sleeper only | Sleeper averaged 50/50 with FantasyPros' expert consensus at QB, WR, K | Replayed lineups: +0.57 pts/week (90% range 0.15 to 1.09); changed 50 of 208 team-weeks and scored more 60% of those times | Rule chosen on 2022–24, confirmed on 2025–26. RB, TE, DEF stay on Sleeper (no gain) |
 | Early-week advice | Unmeasured | Wednesday's consensus missed by 5.91 pts vs 5.88 on Sunday morning | — | Answered: early-week rankings are nearly as good as the final ones |
 | Floor / ceiling | Middle half of the last 6 games: held the actual score 35% of the time (should be 50%) | Projection-based: 49.5% | — | Fixed |
@@ -266,6 +267,33 @@ Olave deal, which Down Field says hurts you, dropped to near zero. Two deals sti
 - The site values Irving more than Down Field does.
 - The site sees A.J. Brown → Corum as a gain for you, while Down Field calls it noise.
 
+**E20 — Waiver claims.** This replays every team-week, Weeks 3–14 of this league's 2025 and 2026
+seasons. It asks what the site's waiver plan would have suggested, and how many lineup points the
+move would have added over the next three weeks with real scores (the add in, the named drop out).
+
+| Move | Avg points gained, 3 weeks | Helped |
+| --- | --- | --- |
+| Site's top claim, old ranking | 2.1 | 26% |
+| Site's top claim, new ranking | **8.1** | 85% |
+| Best-projected free agent | 5.4 | 58% |
+| Best season-average free agent | 6.3 | 55% |
+| Managers' actual adds (741) | 9.5 | 75% |
+| Injured stash (over 8 weeks) | 1.9 | 15% |
+
+**What went wrong.** The old ranking put injured "stash" players and young lottery tickets in tier 2,
+above healthy players who would start. They were the top pick in 120 of 156 weeks and gained almost
+nothing.
+
+**The fix.** The best-projected free agents now always make the list, ranked by this week's
+projection. Quarterbacks count only for a team with fewer than two, or none healthy this week: a
+first version without that rule filled the list with backup QBs. Injured stashes are tier 4 (free agency, not a claim). A young player alone is no
+longer a tier 2 claim.
+
+**On managers' actual adds.** They score higher because they include moves made after Sunday news
+and every add a manager made, not one pick a week. The comparison that matters is against the
+naive pick and against doing nothing. Sleeper's "trending adds" signal is not archived, so it was
+blind in this test.
+
 ## What changed in the code
 
 | Change | Where |
@@ -281,6 +309,7 @@ Olave deal, which Down Field says hurts you, dropped to near zero. Two deals sti
 | Classifier fixes and the clause rule; labelled headline set; headline lag behind official changes | `public/js/playernews.js`, `lib/playernews.js`, `backtest/news-*`, `lib/snapshot.js` |
 | Official status and practice changes in the status log, News items and alerts | `lib/snapshot.js`, `public/js/playernews.js`, `lib/alerts.js` |
 | Wind at kickoff for outdoor games (Open-Meteo), shown with its measured effect | `lib/weather.js`, `public/js/views/lineup.js` |
+| Waiver ranking by projection; injured stashes and young players no longer claim tiers; top claim excludes stashes | `public/js/model.js` `waiverPlan`/`tierFor`, `lib/calls.js` |
 | Experts' rest-of-season rank fetched daily and blended into RB/WR/TE trade values; shown on Values and trade checks | `lib/consensus.js`, `public/js/values.js`, `public/js/views/{values,trades}.js` |
 | Expert consensus fetched daily and averaged into QB/WR/K projections; both numbers shown | `lib/consensus.js`, `public/js/{fitted,model}.js`, `public/js/views/lineup.js` |
 | Weekly consensus history for the backtest; E17, E18 | `backtest/fetch-ecr.mjs`, `backtest/experiments-a.mjs` |

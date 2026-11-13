@@ -39,7 +39,7 @@ function leagueWeeks() {
   return out;
 }
 // withEcr: attach that week's final expert consensus, as the live site now does (E17)
-function modelFor(lw, withEcr = false) {
+function modelFor(lw, withEcr = false, rid = null) {
   const teams = lw.mu.map((m) => ({ id: m.rid, owner: lw.owners[m.rid], players: m.players || [], starters: m.starters || [], reserve: [] }));
   const players = structuredClone(asOf(lw.L.season, lw.wk));
   attachRosBt(players, lw.L.season, lw.wk);
@@ -48,7 +48,7 @@ function modelFor(lw, withEcr = false) {
     for (const [pid, x] of e?.players || []) if (players[pid] && players[pid].pos === x.pos) players[pid].ecr = { ecr: x.ecr, sd: x.sd, pos: x.pos };
   }
   const { snap, now } = D.synthSnap(lw.L.season, lw.wk, { teams, lg: lw.L, pastScores: lw.pastScores, pairs: lw.pairs, playersOverride: players });
-  return buildModel(snap, teams[0].id, now);
+  return buildModel(snap, rid ?? teams[0].id, now);
 }
 
 // ================= E8 + E7 =================
@@ -695,6 +695,189 @@ export function e19() {
     findings: [
       ...Object.keys(fit.test).map((p) => `${p}: site value misses by ${fit.test[p]['Site value today'].mae}, experts' ROS rank ${fit.test[p]['Expert ROS rank, as points'].mae}, half and half ${fit.test[p]['Half and half'].mae}, fitted blend (${Math.round(fit.weight[p] * 100)}% site) ${fit.test[p][fk(p)].mae}.`),
       `Rule chosen on 2022-24 (blend where it beat the site value by more than 0.02 a game): ${Object.entries(fit.adopt).map(([p, a]) => `${p} ${a ? 'blend' : 'site value'}`).join(', ')}. Confirmed on 2025 at: ${Object.entries(fit.confirmed).filter(([p, c]) => c && fit.adopt[p]).map(([p]) => p).join(', ') || 'none'}.`,
+    ],
+    fit,
+  };
+}
+
+// ================= E20 =================
+// Waiver advice. For every team-week of this league (Weeks 3-14), what the site's waiver plan
+// would have suggested, against adding the best-projected free agent, against what managers
+// actually added, and against doing nothing. A move is worth the best-lineup points it adds over
+// the next three weeks with real scores: add in, drop out, everything else as the roster stood.
+// Note: Sleeper's "trending adds" are not archived, so that signal is blind here, and next week's
+// projection is not used (the archive only has the final, post-news version).
+const SKILL_K = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
+function moveGain(M, S, wk, rosterIds, add, drop, span = 3) {
+  let gain = 0;
+  for (let w = wk; w <= Math.min(wk + span - 1, Math.min(17, S.lastWeek)); w++) {
+    const act = S.weeks[w];
+    if (!act) continue;
+    const pts = (id) => (act.get(id)?.played ? act.get(id).pts : 0);
+    const base = rosterIds.filter((id) => id !== add);
+    const after = base.filter((id) => id !== drop).concat(add);
+    const v = (ids) => M.solve(ids, { v: pts, can: () => true }).total;
+    gain += v(after) - v(base);
+  }
+  return gain;
+}
+let e20Cache = null;
+const row_stash_holder = {};
+export function waiverRows() {
+  if (e20Cache) return e20Cache;
+  const rows = [];
+  for (const L of D.leagueChain()) {
+    const S = D.loadSeason(L.season);
+    const owners = Object.fromEntries(L.rosters.map((r) => [r.rid, L.users.find((u) => u.id === r.owner)?.name || 'Team ' + r.rid]));
+    const pastScores = {};
+    const pairs = {};
+    for (const [k, x] of Object.entries(L.weeks)) {
+      pastScores[k] = Object.fromEntries(x.mu.map((m) => [m.rid, m.pts || 0]));
+      pairs[k] = Object.fromEntries(x.mu.map((m) => [m.rid, m.mid]));
+    }
+    for (let wk = 3; wk <= Math.min(14, S.lastWeek - 1); wk++) {
+      const w = L.weeks[wk];
+      if (!w?.mu?.length) continue;
+      const lw = { L, S, wk, owners, pastScores, pairs, mu: w.mu };
+      // what managers actually added that week (claims and free agents processed before week wk's games)
+      const realAdds = {};
+      for (const tx of (L.weeks[wk - 1]?.tx || []).concat(L.weeks[wk]?.tx || [])) {
+        if (!['waiver', 'free_agent'].includes(tx.type) || !tx.adds) continue;
+        for (const [pid, rid] of Object.entries(tx.adds)) {
+          const drop = Object.entries(tx.drops || {}).find(([, r]) => r === rid)?.[0] || null;
+          (realAdds[rid] ||= []).push({ add: pid, drop });
+        }
+      }
+      for (const m of w.mu) {
+        let M;
+        try {
+          M = modelFor(lw, true, m.rid);
+        } catch {
+          continue;
+        }
+        const roster = (m.players || []).filter((id) => !(m.reserve || []).includes(id));
+        let plan;
+        try {
+          plan = M.waiverPlan();
+        } catch {
+          continue;
+        }
+        const cands = [...(plan.groups.risers || []), ...(plan.groups.lottery || []), ...(plan.groups.cuffs || [])];
+        // the top claim is the best player for the lineup now; injured stashes are judged separately
+        const isStash = (c) => c.p.avail === 'out';
+        const now = cands.filter((c) => !isStash(c));
+        now.sort((a, b) => (a.tier ?? 9) - (b.tier ?? 9) || (b.p?.proj || 0) - (a.p?.proj || 0));
+        const top = now[0];
+        const stash = cands.find(isStash);
+        if (stash) {
+          const drop = stash.drop?.pid || null;
+          (row_stash_holder.list ||= []).push({ season: L.season, wk, gain3: moveGain(M, S, wk, roster, stash.id, drop), gain8: moveGain(M, S, wk, roster, stash.id, drop, 8), name: stash.p.n });
+        }
+        const fa = Object.values(M.snap.players).filter((p) => p.own == null && SKILL_K.includes(p.pos) && p.proj?.pts > 0 && !['Out', 'IR', 'Doubtful'].includes(p.inj || ''));
+        const benchLow = M.lineup(M.me).bench.filter((id) => !M.lineup(M.me).opt.slots.some((s) => s.pid === id)).sort((a, b) => Math.max(M.val(a), M.P(a).ppg || 0) - Math.max(M.val(b), M.P(b).ppg || 0))[0] || null;
+        const naive = fa.filter((p) => p.pos !== 'K' && p.pos !== 'DEF').sort((a, b) => b.proj.pts - a.proj.pts)[0];
+        const naivePpg = fa.filter((p) => p.pos !== 'K' && p.pos !== 'DEF' && p.hist.length >= 3).sort((a, b) => (M.P(b.id).ppg || 0) - (M.P(a.id).ppg || 0))[0];
+        const fullRoster = M.me.players.length >= M.maxRoster;
+        const dropFor = (d) => (fullRoster ? d : null);
+        const row = { season: L.season, wk, rid: m.rid, owner: owners[m.rid], noNeed: plan.noNeed };
+        if (top) {
+          const drop = top.drop?.pid || null;
+          row.site = { add: top.id, name: top.p.n, why: (top.why || []).join('; '), proj: top.p.proj, drop, tier: top.tier, group: top.group, impact: top.impact, gain: moveGain(M, S, wk, roster, top.id, drop), dropBeat: null };
+          // did the drop outscore the add over the three weeks?
+          const sum = (id) => {
+            let s = 0;
+            for (let x = wk; x <= wk + 2; x++) s += S.weeks[x]?.get(id)?.played ? S.weeks[x].get(id).pts : 0;
+            return s;
+          };
+          row.site.dropBeat = drop ? (sum(drop) > sum(top.id) ? 1 : 0) : null;
+          row.site.addPts = sum(top.id);
+        }
+        if (naive) row.naive = { add: naive.id, gain: moveGain(M, S, wk, roster, naive.id, dropFor(benchLow)) };
+        if (naivePpg) row.naivePpg = { add: naivePpg.id, gain: moveGain(M, S, wk, roster, naivePpg.id, dropFor(benchLow)) };
+        const real = (realAdds[m.rid] || []).filter((x) => M.snap.players[x.add]);
+        if (real.length) row.real = real.map((x) => ({ ...x, gain: moveGain(M, S, wk, roster, x.add, x.drop && roster.includes(x.drop) ? x.drop : null) }));
+        // features for every candidate, to refit the ranking
+        row.cards = cands.slice(0, 12).map((c) => ({ id: c.id, tier: c.tier, group: c.group, impact: c.impact, ppg3: c.p.ppg3 || 0, ppg: c.p.ppg || 0, proj: c.p.proj || 0, nWhy: (c.why || []).length, gain: moveGain(M, S, wk, roster, c.id, c.drop?.pid || null) }));
+        rows.push(row);
+      }
+    }
+  }
+  return (e20Cache = rows);
+}
+export function e20() {
+  const rows = waiverRows();
+  const stat = (list) => {
+    const g = list.map((x) => x.gain);
+    return { n: g.length, mean: mean(g), hit: mean(g.map((x) => (x > 0 ? 1 : 0))), big: mean(g.map((x) => (x >= 10 ? 1 : 0))) };
+  };
+  const byWk = (pick) => {
+    const g = {};
+    for (const r of rows) {
+      const x = pick(r);
+      if (x) (g[r.season + ':' + r.wk] ||= []).push(x);
+    }
+    return g;
+  };
+  const line = (label, pick) => {
+    const list = rows.map(pick).filter(Boolean);
+    const s = stat(list);
+    const ci = bootCI(byWk(pick), (x) => mean(x.map((y) => y.gain)), 300);
+    return [label, s.n, r1(s.mean), `${r1(ci[0])} to ${r1(ci[1])}`, pct(s.hit), pct(s.big)];
+  };
+  const realFirst = (r) => (r.real?.length ? r.real.sort((a, b) => b.gain - a.gain).slice(-1)[0] && r.real[0] : null);
+  const realAll = rows.flatMap((r) => (r.real || []).map((x) => ({ ...x, season: r.season, wk: r.wk })));
+  const head = ['Move', 'Team-weeks', 'Lineup points gained, next 3 weeks (avg)', '90% range', 'Helped %', 'Added 10+ points %'];
+  const table1 = [
+    line("Site's top suggestion", (r) => r.site),
+    line('Naive: best-projected free agent', (r) => r.naive),
+    line('Naive: best season average free agent', (r) => r.naivePpg),
+    ["Managers' actual adds (each add)", realAll.length, r1(mean(realAll.map((x) => x.gain))), '', pct(mean(realAll.map((x) => (x.gain > 0 ? 1 : 0)))), pct(mean(realAll.map((x) => (x.gain >= 10 ? 1 : 0))))],
+    ['Doing nothing', rows.length, 0, '', 0, 0],
+  ];
+  const st = row_stash_holder.list || [];
+  const stashLine = ['Injured stash (separately, over 8 weeks)', st.length, r1(mean(st.map((x) => x.gain8))), '', pct(mean(st.map((x) => (x.gain8 > 0 ? 1 : 0)))), pct(mean(st.map((x) => (x.gain8 >= 10 ? 1 : 0))))];
+  table1.push(stashLine);
+  const tiers = {};
+  for (const r of rows) if (r.site) (tiers[`Tier ${r.site.tier} (${r.site.group})`] ||= []).push(r.site);
+  const table2 = Object.entries(tiers).sort().map(([k, list]) => { const s = stat(list); return [k, s.n, r1(s.mean), pct(s.hit), pct(mean(list.filter((x) => x.dropBeat != null).map((x) => x.dropBeat)))]; });
+  // refit the ranking of candidates: which single rule picks the best card on 2025, checked on 2026
+  const rules = {
+    'Site order (tier, then impact)': (c) => -(c.tier * 100) + c.impact,
+    'Impact this week only': (c) => c.impact,
+    'Recent scoring (last 3)': (c) => c.ppg3,
+    'Season average': (c) => c.ppg,
+    'Projection this week': (c) => c.proj,
+    'Impact + 0.3 x last 3': (c) => c.impact + 0.3 * c.ppg3,
+  };
+  const ruleRows = Object.entries(rules).map(([k, f]) => {
+    const per = (season) => {
+      const x = rows.filter((r) => r.season === season && r.cards?.length).map((r) => r.cards.slice().sort((a, b) => f(b) - f(a))[0].gain);
+      return { mean: mean(x), n: x.length };
+    };
+    const a = per(2025);
+    const b = per(2026);
+    return [k, r1(a.mean), a.n, r1(b.mean), b.n];
+  });
+  const s = stat(rows.map((r) => r.site).filter(Boolean));
+  const nv = stat(rows.map((r) => r.naive).filter(Boolean));
+  const fit = {
+    site: { mean: r2(s.mean), hit: r3(s.hit), n: s.n }, naive: { mean: r2(nv.mean), hit: r3(nv.hit), n: nv.n },
+    real: { mean: r2(mean(realAll.map((x) => x.gain))), n: realAll.length },
+    tiers: Object.fromEntries(table2.map((r) => [r[0], { n: r[1], mean: r[2], hit: r[3], dropBeat: r[4] }])),
+    rules: Object.fromEntries(ruleRows.map((r) => [r[0], { y2025: r[1], y2026: r[3] }])),
+  };
+  const bestRule = ruleRows.slice().sort((a, b) => b[1] - a[1])[0];
+  return {
+    id: 'E20', title: 'Would the site\'s waiver suggestions have helped?',
+    tables: [
+      { caption: 'Every team-week, Weeks 3-14 of this league\'s 2025 and 2026 seasons. Gain = best-lineup points over the next three weeks with real scores, the add in and the suggested drop out, against the roster as it stood.', head, rows: table1 },
+      { caption: 'Site suggestions by tier and group. Last column: how often the player the site said to drop then outscored the player it said to add.', head: ['Tier', 'n', 'Avg gain', 'Helped %', 'Drop outscored the add %'], rows: table2 },
+      { caption: 'Which rule picks the best of the site\'s candidates? Average gain of the top pick, 2025 and 2026 separately.', head: ['Ranking rule', '2025 avg gain', 'n', '2026 avg gain', 'n'], rows: ruleRows },
+    ],
+    findings: [
+      `The site's top waiver suggestion gained ${r1(s.mean)} lineup points over three weeks on average and helped ${pct(s.hit)}% of the time. The best-projected free agent gained ${r1(nv.mean)}; managers' actual adds ${r1(fit.real.mean)} (${realAll.length} adds). Doing nothing: 0.`,
+      `By tier: ${table2.map((r) => `${r[0]} ${r[2]} (n=${r[1]})`).join(', ')}.`,
+      `Ranking candidates: best rule on 2025 was "${bestRule[0]}" (${bestRule[1]}), which gained ${bestRule[3]} on 2026; the site's own order gained ${ruleRows[0][1]} and ${ruleRows[0][3]}.`,
     ],
     fit,
   };
