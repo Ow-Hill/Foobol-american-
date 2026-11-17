@@ -52,11 +52,16 @@ pool was triaged, not every player background-checked.
 ## Step 5a — What the dashboard's waiver replay found (this league, 2025-26)
 
 - Ranking free agents by **this week's projection** was the best simple rule: the top claim added
-  about 8 lineup points over the next three weeks, against 5.4 for the best-projected free agent
+  about 9 lineup points over the next three weeks, against 5.1 for the best-projected free agent
   overall and 0 for standing pat.
-- **Injured stashes** added 1.9 points over eight weeks on average and helped 15% of the time.
+- **Injured stashes** added 1.7 points over eight weeks on average and helped 14% of the time.
   Treat them as free-agency adds when IR is open, never as a claim.
 - **"Young, ascending"** alone is not a reason to spend priority.
+- **Tier 1 means lineup impact**: 3+ points this week over who you'd start. A back who just took over
+  his depth chart but wouldn't start for you is not tier 1 (those claims gained 4.6 vs 8.5 for tier
+  2). On synthetic 2022-25 leagues tier 1 / 2 / 3 claims gained 25.6 / 15.0 / 8.9 on held-out 2025.
+- **Never drop your last kicker or defense** for a claim; suggested drops of a defense cost 4.7
+  points over three weeks in the replay.
 
 ## Step 6 — Tier and spend priority
 

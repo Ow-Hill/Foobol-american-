@@ -213,4 +213,8 @@ export function rosPoints(pos, ecr) {
 // gained 8.1 (90% range 6.2-10.4): 8.6 vs 6.6 for the best-projected free agent in 2025, 7.4 vs 3.6
 // in 2026. Injured stashes gained
 // 1.9 over eight weeks and are no longer a claim tier.
-export const WAIVER = { topProjected: 5 };
+// tier1Impact: lineup points this week an add must gain to be tier 1. The RB "takeover" shortcut
+// (depth 1, 12+ a game lately, no lineup impact) was removed: top claim 8.7 -> 9.4 on 2025, 7.4
+// held on 2026 (E20). keepKDef: never suggest dropping your last K or DEF. Protecting two only
+// moved the loss onto WR drops (E20).
+export const WAIVER = { topProjected: 5, tier1Impact: 3, keepKDef: 1 };

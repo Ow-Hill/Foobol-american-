@@ -13,7 +13,7 @@ const args = process.argv.slice(2);
 const label = args.find((a) => !a.startsWith('--')) || 'current';
 if (args.includes('--fetch')) await fetchAll();
 
-const ORDER = [A.e1, A.e2, A.e3, A.e4, A.e5, A.e6, B.e7, B.e8, B.e9, A.e10, B.e11, B.e12, B.e13, B.e14, A.e14b, B.e15, A.e16, A.e17, A.e18, B.e19, B.e20, newsEval];
+const ORDER = [A.e1, A.e2, A.e3, A.e4, A.e5, A.e6, B.e7, B.e8, B.e9, A.e10, B.e11, B.e12, B.e13, B.e14, A.e14b, B.e15, A.e16, A.e17, A.e18, B.e19, B.e20, B.e20b, newsEval];
 const out = { label, generated: new Date().toISOString().slice(0, 10), seasons: D.SEASONS, train: D.TRAIN, test: D.TEST, coverage: {}, experiments: {} };
 for (const s of D.SEASONS) {
   const S = D.loadSeason(s);

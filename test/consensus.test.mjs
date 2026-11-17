@@ -110,3 +110,28 @@ test('waivers: the best-projected free agents lead the risers; injured stashes a
   const rook = w.groups.lottery.find((c) => c.id === 'rook');
   if (rook) assert.ok(rook.tier >= 3, 'a young player alone is not a tier 2 claim');
 });
+
+test('waivers: a started game keeps its starters in their slots; an unset kickoff time is not a started game', () => {
+  const pl = (id, pos, team, proj, extra = {}) => ({ id, n: id, pos, team, depth: 2, inj: null, hist: [1, 2, 3, 4].map((w) => ({ w, pts: proj, att: 5, tgt: 3 })), proj: { pts: proj }, own: null, exp: 4, ...extra });
+  const players = { m1: pl('m1', 'WR', 'CIN', 14, { own: 1 }), m3: pl('m3', 'RB', 'DET', 12, { own: 1 }), fa1: pl('fa1', 'WR', 'NYJ', 11) };
+  const g = (home, away, date, extra = {}) => ({ id: home, date, state: 'pre', completed: false, detail: null, home: { t: home, imp: 22 }, away: { t: away, imp: 22 }, ...extra });
+  const mk = (cinGame) => ({
+    meta: { week: 6, tz: 'America/Toronto', builtAt: Date.now(), playoffWeeks: [15, 16, 17] },
+    league: { name: 'T', rosterPositions: ['RB', 'WR', 'BN'], settings: { reserve_slots: 0, playoff_week_start: 15, playoff_teams: 2, trade_deadline: 11, num_teams: 2, waiver_day_of_week: 2 }, scoring: {} },
+    teams: [{ id: 1, owner: 'me', isMe: true, w: 0, l: 0, players: ['m1', 'm3'], starters: ['m3', 'm1'], reserve: [], taxi: [] }, { id: 2, owner: 'x', w: 0, l: 0, players: [], starters: [], reserve: [], taxi: [] }],
+    players, schedule: { 6: { games: [cinGame, g('DET', 'GB', '2030-01-01T18:00Z'), g('NYJ', 'MIA', '2030-01-01T18:00Z')], byes: [] } }, results: {}, matchups: {}, transactions: [], picks: [], notes: [], articles: [], playerNews: { items: [] },
+  });
+  // CIN kicked off: m1 is locked in the WR slot, so a free-agent WR adds nothing this week
+  let M = buildModel(mk(g('CIN', 'PIT', '2020-01-01T18:00Z', { state: 'in' })), 1, Date.now());
+  assert.equal(M.P('m1').locked, true);
+  assert.ok(M.waiverPlan().groups.risers.find((c) => c.id === 'fa1').impact < 0.01, 'locked starter keeps his slot');
+  // ESPN's 1993 placeholder for an unset kickoff time does not lock anyone
+  M = buildModel(mk(g('CIN', 'PIT', '1993-01-31T23:30Z')), 1, Date.now());
+  assert.equal(M.P('m1').locked, false);
+  // the parser replaces the placeholder with the week's Sunday slot and flags it
+  const { parseScoreboard } = require('../lib/sources.js');
+  const ev = (id, date) => ({ id, date, status: { type: { state: 'pre' } }, competitions: [{ competitors: [{ homeAway: 'home', team: { abbreviation: 'CIN' } }, { homeAway: 'away', team: { abbreviation: 'PIT' } }] }] });
+  const games = parseScoreboard({ events: [ev('a', '2026-11-22T18:00Z'), ev('b', '1993-01-31T23:30Z')] });
+  assert.equal(games[1].date, '2026-11-22T18:00Z');
+  assert.equal(games[1].tbd, true);
+});

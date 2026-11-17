@@ -230,7 +230,8 @@ Evidence: up to two items for the incoming player and one for the outgoing, capp
 ### 8.4 Waivers
 
 - Needs with a claim, top 3: priority `act` when need priority ≤ 1, else `this-week`.
-- Tier-1 adds, top 2: `watch`.
+- Tier-1 adds, top 2: `watch`. Tier 1 = 3+ lineup points this week over the current starter
+  (`WAIVER.tier1Impact`, checked in E20/E20b); no depth-chart shortcut. Never drop the last K or DEF.
 - Deadline: next waiver run (Tuesday). Rolling priority: a won claim sends Owen to last.
 
 ### 8.5 Trade

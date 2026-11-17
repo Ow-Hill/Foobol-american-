@@ -97,8 +97,9 @@ classifier is checked against hand-labelled headlines (`node backtest/news-eval.
 live headlines it read 89% correctly on the latest batch, before the fixes it prompted. Expert
 consensus averaged into QB, WR and K projections added about half a point a week to replayed
 lineups. Waiver claims are ranked by projection: in a replay of this league's 2025-26 seasons the
-top claim added about 8 lineup points over three weeks (the old ranking, led by injured stashes and
-rookies, added 2). The backtest's consensus history is built with `node backtest/fetch-ecr.mjs <clone>`
+top claim added about 9 lineup points over three weeks (the old ranking, led by injured stashes and
+rookies, added 2; the best-projected free agent, 5). Tier 1 needs 3+ lineup points this week; on
+synthetic leagues for 2022-25 the tiers held in order (25.6 / 15.0 / 8.9 points on held-out 2025). The backtest's consensus history is built with `node backtest/fetch-ecr.mjs <clone>`
 (see the script header).
 
 ## Matchup strength

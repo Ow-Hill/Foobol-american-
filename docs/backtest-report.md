@@ -33,7 +33,7 @@ before this work is in [`tables-before.md`](backtest/tables-before.md).
 | Teammate estimates, QB out | −10% top target, −20% others | 0% and −10% | Top target scored 99% of expected, others 89% | Old rule too harsh |
 | Confidence labels on estimates | "clear" 43.5%, "lean" 51.5%, "toss" 53.3% (upside down) | lean 66%, toss 52% | — | Fixed: the label now tracks accuracy |
 | Win probability | Brier 0.245; said 75% when the side won 59% | 0.235; says 74%, wins 73% | Coin flip 0.250 | Was barely better than guessing; now calibrated. The season simulation now uses each team's projected lineup for the current week too |
-| Waiver claims (156 team-weeks, this league) | Top suggestion gained 2.1 lineup points over 3 weeks, helped 26% (young "lottery tickets" and injured stashes ranked tier 2) | **8.1** (90% range 6.2–10.4), helped 85% | Best-projected free agent: 5.4; doing nothing: 0 | Fixed. Ranked by projection; QBs only for teams short of one; stashes and rookies no longer outrank real adds. Beat the naive pick in both seasons (8.6 vs 6.6, 7.4 vs 3.6) |
+| Waiver claims (166 team-weeks, this league; 480 synthetic) | Top suggestion gained 2.1 lineup points over 3 weeks, helped 26% (young "lottery tickets" and injured stashes ranked tier 2) | **8.8** (90% range 7.0–10.6), helped 87%; tiers in order on held-out synthetic 2025 (25.6 / 15.0 / 8.9) | Best-projected free agent: 5.1; doing nothing: 0 | Fixed. Ranked by tier then projection; QBs only for teams short of one; stashes and rookies no longer outrank real adds; no tier 1 without lineup impact; never drop the last K/DEF |
 | Projection source | Sleeper only | Sleeper averaged 50/50 with FantasyPros' expert consensus at QB, WR, K | Replayed lineups: +0.57 pts/week (90% range 0.15 to 1.09); changed 50 of 208 team-weeks and scored more 60% of those times | Rule chosen on 2022–24, confirmed on 2025–26. RB, TE, DEF stay on Sleeper (no gain) |
 | Early-week advice | Unmeasured | Wednesday's consensus missed by 5.91 pts vs 5.88 on Sunday morning | — | Answered: early-week rankings are nearly as good as the final ones |
 | Floor / ceiling | Middle half of the last 6 games: held the actual score 35% of the time (should be 50%) | Projection-based: 49.5% | — | Fixed |
@@ -268,17 +268,18 @@ Olave deal, which Down Field says hurts you, dropped to near zero. Two deals sti
 - The site sees A.J. Brown → Corum as a gain for you, while Down Field calls it noise.
 
 **E20 — Waiver claims.** This replays every team-week, Weeks 3–14 of this league's 2025 and 2026
-seasons. It asks what the site's waiver plan would have suggested, and how many lineup points the
-move would have added over the next three weeks with real scores (the add in, the named drop out).
+seasons (through Week 11 of 2026). It asks what the site's waiver plan would have suggested, and how
+many lineup points the move would have added over the next three weeks with real scores (the add in,
+the named drop out).
 
 | Move | Avg points gained, 3 weeks | Helped |
 | --- | --- | --- |
 | Site's top claim, old ranking | 2.1 | 26% |
-| Site's top claim, new ranking | **8.1** | 85% |
-| Best-projected free agent | 5.4 | 58% |
-| Best season-average free agent | 6.3 | 55% |
-| Managers' actual adds (741) | 9.5 | 75% |
-| Injured stash (over 8 weeks) | 1.9 | 15% |
+| Site's top claim, new ranking | **8.8** (90% range 7.0–10.6) | 87% |
+| Best-projected free agent | 5.1 | 55% |
+| Best season-average free agent | 7.2 | 59% |
+| Managers' actual adds (786) | 9.5 | 75% |
+| Injured stash (over 8 weeks) | 1.7 | 14% |
 
 **What went wrong.** The old ranking put injured "stash" players and young lottery tickets in tier 2,
 above healthy players who would start. They were the top pick in 120 of 156 weeks and gained almost
@@ -286,8 +287,55 @@ nothing.
 
 **The fix.** The best-projected free agents now always make the list, ranked by this week's
 projection. Quarterbacks count only for a team with fewer than two, or none healthy this week: a
-first version without that rule filled the list with backup QBs. Injured stashes are tier 4 (free agency, not a claim). A young player alone is no
-longer a tier 2 claim.
+first version without that rule filled the list with backup QBs. Injured stashes are tier 4 (free
+agency, not a claim). A young player alone is no longer a tier 2 claim.
+
+**Tiers, second pass.** After the fix, tier 1 claims did *worst* (4.0 points, n=20, against 7.4 for
+tier 2 and 9.0 for tier 3), and a quarter of the time the dropped player outscored the add. Almost
+all of them came from a shortcut: a back who had just taken over his depth chart (depth 1, 12+ a
+game lately) was tier 1 even when he would not start for that team (Stevenson and Hunt in 2025, no
+lineup impact). Removing it raised the top claim from 8.7 to 9.4 on 2025 and held 7.4 on 2026 (same
+data, before this week's games). Tier 1 is now only 3+ lineup points this week.
+
+| Tier (this league, after) | Claims | Avg gain | Drop outscored the add |
+| --- | --- | --- | --- |
+| Tier 1 | 7 | 12.2 | 0% |
+| Tier 2 | 28 | 7.5 | 11% |
+| Tier 3 | 131 | 8.9 | 6% |
+
+Twenty or so tier 1 claims is too few to set cut-offs, so **E20b** runs the same replay on synthetic
+10-team leagues drafted by projection, 2022–25 (480 team-weeks), fits on 2022–24 and checks on 2025:
+
+| Rule | Top claim 2022–24 | Top claim 2025 (held out) | Tier 1 / 2 / 3 gain, 2025 |
+| --- | --- | --- | --- |
+| Current: tier 1 at 3+ lineup points, tier 2 at 1+ | 17.4 | 16.4 | 25.6 / 15.0 / 8.9 (n 49 / 56 / 605) |
+| Best on 2022–24: tier 1 at 2+ | 17.4 | 16.4 | 23.3 / 12.7 / 8.9 |
+| Projection only, no tiers | 14.3 | 14.4 | — |
+
+The current cut-offs stay. The tiers are in order where there are enough cases, and sorting by tier
+before projection beats projection alone by two points. The tier 2/3 inversion in this league is
+small-sample noise. (Gains are larger in the synthetic leagues because their benches are thinner.)
+
+**Which ranking rule? Fit on 2025, checked on 2026.** The site's order (tier, then impact) was best
+on 2025 (9.4) and tied best on 2026 (8.5). Recent scoring alone (3.0 / 2.0) and season average
+(2.9 / 5.0) were far worse.
+
+**Drops.** Suggested drops of a defense cost 4.7 points over three weeks on average (n=24), because
+the team needed it back. The drop rule now never names your last kicker or defense. Protecting two
+of each only moved the loss onto WR drops (−5.1), so it was not shipped.
+
+**Live bugs found while checking the page (Week 11, 2026).**
+- **Placeholder dates.** ESPN sends a 1993 placeholder date for games whose kickoff time is not set
+  yet. The site read those games as already started, which locked their players (Gibbs, LaPorta,
+  Egbuka).
+- **Locked slots read as empty.** The waiver math dropped locked starters without holding their
+  slots, so every free agent looked like a 9–11 point upgrade. Eight players showed as tier 1,
+  and the page said to spend priority on Flournoy.
+- **What the fixes do:**
+  - The parser now uses that week's Sunday early slot and marks the game "Time TBD".
+  - Lineup impact keeps started games' starters in their slots, as the lineup solver already did.
+  - With both fixes, Flournoy adds +0.7, nothing is tier 1, and the page says to hold priority.
+- The backtest had no live games, so E20 is unaffected. Both cases now have tests.
 
 **On managers' actual adds.** They score higher because they include moves made after Sunday news
 and every add a manager made, not one pick a week. The comparison that matters is against the
@@ -310,6 +358,8 @@ blind in this test.
 | Official status and practice changes in the status log, News items and alerts | `lib/snapshot.js`, `public/js/playernews.js`, `lib/alerts.js` |
 | Wind at kickoff for outdoor games (Open-Meteo), shown with its measured effect | `lib/weather.js`, `public/js/views/lineup.js` |
 | Waiver ranking by projection; injured stashes and young players no longer claim tiers; top claim excludes stashes | `public/js/model.js` `waiverPlan`/`tierFor`, `lib/calls.js` |
+| ESPN placeholder kickoff dates no longer lock players; waiver impact keeps started games' starters in their slots | `lib/sources.js` `parseScoreboard`, `public/js/model.js` `addImpact`, `views/lineup.js` |
+| Tier 1 needs lineup impact (depth-chart shortcut removed); never drop the last K/DEF; tiers checked on synthetic 2022-25 leagues | `public/js/model.js` `tierFor`/`dropFor`, `public/js/fitted.js` `WAIVER`, `backtest/experiments-b.mjs` `e20b` |
 | Experts' rest-of-season rank fetched daily and blended into RB/WR/TE trade values; shown on Values and trade checks | `lib/consensus.js`, `public/js/values.js`, `public/js/views/{values,trades}.js` |
 | Expert consensus fetched daily and averaged into QB/WR/K projections; both numbers shown | `lib/consensus.js`, `public/js/{fitted,model}.js`, `public/js/views/lineup.js` |
 | Weekly consensus history for the backtest; E17, E18 | `backtest/fetch-ecr.mjs`, `backtest/experiments-a.mjs` |
@@ -331,6 +381,8 @@ blind in this test.
   outgoing address. From your own machine it is per user.
 - **Season-odds calibration.** Two seasons of one league is too little to score season odds on
   their own.
+- **Sleeper "trending adds".** Not archived, so the waiver replay could not test it; it stays a
+  minor tag in the ranking. The live call log scores the top claim each week from now on.
 - **Playoff-schedule adjustment for trades.** Dropped: no signal in matchup strength beyond the
   projection.
 

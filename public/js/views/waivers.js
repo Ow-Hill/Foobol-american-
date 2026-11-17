@@ -1,12 +1,12 @@
 import { esc, n1, signed, fmtDay, fmtDayTime, ago } from '../util.js';
 import { card, table, playerName, secondOpinionBtn, statusChip } from '../ui.js';
 
-const tierName = { 1: 'Smash', 2: 'Conditional', 3: 'Pass', 4: 'Free agency' };
+const tierName = { 1: 'Smash', 2: 'Conditional', 3: 'Free agency', 4: 'Free agency' };
 const tierHelp = {
-  1: 'Clear starter takeover or a dropped top-24 player — spend priority.',
-  2: 'Only with real lineup distress, and only if Tier 1 is empty.',
-  3: 'Lateral depth or streamers — wait for free agency.',
-  4: 'Handcuffs, bye fillers and K/DEF streams — claim Wednesday after waivers clear.',
+  1: 'Starts for you and adds 3+ points this week over your current starter — spend priority.',
+  2: 'Adds 1–3 points this week — claim only if Tier 1 is empty.',
+  3: 'Little help this week but a useful add — pick him up in free agency once waivers clear.',
+  4: 'Handcuffs, injured stashes, bye fillers and K/DEF streams — add Wednesday after waivers clear.',
 };
 
 function candRow(M, c, w) {
@@ -60,8 +60,8 @@ export function render(M, ctx) {
   const claimNeeds = w.needs.filter((n) => n.claim);
   const spend = w.tier1[0];
   const advice = spend
-    ? `<div class="callout good"><b>Spend priority on ${esc(spend.p.n)}</b>He is the only Tier 1 here. A successful claim moves you from #${w.wp} to last, so don't spend it on anything lower.</div>`
-    : `<div class="callout"><b>Hold your waiver priority (#${w.wp ?? '–'})</b>Nothing in the pool clears the Tier 1 bar — no starter takeover and no big lineup upgrade. A successful claim sends you to the back of the line, so keep it for a real need.${claimNeeds.length ? ` The one real need is below — and it can wait for free agency.` : ''}</div>`;
+    ? `<div class="callout good"><b>Spend priority on ${esc(spend.p.n)}</b>${w.tier1.length > 1 ? `Best of ${w.tier1.length} Tier 1 adds (${w.tier1.slice(1).map((c) => esc(c.p.n)).join(', ')} next).` : 'He is the only Tier 1 here.'} A successful claim moves you from #${w.wp} to last, so don't spend it on anything lower.</div>`
+    : `<div class="callout"><b>Hold your waiver priority (#${w.wp ?? '–'})</b>Nothing in the pool clears the Tier 1 bar (3+ lineup points this week). A successful claim sends you to the back of the line, so keep it for a real need.${claimNeeds.length ? ` The one real need is below — and it can wait for free agency.` : ''}</div>`;
 
   const needRows = w.needs.map((n) => [`<span class="chip">${n.pri}</span>`, `<b>${esc(n.label)}</b>`, `<span class="muted">${esc(n.detail)}</span>`, n.claim ? '<span class="chip chip-amber">Needs a claim</span>' : '<span class="chip chip-fa">Covered</span>']);
   const look = `<div class="grid g3">${w.look
@@ -87,7 +87,7 @@ export function render(M, ctx) {
     <div class="stack">
       ${card('Needs, in priority order', w.needs.length ? table(['#', 'Need', 'Detail', ''], needRows) : `<div class="allclear"><span class="dot dot-green"></span> No need — holding is a real option.</div>`, { cls: 'flush', sub: 'Empty slot → starter out → bye → thin spot → insurance' })}
       ${card('Bye look-ahead', look)}
-      ${group(M, 'Proven risers', 'The best-projected free agents this week, plus rising scoring, snap share, trending adds or a lineup upgrade. Ranked by projection: in the 2025-26 replay this order gained about 8 lineup points over three weeks per claim', w.groups.risers, w, 'No unrostered player clears the bar this week.')}
+      ${group(M, 'Proven risers', 'The best-projected free agents this week, plus rising scoring, snap share, trending adds or a lineup upgrade. Ranked by projection: in the 2025-26 replay this order gained about 9 lineup points over three weeks per claim', w.groups.risers, w, 'No unrostered player clears the bar this week.')}
       ${group(M, 'Handcuff stashes', 'The next man up behind your starting backs', w.groups.cuffs, w, 'No unrostered handcuffs for your backs.')}
       ${group(M, 'Lottery tickets', 'Trending, young and ascending, or a talented player stashable on IR', w.groups.lottery, w, 'Nothing interesting beyond the lists above.')}
       <div class="grid g2">
@@ -95,7 +95,7 @@ export function render(M, ctx) {
         ${card('Kicker streams', streamTable(M, w.streams.K, 'K'), { cls: 'flush', sub: 'Long-range kickers in domes or calm weather earn more (4/5/6 for 40+/50+/60+)' })}
       </div>
       ${card('Recent drops by rivals', drops, { cls: 'flush', sub: 'Last 7 days — worth a no-cost claim if still unclaimed' })}
-      ${card('How the tiers work', Object.keys(tierName).map((k) => `<p style="margin-bottom:6px"><span class="chip chip-tier${k}">T${k} · ${tierName[k]}</span> <span class="muted">${tierHelp[k]}</span></p>`).join('') + `<p class="note">Tier is set from how much the player would raise your best legal lineup (this week and next), plus role changes. Candidates are ranked by this week's projection, which beat the old signal-based order in a replay of this league's 2025-26 seasons (about 8 lineup points per claim over three weeks vs 2). Injured stashes are free-agency adds, not claims. Always check the news before a claim is final.</p>`)}
+      ${card('How the tiers work', Object.keys(tierName).map((k) => `<p style="margin-bottom:6px"><span class="chip chip-tier${k}">T${k} · ${tierName[k]}</span> <span class="muted">${tierHelp[k]}</span></p>`).join('') + `<p class="note">Tier is set from how much the player would raise your best legal lineup this week. Within a tier, candidates are ranked by this week's projection, which beat the old signal-based order in a replay of this league's 2025-26 seasons (about 9 lineup points per claim over three weeks vs 2). On synthetic 2022-25 leagues, tier 1 claims gained 25.6 points, tier 2 15.0 and tier 3 8.9. Injured stashes are free-agency adds, not claims. Always check the news before a claim is final.</p>`)}
     </div>`;
 }
 const me_count = (M) => M.me.players.length;

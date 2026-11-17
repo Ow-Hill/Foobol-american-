@@ -54,6 +54,12 @@ test('fitted.js matches the saved backtest results it cites', () => {
   const cur = JSON.parse(fs.readFileSync(path.join(root, 'docs', 'backtest', 'results-current.json'), 'utf8')).experiments;
   near(F.TRADE_BALANCE.median, cur.E13.fit.balance.median, 0.001, 'trade balance');
   near(F.TRADE_BALANCE.p25, cur.E13.fit.balance.p25, 0.001, 'trade balance p25');
+  // E20/E20b: waiver tiers. The cut-offs must keep tiers in order on the held-out synthetic season,
+  // and the site's top claim must beat adding the best-projected free agent in this league.
+  const wb = cur.E20b.fit.current;
+  assert.ok(wb.t1 >= wb.t2 && wb.t2 >= wb.t3, 'waiver tiers in order on held-out 2025');
+  assert.ok(cur.E20.fit.site.mean > cur.E20.fit.naive.mean, 'top claim beats the naive pick');
+  assert.equal(F.WAIVER.tier1Impact, 3);
 });
 
 test('helpers: gap win rate, play chance, rest-of-season health, expected points', () => {

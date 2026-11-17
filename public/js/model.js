@@ -69,8 +69,8 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     gameIdx[wk] = {};
     byeIdx[wk] = new Set(snap.schedule[wk].byes);
     for (const g of snap.schedule[wk].games) {
-      gameIdx[wk][g.home.t] = { opp: g.away.t, home: true, date: g.date, state: g.state, completed: g.completed, detail: g.detail, imp: g.home.imp, oppImp: g.away.imp, spread: g.spread, score: g.home.score, oppScore: g.away.score, wind: g.wind || null, indoor: g.venue?.indoor ?? null };
-      gameIdx[wk][g.away.t] = { opp: g.home.t, home: false, date: g.date, state: g.state, completed: g.completed, detail: g.detail, imp: g.away.imp, oppImp: g.home.imp, spread: g.spread, score: g.away.score, oppScore: g.home.score, wind: g.wind || null, indoor: g.venue?.indoor ?? null };
+      gameIdx[wk][g.home.t] = { opp: g.away.t, home: true, date: g.date, state: g.state, completed: g.completed, detail: g.detail, imp: g.home.imp, oppImp: g.away.imp, spread: g.spread, score: g.home.score, oppScore: g.away.score, wind: g.wind || null, indoor: g.venue?.indoor ?? null, tbd: !!g.tbd || !(new Date(g.date).getFullYear() >= 2000) };
+      gameIdx[wk][g.away.t] = { opp: g.home.t, home: false, date: g.date, state: g.state, completed: g.completed, detail: g.detail, imp: g.away.imp, oppImp: g.home.imp, spread: g.spread, score: g.away.score, oppScore: g.home.score, wind: g.wind || null, indoor: g.venue?.indoor ?? null, tbd: !!g.tbd || !(new Date(g.date).getFullYear() >= 2000) };
     }
   }
   const gameFor = (team, wk = W) => (team && gameIdx[wk] ? gameIdx[wk][team] || null : null);
@@ -122,7 +122,7 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       note,
       game,
       bye,
-      locked: !!(game && (game.state !== 'pre' || new Date(game.date).getTime() <= now)),
+      locked: !!(game && (game.state !== 'pre' || (!game.tbd && new Date(game.date).getTime() <= now))),
       avail: bye ? 'bye' : effSev >= 3 ? 'out' : effSev === 2 ? 'q' : 'ok',
       // Sleeper's projection, averaged with the expert consensus where that beat it (E17)
       projSleeper: p.proj?.pts ?? 0,
@@ -734,8 +734,11 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
 
   function addImpact(pid, wk) {
     const l = lineup(me);
-    const base = solve(l.active, { v: (id) => val(id, wk), can: (id) => (wk === W ? canStartNow(id) && !P(id).locked : P(id).effSev < 4 && !isBye(P(id).team, wk)) });
-    const withIt = solve([...l.active, pid], { v: (id) => val(id, wk), can: (id) => (wk === W ? canStartNow(id) && !P(id).locked : P(id).effSev < 4 && !isBye(P(id).team, wk)) });
+    // This week, starters whose game has kicked off keep their slots (as in the lineup itself);
+    // without that, every locked slot looked empty and any free agent seemed to fill it.
+    const opts = { v: (id) => val(id, wk), can: (id) => (wk === W ? canStartNow(id) && !P(id).locked : P(id).effSev < 4 && !isBye(P(id).team, wk)), locked: wk === W ? lockedSlotsFor(l.starters) : null };
+    const base = solve(l.active, opts);
+    const withIt = solve([...l.active, pid], opts);
     return withIt.total - base.total;
   }
 
@@ -746,10 +749,13 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     const keepers = new Set(l.opt.slots.map((s) => s.pid).filter(Boolean));
     const qbs = l.active.filter((id) => P(id).pos === 'QB');
     const tes = l.active.filter((id) => P(id).pos === 'TE');
+    // Never suggest dropping your last kicker or defense.
+    const count = (pos) => l.active.filter((id) => P(id).pos === pos).length;
     const pool = l.bench
       .filter((id) => !keepers.has(id))
       .filter((id) => !(P(id).pos === 'QB' && qbs.length <= 2))
       .filter((id) => !(P(id).pos === 'TE' && tes.length <= 2))
+      .filter((id) => !(['K', 'DEF'].includes(P(id).pos) && count(P(id).pos) <= WAIVER.keepKDef))
       .filter((id) => id !== cand.id)
       .sort((a, b) => Math.max(val(a), P(a).ppg || 0) - Math.max(val(b), P(b).ppg || 0));
     const d = pool[0];
@@ -915,8 +921,9 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     // Injured stashes gained 1.9 lineup points over the next 8 weeks on average (E20): add one
     // with an open IR slot if you like, but it is not worth a waiver claim.
     if (c.p.avail === 'out') return 4;
-    const takeover = c.p.depth === 1 && c.p.pos === 'RB' && (c.p.ppg3 || 0) >= 12;
-    if (c.impact >= 3 || takeover) return 1;
+    // A depth-chart "takeover" with no lineup impact for this team gained 4.6 points over three
+    // weeks, below tier 2 and 3 (E20): only lineup impact earns tier 1.
+    if (c.impact >= WAIVER.tier1Impact) return 1;
     // Lottery tickets were the top pick in 120 of 156 replayed weeks and gained 0.9 points on
     // average (E20): a young player alone is no longer a reason to spend a claim.
     if (c.impact >= 1) return 2;

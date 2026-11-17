@@ -36,6 +36,7 @@ export function kickCell(p) {
   if (!p.game) return '<span class="dim">–</span>';
   if (p.game.state === 'in') return `<span class="chip chip-red">LIVE</span>`;
   if (p.game.state === 'post' || p.game.completed) return `<span class="chip">FINAL</span>`;
+  if (p.game.tbd) return '<span class="dim">Time TBD</span>';
   return fmtKick(p.game.date);
 }
 export function rangeCell(p) {

@@ -1,6 +1,6 @@
 {
  "label": "current",
- "generated": "2026-11-13",
+ "generated": "2026-11-17",
  "seasons": [
   2022,
   2023,
@@ -39,21 +39,21 @@
    "injuryUnmatched": 16
   },
   "2026": {
-   "weeks": 9,
-   "injuryRows": 848,
-   "injuryUnmatched": 15
+   "weeks": 10,
+   "injuryRows": 949,
+   "injuryUnmatched": 16
   }
  },
  "experiments": {
   "E1": {
    "title": "How accurate are the numbers the engine ranks on?",
    "findings": [
-    "QB: Sleeper's projection misses by 6.22 points on average; the best alternative (Projection 75% + usage 25%) misses by 6.2 (0.03 better).",
-    "RB: Sleeper's projection misses by 6.14 points on average; the best alternative (Sleeper projection (what the site uses)) misses by 6.14 (no better).",
-    "WR: Sleeper's projection misses by 5.83 points on average; the best alternative (Sleeper projection (what the site uses)) misses by 5.83 (no better).",
+    "QB: Sleeper's projection misses by 6.23 points on average; the best alternative (Projection 75% + usage 25%) misses by 6.22 (0.01 better).",
+    "RB: Sleeper's projection misses by 6.19 points on average; the best alternative (Sleeper projection (what the site uses)) misses by 6.19 (no better).",
+    "WR: Sleeper's projection misses by 5.86 points on average; the best alternative (Sleeper projection (what the site uses)) misses by 5.86 (no better).",
     "TE: Sleeper's projection misses by 5.33 points on average; the best alternative (Sleeper projection (what the site uses)) misses by 5.33 (no better).",
-    "K: Sleeper's projection misses by 4 points on average; the best alternative (Fitted blend of all) misses by 3.98 (0.01 better).",
-    "DEF: Sleeper's projection misses by 4.56 points on average; the best alternative (Sleeper projection (what the site uses)) misses by 4.56 (no better)."
+    "K: Sleeper's projection misses by 3.94 points on average; the best alternative (Fitted blend of all) misses by 3.92 (0.02 better).",
+    "DEF: Sleeper's projection misses by 4.55 points on average; the best alternative (Sleeper projection (what the site uses)) misses by 4.55 (no better)."
    ],
    "fit": {
     "QB": {
@@ -73,39 +73,39 @@
      "projWeight": 0.75,
      "test": {
       "Sleeper projection (what the site uses)": {
-       "mae": 6.22,
-       "bias": -0.48,
-       "rho": 0.295
+       "mae": 6.23,
+       "bias": -0.42,
+       "rho": 0.303
       },
       "Season average": {
        "mae": 6.7,
-       "bias": -0.07,
-       "rho": 0.178
+       "bias": -0.01,
+       "rho": 0.186
       },
       "Last 3 games": {
-       "mae": 6.88,
-       "bias": -0.09,
-       "rho": 0.169
+       "mae": 6.91,
+       "bias": 0,
+       "rho": 0.172
       },
       "Trade-value blend (values.js)": {
        "mae": 6.28,
-       "bias": -0.31,
-       "rho": 0.254
+       "bias": -0.24,
+       "rho": 0.261
       },
       "Volume-based expected points": {
-       "mae": 6.53,
-       "bias": 1.4,
+       "mae": 6.6,
+       "bias": 1.49,
        "rho": 0.151
       },
       "Projection 75% + usage 25%": {
-       "mae": 6.2,
-       "bias": -0.01,
-       "rho": 0.281
+       "mae": 6.22,
+       "bias": 0.06,
+       "rho": 0.288
       },
       "Fitted blend of all": {
-       "mae": 6.25,
-       "bias": -0.39,
-       "rho": 0.27
+       "mae": 6.26,
+       "bias": -0.32,
+       "rho": 0.278
       }
      }
     },
@@ -126,39 +126,39 @@
      "projWeight": 1,
      "test": {
       "Sleeper projection (what the site uses)": {
-       "mae": 6.14,
-       "bias": -0.14,
-       "rho": 0.461
+       "mae": 6.19,
+       "bias": -0.05,
+       "rho": 0.467
       },
       "Season average": {
-       "mae": 6.41,
-       "bias": 0.77,
-       "rho": 0.39
+       "mae": 6.46,
+       "bias": 0.85,
+       "rho": 0.395
       },
       "Last 3 games": {
-       "mae": 6.82,
-       "bias": 0.2,
-       "rho": 0.332
+       "mae": 6.87,
+       "bias": 0.28,
+       "rho": 0.333
       },
       "Trade-value blend (values.js)": {
-       "mae": 6.18,
-       "bias": 0.12,
-       "rho": 0.441
+       "mae": 6.24,
+       "bias": 0.2,
+       "rho": 0.447
       },
       "Volume-based expected points": {
-       "mae": 6.32,
-       "bias": 0.63,
-       "rho": 0.391
+       "mae": 6.38,
+       "bias": 0.69,
+       "rho": 0.393
       },
       "Projection 100% + usage 0%": {
-       "mae": 6.14,
-       "bias": -0.14,
-       "rho": 0.461
+       "mae": 6.19,
+       "bias": -0.05,
+       "rho": 0.467
       },
       "Fitted blend of all": {
-       "mae": 6.25,
-       "bias": -0.56,
-       "rho": 0.456
+       "mae": 6.3,
+       "bias": -0.48,
+       "rho": 0.463
       }
      }
     },
@@ -179,39 +179,39 @@
      "projWeight": 1,
      "test": {
       "Sleeper projection (what the site uses)": {
-       "mae": 5.83,
-       "bias": -0.64,
-       "rho": 0.395
+       "mae": 5.86,
+       "bias": -0.61,
+       "rho": 0.396
       },
       "Season average": {
-       "mae": 6.15,
-       "bias": -0.19,
-       "rho": 0.312
+       "mae": 6.17,
+       "bias": -0.18,
+       "rho": 0.315
       },
       "Last 3 games": {
-       "mae": 6.48,
-       "bias": -0.42,
-       "rho": 0.284
+       "mae": 6.53,
+       "bias": -0.38,
+       "rho": 0.282
       },
       "Trade-value blend (values.js)": {
-       "mae": 5.88,
-       "bias": -0.49,
-       "rho": 0.373
+       "mae": 5.92,
+       "bias": -0.46,
+       "rho": 0.374
       },
       "Volume-based expected points": {
-       "mae": 6.2,
-       "bias": -0.38,
-       "rho": 0.324
+       "mae": 6.24,
+       "bias": -0.36,
+       "rho": 0.322
       },
       "Projection 100% + usage 0%": {
-       "mae": 5.83,
-       "bias": -0.64,
-       "rho": 0.395
+       "mae": 5.86,
+       "bias": -0.61,
+       "rho": 0.396
       },
       "Fitted blend of all": {
-       "mae": 5.83,
-       "bias": -0.59,
-       "rho": 0.391
+       "mae": 5.86,
+       "bias": -0.56,
+       "rho": 0.392
       }
      }
     },
@@ -233,38 +233,38 @@
      "test": {
       "Sleeper projection (what the site uses)": {
        "mae": 5.33,
-       "bias": -0.32,
-       "rho": 0.331
+       "bias": -0.45,
+       "rho": 0.313
       },
       "Season average": {
        "mae": 5.63,
-       "bias": -0.37,
-       "rho": 0.224
+       "bias": -0.52,
+       "rho": 0.213
       },
       "Last 3 games": {
-       "mae": 6.19,
-       "bias": -0.76,
-       "rho": 0.148
+       "mae": 6.16,
+       "bias": -0.86,
+       "rho": 0.147
       },
       "Trade-value blend (values.js)": {
        "mae": 5.47,
-       "bias": -0.42,
-       "rho": 0.277
+       "bias": -0.54,
+       "rho": 0.262
       },
       "Volume-based expected points": {
-       "mae": 5.64,
-       "bias": -0.09,
-       "rho": 0.185
+       "mae": 5.61,
+       "bias": -0.2,
+       "rho": 0.188
       },
       "Projection 100% + usage 0%": {
        "mae": 5.33,
-       "bias": -0.32,
-       "rho": 0.331
+       "bias": -0.45,
+       "rho": 0.313
       },
       "Fitted blend of all": {
-       "mae": 5.4,
-       "bias": -0.7,
-       "rho": 0.33
+       "mae": 5.41,
+       "bias": -0.83,
+       "rho": 0.31
       }
      }
     },
@@ -283,34 +283,34 @@
      "projWeight": 1,
      "test": {
       "Sleeper projection (what the site uses)": {
-       "mae": 4,
-       "bias": -0.01,
-       "rho": 0.096
+       "mae": 3.94,
+       "bias": -0.03,
+       "rho": 0.108
       },
       "Season average": {
-       "mae": 4.09,
-       "bias": -0.31,
-       "rho": 0.18
+       "mae": 4.08,
+       "bias": -0.35,
+       "rho": 0.176
       },
       "Last 3 games": {
-       "mae": 4.54,
-       "bias": -0.32,
-       "rho": 0.086
+       "mae": 4.53,
+       "bias": -0.34,
+       "rho": 0.073
       },
       "Trade-value blend (values.js)": {
-       "mae": 4,
-       "bias": -0.12,
-       "rho": 0.142
+       "mae": 3.97,
+       "bias": -0.15,
+       "rho": 0.138
       },
       "Projection 100% + average 0%": {
-       "mae": 4,
-       "bias": -0.01,
-       "rho": 0.096
+       "mae": 3.94,
+       "bias": -0.03,
+       "rho": 0.108
       },
       "Fitted blend of all": {
-       "mae": 3.98,
-       "bias": 0.5,
-       "rho": -0.011
+       "mae": 3.92,
+       "bias": 0.47,
+       "rho": 0.004
       }
      }
     },
@@ -329,34 +329,34 @@
      "projWeight": 1,
      "test": {
       "Sleeper projection (what the site uses)": {
-       "mae": 4.56,
-       "bias": 0.25,
-       "rho": 0.186
+       "mae": 4.55,
+       "bias": 0.3,
+       "rho": 0.183
       },
       "Season average": {
-       "mae": 5.11,
-       "bias": 0.71,
-       "rho": -0.026
+       "mae": 5.09,
+       "bias": 0.73,
+       "rho": -0.036
       },
       "Last 3 games": {
-       "mae": 5.48,
-       "bias": 0.65,
-       "rho": -0.025
+       "mae": 5.44,
+       "bias": 0.68,
+       "rho": -0.023
       },
       "Trade-value blend (values.js)": {
-       "mae": 4.74,
-       "bias": 0.44,
-       "rho": 0.039
+       "mae": 4.71,
+       "bias": 0.48,
+       "rho": 0.038
       },
       "Projection 100% + average 0%": {
-       "mae": 4.56,
-       "bias": 0.25,
-       "rho": 0.186
+       "mae": 4.55,
+       "bias": 0.3,
+       "rho": 0.183
       },
       "Fitted blend of all": {
-       "mae": 4.66,
-       "bias": -0.49,
-       "rho": 0.165
+       "mae": 4.63,
+       "bias": -0.45,
+       "rho": 0.156
       }
      }
     }
@@ -376,322 +376,322 @@
       [
        "QB",
        "Sleeper projection (what the site uses)",
-       6.22,
-       -0.48,
-       0.295,
-       457
+       6.23,
+       -0.42,
+       0.303,
+       481
       ],
       [
        "QB",
        "Season average",
        6.7,
-       -0.07,
-       0.178,
-       457
+       -0.01,
+       0.186,
+       481
       ],
       [
        "QB",
        "Last 3 games",
-       6.88,
-       -0.09,
-       0.169,
-       457
+       6.91,
+       0,
+       0.172,
+       481
       ],
       [
        "QB",
        "Trade-value blend (values.js)",
        6.28,
-       -0.31,
-       0.254,
-       457
+       -0.24,
+       0.261,
+       481
       ],
       [
        "QB",
        "Volume-based expected points",
-       6.53,
-       1.4,
+       6.6,
+       1.49,
        0.151,
-       457
+       481
       ],
       [
        "QB",
        "Projection 75% + usage 25%",
-       6.2,
-       -0.01,
-       0.281,
-       457
+       6.22,
+       0.06,
+       0.288,
+       481
       ],
       [
        "QB",
        "Fitted blend of all",
-       6.25,
-       -0.39,
-       0.27,
-       457
+       6.26,
+       -0.32,
+       0.278,
+       481
       ],
       [
        "RB",
        "Sleeper projection (what the site uses)",
-       6.14,
-       -0.14,
-       0.461,
-       774
+       6.19,
+       -0.05,
+       0.467,
+       812
       ],
       [
        "RB",
        "Season average",
-       6.41,
-       0.77,
-       0.39,
-       774
+       6.46,
+       0.85,
+       0.395,
+       812
       ],
       [
        "RB",
        "Last 3 games",
-       6.82,
+       6.87,
+       0.28,
+       0.333,
+       812
+      ],
+      [
+       "RB",
+       "Trade-value blend (values.js)",
+       6.24,
        0.2,
-       0.332,
-       774
-      ],
-      [
-       "RB",
-       "Trade-value blend (values.js)",
-       6.18,
-       0.12,
-       0.441,
-       774
+       0.447,
+       812
       ],
       [
        "RB",
        "Volume-based expected points",
-       6.32,
-       0.63,
-       0.391,
-       774
+       6.38,
+       0.69,
+       0.393,
+       812
       ],
       [
        "RB",
        "Projection 100% + usage 0%",
-       6.14,
-       -0.14,
-       0.461,
-       774
+       6.19,
+       -0.05,
+       0.467,
+       812
       ],
       [
        "RB",
        "Fitted blend of all",
-       6.25,
-       -0.56,
-       0.456,
-       774
+       6.3,
+       -0.48,
+       0.463,
+       812
       ],
       [
        "WR",
        "Sleeper projection (what the site uses)",
-       5.83,
-       -0.64,
-       0.395,
-       1084
+       5.86,
+       -0.61,
+       0.396,
+       1138
       ],
       [
        "WR",
        "Season average",
-       6.15,
-       -0.19,
-       0.312,
-       1084
+       6.17,
+       -0.18,
+       0.315,
+       1138
       ],
       [
        "WR",
        "Last 3 games",
-       6.48,
-       -0.42,
-       0.284,
-       1084
+       6.53,
+       -0.38,
+       0.282,
+       1138
       ],
       [
        "WR",
        "Trade-value blend (values.js)",
-       5.88,
-       -0.49,
-       0.373,
-       1084
+       5.92,
+       -0.46,
+       0.374,
+       1138
       ],
       [
        "WR",
        "Volume-based expected points",
-       6.2,
-       -0.38,
-       0.324,
-       1084
+       6.24,
+       -0.36,
+       0.322,
+       1138
       ],
       [
        "WR",
        "Projection 100% + usage 0%",
-       5.83,
-       -0.64,
-       0.395,
-       1084
+       5.86,
+       -0.61,
+       0.396,
+       1138
       ],
       [
        "WR",
        "Fitted blend of all",
-       5.83,
-       -0.59,
-       0.391,
-       1084
+       5.86,
+       -0.56,
+       0.392,
+       1138
       ],
       [
        "TE",
        "Sleeper projection (what the site uses)",
        5.33,
-       -0.32,
-       0.331,
-       392
+       -0.45,
+       0.313,
+       412
       ],
       [
        "TE",
        "Season average",
        5.63,
-       -0.37,
-       0.224,
-       392
+       -0.52,
+       0.213,
+       412
       ],
       [
        "TE",
        "Last 3 games",
-       6.19,
-       -0.76,
-       0.148,
-       392
+       6.16,
+       -0.86,
+       0.147,
+       412
       ],
       [
        "TE",
        "Trade-value blend (values.js)",
        5.47,
-       -0.42,
-       0.277,
-       392
+       -0.54,
+       0.262,
+       412
       ],
       [
        "TE",
        "Volume-based expected points",
-       5.64,
-       -0.09,
-       0.185,
-       392
+       5.61,
+       -0.2,
+       0.188,
+       412
       ],
       [
        "TE",
        "Projection 100% + usage 0%",
        5.33,
-       -0.32,
-       0.331,
-       392
+       -0.45,
+       0.313,
+       412
       ],
       [
        "TE",
        "Fitted blend of all",
-       5.4,
-       -0.7,
-       0.33,
-       392
+       5.41,
+       -0.83,
+       0.31,
+       412
       ],
       [
        "K",
        "Sleeper projection (what the site uses)",
-       4,
-       -0.01,
-       0.096,
-       314
+       3.94,
+       -0.03,
+       0.108,
+       330
       ],
       [
        "K",
        "Season average",
-       4.09,
-       -0.31,
-       0.18,
-       314
+       4.08,
+       -0.35,
+       0.176,
+       330
       ],
       [
        "K",
        "Last 3 games",
-       4.54,
-       -0.32,
-       0.086,
-       314
+       4.53,
+       -0.34,
+       0.073,
+       330
       ],
       [
        "K",
        "Trade-value blend (values.js)",
-       4,
-       -0.12,
-       0.142,
-       314
+       3.97,
+       -0.15,
+       0.138,
+       330
       ],
       [
        "K",
        "Projection 100% + average 0%",
-       4,
-       -0.01,
-       0.096,
-       314
+       3.94,
+       -0.03,
+       0.108,
+       330
       ],
       [
        "K",
        "Fitted blend of all",
-       3.98,
-       0.5,
-       -0.011,
-       314
+       3.92,
+       0.47,
+       0.004,
+       330
       ],
       [
        "DEF",
        "Sleeper projection (what the site uses)",
-       4.56,
-       0.25,
-       0.186,
-       320
+       4.55,
+       0.3,
+       0.183,
+       336
       ],
       [
        "DEF",
        "Season average",
-       5.11,
-       0.71,
-       -0.026,
-       320
+       5.09,
+       0.73,
+       -0.036,
+       336
       ],
       [
        "DEF",
        "Last 3 games",
-       5.48,
-       0.65,
-       -0.025,
-       320
+       5.44,
+       0.68,
+       -0.023,
+       336
       ],
       [
        "DEF",
        "Trade-value blend (values.js)",
-       4.74,
-       0.44,
-       0.039,
-       320
+       4.71,
+       0.48,
+       0.038,
+       336
       ],
       [
        "DEF",
        "Projection 100% + average 0%",
-       4.56,
-       0.25,
-       0.186,
-       320
+       4.55,
+       0.3,
+       0.183,
+       336
       ],
       [
        "DEF",
        "Fitted blend of all",
-       4.66,
-       -0.49,
-       0.165,
-       320
+       4.63,
+       -0.45,
+       0.156,
+       336
       ]
      ]
     }
@@ -700,11 +700,11 @@
   "E2": {
    "title": "Are Clear / Lean / Toss-up honest?",
    "findings": [
-    "RB / WR / TE (same position): a 2-3 point edge won 59.2% of the time, a 4-5 point edge 68%, 10+ 85.1%.",
-    "FLEX (RB vs WR vs TE): a 2-3 point edge won 59.2% of the time, a 4-5 point edge 67.6%, 10+ 84.7%.",
-    "QB: a 2-3 point edge won 57.9% of the time, a 4-5 point edge 64.1%, 10+ 93.3%.",
-    "K: a 2-3 point edge won 66.7% of the time, a 4-5 point edge null%, 10+ null%.",
-    "DEF: a 2-3 point edge won 66.4% of the time, a 4-5 point edge 88.9%, 10+ null%."
+    "RB / WR / TE (same position): a 2-3 point edge won 59.4% of the time, a 4-5 point edge 68%, 10+ 85.9%.",
+    "FLEX (RB vs WR vs TE): a 2-3 point edge won 59.2% of the time, a 4-5 point edge 67.7%, 10+ 85.3%.",
+    "QB: a 2-3 point edge won 57.9% of the time, a 4-5 point edge 64.2%, 10+ 88.9%.",
+    "K: a 2-3 point edge won 68.4% of the time, a 4-5 point edge null%, 10+ null%.",
+    "DEF: a 2-3 point edge won 65.8% of the time, a 4-5 point edge 88.9%, 10+ null%."
    ],
    "fit": {
     "RB / WR / TE (same position)": {
@@ -790,11 +790,11 @@
         0,
         1
        ],
-       "win": 0.516,
-       "n": 8467,
+       "win": 0.513,
+       "n": 8900,
        "ci": [
-        0.506,
-        0.526
+        0.505,
+        0.524
        ]
       },
       {
@@ -802,11 +802,11 @@
         1,
         2
        ],
-       "win": 0.564,
-       "n": 7530,
+       "win": 0.563,
+       "n": 7869,
        "ci": [
-        0.55,
-        0.579
+        0.551,
+        0.577
        ]
       },
       {
@@ -814,10 +814,10 @@
         2,
         3
        ],
-       "win": 0.592,
-       "n": 6317,
+       "win": 0.594,
+       "n": 6591,
        "ci": [
-        0.574,
+        0.582,
         0.605
        ]
       },
@@ -826,11 +826,11 @@
         3,
         4
        ],
-       "win": 0.629,
-       "n": 5529,
+       "win": 0.627,
+       "n": 5771,
        "ci": [
         0.61,
-        0.647
+        0.642
        ]
       },
       {
@@ -839,10 +839,10 @@
         5
        ],
        "win": 0.68,
-       "n": 4899,
+       "n": 5133,
        "ci": [
-        0.663,
-        0.699
+        0.667,
+        0.701
        ]
       },
       {
@@ -850,11 +850,11 @@
         5,
         6
        ],
-       "win": 0.681,
-       "n": 4063,
+       "win": 0.68,
+       "n": 4255,
        "ci": [
-        0.655,
-        0.702
+        0.659,
+        0.704
        ]
       },
       {
@@ -863,10 +863,10 @@
         8
        ],
        "win": 0.74,
-       "n": 5813,
+       "n": 6141,
        "ci": [
-        0.722,
-        0.752
+        0.73,
+        0.757
        ]
       },
       {
@@ -874,11 +874,11 @@
         8,
         10
        ],
-       "win": 0.773,
-       "n": 3406,
+       "win": 0.769,
+       "n": 3637,
        "ci": [
-        0.755,
-        0.792
+        0.757,
+        0.789
        ]
       },
       {
@@ -886,11 +886,11 @@
         10,
         99
        ],
-       "win": 0.851,
-       "n": 3799,
+       "win": 0.859,
+       "n": 4025,
        "ci": [
-        0.83,
-        0.873
+        0.84,
+        0.884
        ]
       }
      ]
@@ -978,11 +978,11 @@
         0,
         1
        ],
-       "win": 0.514,
-       "n": 21993,
+       "win": 0.513,
+       "n": 23137,
        "ci": [
-        0.511,
-        0.519
+        0.508,
+        0.518
        ]
       },
       {
@@ -991,9 +991,9 @@
         2
        ],
        "win": 0.559,
-       "n": 19912,
+       "n": 20868,
        "ci": [
-        0.551,
+        0.553,
         0.568
        ]
       },
@@ -1003,10 +1003,10 @@
         3
        ],
        "win": 0.592,
-       "n": 17400,
+       "n": 18189,
        "ci": [
-        0.581,
-        0.602
+        0.58,
+        0.603
        ]
       },
       {
@@ -1014,11 +1014,11 @@
         3,
         4
        ],
-       "win": 0.633,
-       "n": 15002,
+       "win": 0.632,
+       "n": 15678,
        "ci": [
         0.619,
-        0.653
+        0.646
        ]
       },
       {
@@ -1026,11 +1026,11 @@
         4,
         5
        ],
-       "win": 0.676,
-       "n": 12917,
+       "win": 0.677,
+       "n": 13543,
        "ci": [
-        0.662,
-        0.691
+        0.665,
+        0.692
        ]
       },
       {
@@ -1038,11 +1038,11 @@
         5,
         6
        ],
-       "win": 0.69,
-       "n": 10428,
+       "win": 0.689,
+       "n": 10905,
        "ci": [
-        0.672,
-        0.707
+        0.673,
+        0.708
        ]
       },
       {
@@ -1051,10 +1051,10 @@
         8
        ],
        "win": 0.741,
-       "n": 15350,
+       "n": 16227,
        "ci": [
-        0.726,
-        0.755
+        0.73,
+        0.757
        ]
       },
       {
@@ -1063,9 +1063,9 @@
         10
        ],
        "win": 0.78,
-       "n": 9133,
+       "n": 9668,
        "ci": [
-        0.766,
+        0.768,
         0.797
        ]
       },
@@ -1074,11 +1074,11 @@
         10,
         99
        ],
-       "win": 0.847,
-       "n": 10320,
+       "win": 0.853,
+       "n": 10881,
        "ci": [
-        0.83,
-        0.868
+        0.835,
+        0.877
        ]
       }
      ]
@@ -1166,10 +1166,10 @@
         0,
         1
        ],
-       "win": 0.525,
-       "n": 1276,
+       "win": 0.527,
+       "n": 1318,
        "ci": [
-        0.503,
+        0.504,
         0.55
        ]
       },
@@ -1178,11 +1178,11 @@
         1,
         2
        ],
-       "win": 0.586,
-       "n": 1198,
+       "win": 0.59,
+       "n": 1251,
        "ci": [
-        0.552,
-        0.621
+        0.561,
+        0.629
        ]
       },
       {
@@ -1191,10 +1191,10 @@
         3
        ],
        "win": 0.579,
-       "n": 952,
+       "n": 992,
        "ci": [
-        0.544,
-        0.617
+        0.548,
+        0.609
        ]
       },
       {
@@ -1202,11 +1202,11 @@
         3,
         4
        ],
-       "win": 0.634,
-       "n": 729,
+       "win": 0.638,
+       "n": 770,
        "ci": [
-        0.582,
-        0.682
+        0.595,
+        0.696
        ]
       },
       {
@@ -1214,11 +1214,11 @@
         4,
         5
        ],
-       "win": 0.641,
-       "n": 552,
+       "win": 0.642,
+       "n": 575,
        "ci": [
-        0.6,
-        0.689
+        0.597,
+        0.691
        ]
       },
       {
@@ -1226,11 +1226,11 @@
         5,
         6
        ],
-       "win": 0.685,
-       "n": 352,
+       "win": 0.691,
+       "n": 376,
        "ci": [
-        0.635,
-        0.745
+        0.63,
+        0.767
        ]
       },
       {
@@ -1238,11 +1238,11 @@
         6,
         8
        ],
-       "win": 0.733,
-       "n": 356,
+       "win": 0.739,
+       "n": 391,
        "ci": [
-        0.668,
-        0.796
+        0.664,
+        0.791
        ]
       },
       {
@@ -1250,11 +1250,11 @@
         8,
         10
        ],
-       "win": 0.841,
-       "n": 82,
+       "win": 0.823,
+       "n": 96,
        "ci": [
-        0.771,
-        0.923
+        0.755,
+        0.885
        ]
       },
       {
@@ -1262,10 +1262,10 @@
         10,
         99
        ],
-       "win": 0.933,
-       "n": 15,
+       "win": 0.889,
+       "n": 18,
        "ci": [
-        0.9,
+        0.778,
         1
        ]
       }
@@ -1354,11 +1354,11 @@
         0,
         1
        ],
-       "win": 0.516,
-       "n": 1725,
+       "win": 0.52,
+       "n": 1813,
        "ci": [
-        0.486,
-        0.543
+        0.489,
+        0.551
        ]
       },
       {
@@ -1366,11 +1366,11 @@
         1,
         2
        ],
-       "win": 0.579,
-       "n": 444,
+       "win": 0.582,
+       "n": 457,
        "ci": [
-        0.502,
-        0.657
+        0.51,
+        0.658
        ]
       },
       {
@@ -1378,11 +1378,11 @@
         2,
         3
        ],
-       "win": 0.667,
-       "n": 75,
+       "win": 0.684,
+       "n": 79,
        "ci": [
-        0.493,
-        0.8
+        0.524,
+        0.809
        ]
       },
       {
@@ -1542,10 +1542,10 @@
         0,
         1
        ],
-       "win": 0.541,
-       "n": 1201,
+       "win": 0.546,
+       "n": 1254,
        "ci": [
-        0.514,
+        0.52,
         0.566
        ]
       },
@@ -1554,11 +1554,11 @@
         1,
         2
        ],
-       "win": 0.579,
-       "n": 793,
+       "win": 0.57,
+       "n": 834,
        "ci": [
-        0.531,
-        0.63
+        0.529,
+        0.623
        ]
       },
       {
@@ -1566,11 +1566,11 @@
         2,
         3
        ],
-       "win": 0.664,
-       "n": 241,
+       "win": 0.658,
+       "n": 260,
        "ci": [
-        0.557,
-        0.757
+        0.554,
+        0.74
        ]
       },
       {
@@ -1581,8 +1581,8 @@
        "win": 0.72,
        "n": 25,
        "ci": [
-        0.471,
-        0.85
+        0.4,
+        0.867
        ]
       },
       {
@@ -1664,73 +1664,73 @@
        "0-1",
        51.5,
        19660,
-       51.6,
-       8467,
-       "50.6-52.6"
+       51.3,
+       8900,
+       "50.5-52.4"
       ],
       [
        "1-2",
        57.4,
        17569,
-       56.4,
-       7530,
-       "55-57.9"
+       56.3,
+       7869,
+       "55.1-57.7"
       ],
       [
        "2-3",
        60.5,
        15127,
-       59.2,
-       6317,
-       "57.4-60.5"
+       59.4,
+       6591,
+       "58.2-60.5"
       ],
       [
        "3-4",
        64.1,
        13042,
-       62.9,
-       5529,
-       "61-64.7"
+       62.7,
+       5771,
+       "61-64.2"
       ],
       [
        "4-5",
        67.8,
        10906,
        68,
-       4899,
-       "66.3-69.9"
+       5133,
+       "66.7-70.1"
       ],
       [
        "5-6",
        70.6,
        8413,
-       68.1,
-       4063,
-       "65.5-70.2"
+       68,
+       4255,
+       "65.9-70.4"
       ],
       [
        "6-8",
        75.3,
        10569,
        74,
-       5813,
-       "72.2-75.2"
+       6141,
+       "73-75.7"
       ],
       [
        "8-10",
        80.2,
        5573,
-       77.3,
-       3406,
-       "75.5-79.2"
+       76.9,
+       3637,
+       "75.7-78.9"
       ],
       [
        "10-+",
        83.9,
        3899,
-       85.1,
-       3799,
-       "83-87.3"
+       85.9,
+       4025,
+       "84-88.4"
       ]
      ]
     },
@@ -1749,73 +1749,73 @@
        "0-1",
        51.9,
        47797,
-       51.4,
-       21993,
-       "51.1-51.9"
+       51.3,
+       23137,
+       "50.8-51.8"
       ],
       [
        "1-2",
        56.4,
        45029,
        55.9,
-       19912,
-       "55.1-56.8"
+       20868,
+       "55.3-56.8"
       ],
       [
        "2-3",
        60.6,
        40121,
        59.2,
-       17400,
-       "58.1-60.2"
+       18189,
+       "58-60.3"
       ],
       [
        "3-4",
        63.8,
        34592,
-       63.3,
-       15002,
-       "61.9-65.3"
+       63.2,
+       15678,
+       "61.9-64.6"
       ],
       [
        "4-5",
        68.1,
        29509,
-       67.6,
-       12917,
-       "66.2-69.1"
+       67.7,
+       13543,
+       "66.5-69.2"
       ],
       [
        "5-6",
        70.6,
        23661,
-       69,
-       10428,
-       "67.2-70.7"
+       68.9,
+       10905,
+       "67.3-70.8"
       ],
       [
        "6-8",
        74.5,
        30645,
        74.1,
-       15350,
-       "72.6-75.5"
+       16227,
+       "73-75.7"
       ],
       [
        "8-10",
        79.4,
        15899,
        78,
-       9133,
-       "76.6-79.7"
+       9668,
+       "76.8-79.7"
       ],
       [
        "10-+",
        83.5,
        11186,
-       84.7,
-       10320,
-       "83-86.8"
+       85.3,
+       10881,
+       "83.5-87.7"
       ]
      ]
     },
@@ -1834,73 +1834,73 @@
        "0-1",
        52.2,
        2543,
-       52.5,
-       1276,
-       "50.3-55"
+       52.7,
+       1318,
+       "50.4-55"
       ],
       [
        "1-2",
        58.3,
        2101,
-       58.6,
-       1198,
-       "55.2-62.1"
+       59,
+       1251,
+       "56.1-62.9"
       ],
       [
        "2-3",
        58.3,
        1858,
        57.9,
-       952,
-       "54.4-61.7"
+       992,
+       "54.8-60.9"
       ],
       [
        "3-4",
        61.8,
        1417,
-       63.4,
-       729,
-       "58.2-68.2"
+       63.8,
+       770,
+       "59.5-69.6"
       ],
       [
        "4-5",
        68.2,
        1103,
-       64.1,
-       552,
-       "60-68.9"
+       64.2,
+       575,
+       "59.7-69.1"
       ],
       [
        "5-6",
        71.1,
        836,
-       68.5,
-       352,
-       "63.5-74.5"
+       69.1,
+       376,
+       "63-76.7"
       ],
       [
        "6-8",
        74.3,
        1099,
-       73.3,
-       356,
-       "66.8-79.6"
+       73.9,
+       391,
+       "66.4-79.1"
       ],
       [
        "8-10",
        82.3,
        479,
-       84.1,
-       82,
-       "77.1-92.3"
+       82.3,
+       96,
+       "75.5-88.5"
       ],
       [
        "10-+",
        87,
        138,
-       93.3,
-       15,
-       "90-100"
+       88.9,
+       18,
+       "77.8-100"
       ]
      ]
     },
@@ -1919,25 +1919,25 @@
        "0-1",
        51.9,
        3374,
-       51.6,
-       1725,
-       "48.6-54.3"
+       52,
+       1813,
+       "48.9-55.1"
       ],
       [
        "1-2",
        49.7,
        1140,
-       57.9,
-       444,
-       "50.2-65.7"
+       58.2,
+       457,
+       "51-65.8"
       ],
       [
        "2-3",
        56.6,
        182,
-       66.7,
-       75,
-       "49.3-80"
+       68.4,
+       79,
+       "52.4-80.9"
       ],
       [
        "3-4",
@@ -2004,25 +2004,25 @@
        "0-1",
        51.8,
        2544,
-       54.1,
-       1201,
-       "51.4-56.6"
+       54.6,
+       1254,
+       "52-56.6"
       ],
       [
        "1-2",
        60.7,
        1540,
-       57.9,
-       793,
-       "53.1-63"
+       57,
+       834,
+       "52.9-62.3"
       ],
       [
        "2-3",
        63.8,
        547,
-       66.4,
-       241,
-       "55.7-75.7"
+       65.8,
+       260,
+       "55.4-74"
       ],
       [
        "3-4",
@@ -2030,7 +2030,7 @@
        98,
        72,
        25,
-       "47.1-85"
+       "40-86.7"
       ],
       [
        "4-5",
@@ -2079,38 +2079,38 @@
   "E3": {
    "title": "Does each tiebreak step pick the winner?",
    "findings": [
-    "In toss-ups (projections within 2 points), the higher implied team total won 52.4% (54.5% when 4+ apart); the softer position matchup won 50%; the untagged player beat a Questionable one 54% of the time counting sit-outs as zero."
+    "In toss-ups (projections within 2 points), the higher implied team total won 52.2% (54.3% when 4+ apart); the softer position matchup won 49.8%; the untagged player beat a Questionable one 55.1% of the time counting sit-outs as zero."
    ],
    "fit": {
     "health": {
      "train": 0.526,
-     "test": 0.54,
-     "nTest": 1835
+     "test": 0.551,
+     "nTest": 1954
     },
     "healthPlayed": {
      "train": 0.525,
-     "test": 0.54,
-     "nTest": 1835
+     "test": 0.551,
+     "nTest": 1954
     },
     "implied": {
      "train": 0.507,
-     "test": 0.524,
-     "nTest": 17856
+     "test": 0.522,
+     "nTest": 18692
     },
     "impliedBig": {
      "train": 0.515,
-     "test": 0.545,
-     "nTest": 8112
+     "test": 0.543,
+     "nTest": 8528
     },
     "matchup": {
      "train": 0.51,
-     "test": 0.5,
-     "nTest": 11051
+     "test": 0.498,
+     "nTest": 11576
     },
     "proj": {
      "train": 0.544,
-     "test": 0.54,
-     "nTest": 18471
+     "test": 0.539,
+     "nTest": 19338
     }
    },
    "tables": [
@@ -2128,43 +2128,43 @@
        "Keep the higher projection (what happens with no tiebreak)",
        54.4,
        41873,
-       54,
-       18471
+       53.9,
+       19338
       ],
       [
        "Health: pick the player with no tag over a Questionable one (sat out = 0)",
        52.6,
        5725,
-       54,
-       1835
+       55.1,
+       1954
       ],
       [
        "Health: same, only when both ended up playing",
        52.5,
        5705,
-       54,
-       1835
+       55.1,
+       1954
       ],
       [
        "Game environment: pick the higher implied team total",
        50.7,
        40470,
-       52.4,
-       17856
+       52.2,
+       18692
       ],
       [
        "Game environment: only when the totals differ by 4+",
        51.5,
        17233,
-       54.5,
-       8112
+       54.3,
+       8528
       ],
       [
        "Position matchup: pick the softer opponent (site rule)",
        51,
        24914,
-       50,
-       11051
+       49.8,
+       11576
       ]
      ]
     }
@@ -2173,18 +2173,18 @@
   "E4": {
    "title": "What does an injury tag really mean?",
    "findings": [
-    "Fantasy-relevant Questionable players played 69.7% of the time and scored 85% of their own average when they did, so a Questionable tag is worth about 59.2% of a normal week. Doubtful: played 1%.",
-    "Practice status moves it a lot: FP 89.8% played, LP 68.3% played, DNP 55% played.",
+    "Fantasy-relevant Questionable players played 69.7% of the time and scored 84.7% of their own average when they did, so a Questionable tag is worth about 59% of a normal week. Doubtful: played 1%.",
+    "Practice status moves it a lot: FP 89.6% played, LP 68.4% played, DNP 54.2% played.",
     "None of the Questionable players who sat out still has a projection in Sleeper's stored numbers: the archive keeps the final pre-kickoff version, after inactives were announced. Any replay that uses it already \"knows\" who sat.",
-    "When Questionable players did play, they scored -1.09 points vs their projection on average (-1.13 in 2022-24, -0.95 in 2025-26; 90.3% and 92.1% of the projection)."
+    "When Questionable players did play, they scored -1.13 points vs their projection on average (-1.13 in 2022-24, -1.12 in 2025-26; 90.3% and 90.7% of the projection)."
    ],
    "fit": {
     "status": {
      "Questionable": {
       "play": 0.697,
-      "prod": 0.85,
-      "ev": 0.592,
-      "n": 868
+      "prod": 0.847,
+      "ev": 0.59,
+      "n": 881
      },
      "Doubtful": {
       "play": 0.01,
@@ -2196,54 +2196,54 @@
       "play": 0,
       "prod": null,
       "ev": null,
-      "n": 625
+      "n": 633
      }
     },
     "questionableByPractice": {
      "FP": {
-      "play": 0.898,
-      "prod": 0.847,
-      "ev": 0.761,
-      "n": 128
+      "play": 0.896,
+      "prod": 0.837,
+      "ev": 0.75,
+      "n": 134
      },
      "LP": {
-      "play": 0.683,
-      "prod": 0.867,
-      "ev": 0.593,
-      "n": 597
+      "play": 0.684,
+      "prod": 0.866,
+      "ev": 0.592,
+      "n": 602
      },
      "DNP": {
-      "play": 0.55,
+      "play": 0.542,
       "prod": 0.759,
-      "ev": 0.418,
-      "n": 129
+      "ev": 0.411,
+      "n": 131
      }
     },
     "questionableByInjury": {
      "Ankle": {
-      "play": 0.693,
-      "prod": 0.801,
-      "n": 127
+      "play": 0.698,
+      "prod": 0.791,
+      "n": 129
      },
      "Knee": {
-      "play": 0.648,
-      "prod": 0.833,
-      "n": 125
+      "play": 0.654,
+      "prod": 0.825,
+      "n": 127
      },
      "Groin/hip/quad": {
-      "play": 0.714,
+      "play": 0.702,
       "prod": 0.927,
-      "n": 112
-     },
-     "Hamstring": {
-      "play": 0.593,
-      "prod": 0.861,
-      "n": 91
+      "n": 114
      },
      "Back/ribs/core": {
-      "play": 0.789,
-      "prod": 0.908,
-      "n": 90
+      "play": 0.783,
+      "prod": 0.916,
+      "n": 92
+     },
+     "Hamstring": {
+      "play": 0.598,
+      "prod": 0.857,
+      "n": 92
      },
      "Shoulder": {
       "play": 0.658,
@@ -2251,14 +2251,14 @@
       "n": 79
      },
      "Other": {
-      "play": 0.676,
-      "prod": 0.678,
-      "n": 74
+      "play": 0.671,
+      "prod": 0.671,
+      "n": 76
      },
      "Foot/toe": {
-      "play": 0.766,
-      "prod": 0.889,
-      "n": 64
+      "play": 0.769,
+      "prod": 0.877,
+      "n": 65
      },
      "Illness/rest": {
       "play": 0.78,
@@ -2266,9 +2266,9 @@
       "n": 50
      },
      "Concussion": {
-      "play": 0.625,
-      "prod": 0.876,
-      "n": 32
+      "play": 0.636,
+      "prod": 0.888,
+      "n": 33
      }
     },
     "questionableByPosition": {
@@ -2278,25 +2278,25 @@
       "n": 115
      },
      "RB": {
-      "play": 0.713,
-      "prod": 0.903,
-      "n": 216
+      "play": 0.709,
+      "prod": 0.896,
+      "n": 220
      },
      "WR": {
       "play": 0.746,
       "prod": 0.819,
-      "n": 433
+      "n": 441
      },
      "TE": {
-      "play": 0.769,
-      "prod": 0.867,
-      "n": 104
+      "play": 0.771,
+      "prod": 0.86,
+      "n": 105
      }
     },
-    "projBiasWhenPlayed": -1.09,
+    "projBiasWhenPlayed": -1.13,
     "projBiasTrain": -1.13,
-    "projBiasTest": -0.95,
-    "projRatioTest": 0.921,
+    "projBiasTest": -1.12,
+    "projRatioTest": 0.907,
     "projRatioTrain": 0.903,
     "satOutStillProjected": 0,
     "satOutAvgProjection": null
@@ -2317,12 +2317,12 @@
      "rows": [
       [
        "Questionable",
-       868,
+       881,
        69.7,
        70.3,
-       68.1,
+       68.2,
        0.85,
-       0.96,
+       0.95,
        0.59
       ],
       [
@@ -2337,7 +2337,7 @@
       ],
       [
        "Out",
-       625,
+       633,
        0,
        0,
        0,
@@ -2362,33 +2362,33 @@
      "rows": [
       [
        "FP",
-       128,
-       89.8,
+       134,
+       89.6,
        87.5,
-       96.9,
-       0.85,
-       1,
-       0.76
+       94.7,
+       0.84,
+       0.99,
+       0.75
       ],
       [
        "LP",
-       597,
-       68.3,
+       602,
+       68.4,
        69.7,
-       64.6,
+       65.1,
        0.87,
        0.95,
        0.59
       ],
       [
        "DNP",
-       129,
-       55,
+       131,
+       54.2,
        55.4,
-       53.6,
+       50,
        0.76,
        0.91,
-       0.42
+       0.41
       ]
      ]
     },
@@ -2417,33 +2417,33 @@
       ],
       [
        "RB",
-       216,
-       71.3,
+       220,
+       70.9,
        70.7,
-       73.1,
+       71.4,
        0.9,
-       0.96,
+       0.95,
        0.64
       ],
       [
        "WR",
-       433,
+       441,
        74.6,
        75.1,
-       73.2,
+       73.3,
        0.82,
        0.96,
        0.61
       ],
       [
        "TE",
-       104,
-       76.9,
+       105,
+       77.1,
        76.5,
-       77.8,
-       0.87,
+       78.4,
+       0.86,
        0.9,
-       0.67
+       0.66
       ]
      ]
     },
@@ -2462,53 +2462,53 @@
      "rows": [
       [
        "Ankle",
-       127,
-       69.3,
+       129,
+       69.8,
        68.4,
-       71.9,
-       0.8,
-       0.91,
+       73.5,
+       0.79,
+       0.9,
        0.55
       ],
       [
        "Knee",
-       125,
+       127,
+       65.4,
        64.8,
-       64.8,
-       64.7,
-       0.83,
-       0.89,
+       66.7,
+       0.82,
+       0.9,
        0.54
       ],
       [
        "Groin/hip/quad",
-       112,
-       71.4,
+       114,
+       70.2,
        72.1,
-       69.2,
+       64.3,
        0.93,
        1,
-       0.66
-      ],
-      [
-       "Hamstring",
-       91,
-       59.3,
-       56.7,
-       66.7,
-       0.86,
-       0.96,
-       0.51
+       0.65
       ],
       [
        "Back/ribs/core",
-       90,
-       78.9,
+       92,
+       78.3,
        79.4,
-       77.3,
-       0.91,
-       1.04,
+       75,
+       0.92,
+       1.03,
        0.72
+      ],
+      [
+       "Hamstring",
+       92,
+       59.8,
+       56.7,
+       68,
+       0.86,
+       0.95,
+       0.51
       ],
       [
        "Shoulder",
@@ -2522,23 +2522,23 @@
       ],
       [
        "Other",
-       74,
-       67.6,
+       76,
+       67.1,
        73.1,
-       54.5,
-       0.68,
+       54.2,
+       0.67,
        0.83,
-       0.46
+       0.45
       ],
       [
        "Foot/toe",
-       64,
-       76.6,
+       65,
+       76.9,
        86.7,
-       52.6,
-       0.89,
+       55,
+       0.88,
        0.99,
-       0.68
+       0.67
       ],
       [
        "Illness/rest",
@@ -2552,13 +2552,13 @@
       ],
       [
        "Concussion",
-       32,
-       62.5,
+       33,
+       63.6,
        60.7,
-       75,
-       0.88,
-       1.16,
-       0.55
+       80,
+       0.89,
+       1.15,
+       0.57
       ]
      ]
     },
@@ -2577,22 +2577,22 @@
      "rows": [
       [
        "WR LP",
-       285,
+       289,
        74.7,
        75.8,
-       71.8,
-       0.81,
+       72,
+       0.82,
        0.96,
        0.61
       ],
       [
        "RB LP",
-       142,
-       69.7,
+       143,
+       69.9,
        69.8,
-       69.4,
+       70.3,
+       0.94,
        0.95,
-       0.96,
        0.66
       ],
       [
@@ -2617,43 +2617,43 @@
       ],
       [
        "WR DNP",
-       77,
-       59.7,
+       78,
+       59,
        61.7,
-       52.9,
+       50,
        0.75,
        0.92,
-       0.45
+       0.44
       ],
       [
        "WR FP",
-       65,
-       90.8,
+       68,
+       91.2,
        88,
        100,
-       0.9,
-       1,
+       0.89,
+       0.99,
        0.81
       ],
       [
        "RB FP",
-       36,
-       91.7,
+       38,
+       89.5,
        88.9,
-       100,
-       0.85,
-       0.99,
-       0.78
+       90.9,
+       0.84,
+       0.98,
+       0.76
       ],
       [
        "RB DNP",
-       33,
-       54.5,
+       34,
+       52.9,
        51.9,
-       66.7,
+       57.1,
        0.72,
        0.89,
-       0.39
+       0.38
       ]
      ]
     }
@@ -2662,14 +2662,14 @@
   "E5": {
    "title": "Were the teammate (ripple) estimates right?",
    "findings": [
-    "1651 teammate estimates scored against what the same players would have been expected to do with no news. Overall: right direction 56.1%, wrong 30.8%; pure chance would be 44.1%.",
-    "Running back out → carries for the remaining backs: right 68.8%, wrong 27.4%, chance 43.1%. This is the one strong rule.",
-    "Receiver or tight end out → targets for teammates: WR right 48.2%, wrong 38.8%, chance 37.2%; TE right 54.5%, wrong 32.5%, chance 37.2%. The average estimate was +1.19 targets; the average real change was 0.66.",
-    "Quarterback out → pass catchers down: right 53.3%, wrong 29.1%, chance 49.6%. Top target scored 98.9% of his expected points (site assumes 90%), the others 89.1% (site assumes 80%).",
-    "Confidence labels: lean 66.2% right (n=462), toss 52.2% right (n=1189). ",
-    "\"Seen this season\" evidence vs the share rule: Share rule (heuristic): 55.7% right, average miss 4.28; Seen this season (with/without split): 53.9% right, average miss 2.89.",
-    "Refit, WR/TE out: a teammate gains 0.126 of his proportional share of the vacated targets, plus 0.104 of all of them if he is the next man up (site: 0.75 and 0.25). On 2025-26 the refit misses by 1.66 targets vs 1.75 for the site rule and 1.65 for \"no change\".",
-    "Refit, RB out: remaining backs gain 0.313 of their proportional share of the vacated carries, and the lead remaining back an extra 0.047 of all of them. Refit misses by 3.42 carries vs 4.35 (site rule) and 4.27 (\"no change\")."
+    "1697 teammate estimates scored against what the same players would have been expected to do with no news. Overall: right direction 56%, wrong 30.8%; pure chance would be 44.1%.",
+    "Running back out → carries for the remaining backs: right 67.1%, wrong 28.8%, chance 42.9%. This is the one strong rule.",
+    "Receiver or tight end out → targets for teammates: WR right 47.8%, wrong 38.8%, chance 37.2%; TE right 54.5%, wrong 32.5%, chance 37.2%. The average estimate was +1.19 targets; the average real change was 0.64.",
+    "Quarterback out → pass catchers down: right 53.5%, wrong 29%, chance 49.7%. Top target scored 98.9% of his expected points (site assumes 90%), the others 88.9% (site assumes 80%).",
+    "Confidence labels: lean 65.1% right (n=476), toss 52.5% right (n=1221). ",
+    "\"Seen this season\" evidence vs the share rule: Share rule (heuristic): 55.7% right, average miss 4.28; Seen this season (with/without split): 53% right, average miss 2.93.",
+    "Refit, WR/TE out: a teammate gains 0.126 of his proportional share of the vacated targets, plus 0.104 of all of them if he is the next man up (site: 0.75 and 0.25). On 2025-26 the refit misses by 1.67 targets vs 1.77 for the site rule and 1.65 for \"no change\".",
+    "Refit, RB out: remaining backs gain 0.313 of their proportional share of the vacated carries, and the lead remaining back an extra 0.047 of all of them. Refit misses by 3.49 carries vs 4.44 (site rule) and 4.14 (\"no change\")."
    ],
    "fit": {
     "baseline": {
@@ -2692,24 +2692,24 @@
     "chance": {
      "tgt": {
       "up": 0.372,
-      "down": 0.479,
-      "rawUp": 0.347,
+      "down": 0.48,
+      "rawUp": 0.345,
       "rawDown": 0.517,
-      "n": 5604
+      "n": 5666
      },
      "att": {
-      "up": 0.431,
-      "down": 0.495,
-      "rawUp": 0.394,
-      "rawDown": 0.529,
-      "n": 1904
+      "up": 0.429,
+      "down": 0.496,
+      "rawUp": 0.393,
+      "rawDown": 0.53,
+      "n": 1925
      },
      "pts": {
       "up": 0.338,
-      "down": 0.496,
+      "down": 0.497,
       "rawUp": 0.329,
-      "rawDown": 0.498,
-      "n": 6154
+      "rawDown": 0.499,
+      "n": 6219
      }
     },
     "wr": {
@@ -2719,9 +2719,9 @@
       0.104
      ],
      "n": 2401,
-     "nTest": 1415,
-     "testMaeFitted": 1.66,
-     "testMaeEngine": 1.75,
+     "nTest": 1466,
+     "testMaeFitted": 1.67,
+     "testMaeEngine": 1.77,
      "testMaeZero": 1.65
     },
     "wrSamePos": {
@@ -2732,9 +2732,9 @@
       0.15
      ],
      "n": 2401,
-     "nTest": 1415,
+     "nTest": 1466,
      "testMaeFitted": 1.66,
-     "testMaeEngine": 1.75,
+     "testMaeEngine": 1.77,
      "testMaeZero": 1.65
     },
     "rb": {
@@ -2744,73 +2744,73 @@
       0.047
      ],
      "n": 317,
-     "nTest": 129,
-     "testMaeFitted": 3.42,
-     "testMaeEngine": 4.35,
-     "testMaeZero": 4.27
+     "nTest": 143,
+     "testMaeFitted": 3.49,
+     "testMaeEngine": 4.44,
+     "testMaeZero": 4.14
     },
     "qb": {
      "top": {
-      "n": 159,
+      "n": 162,
       "ratio": 0.989
      },
      "rest": {
-      "n": 646,
-      "ratio": 0.891
+      "n": 657,
+      "ratio": 0.889
      },
      "topTest": {
-      "n": 57,
-      "ratio": 0.953
+      "n": 60,
+      "ratio": 0.956
      },
      "restTest": {
-      "n": 211,
-      "ratio": 0.876
+      "n": 222,
+      "ratio": 0.868
      }
     },
     "byKind": {
      "out QB → pass catchers (points)": {
-      "n": 732,
-      "hit": 0.533,
-      "miss": 0.291,
-      "chance": 0.496,
-      "hitTest": 0.498,
-      "nTest": 235,
-      "mae": 4.5,
+      "n": 744,
+      "hit": 0.535,
+      "miss": 0.29,
+      "chance": 0.497,
+      "hitTest": 0.506,
+      "nTest": 247,
+      "mae": 4.49,
       "maeZero": 4.66,
       "avgEst": -0.77,
-      "avgAct": -0.84
+      "avgAct": -0.86
      },
      "out WR → targets": {
-      "n": 338,
-      "hit": 0.482,
+      "n": 345,
+      "hit": 0.478,
       "miss": 0.388,
       "chance": 0.372,
-      "hitTest": 0.5,
-      "nTest": 152,
-      "mae": 2.41,
-      "maeZero": 2.36,
+      "hitTest": 0.491,
+      "nTest": 159,
+      "mae": 2.4,
+      "maeZero": 2.34,
       "avgEst": 1.19,
-      "avgAct": 0.66
+      "avgAct": 0.64
      },
      "out RB → carries": {
-      "n": 285,
-      "hit": 0.688,
-      "miss": 0.274,
-      "chance": 0.431,
-      "hitTest": 0.761,
-      "nTest": 92,
-      "mae": 4.15,
-      "maeZero": 5.1,
-      "avgEst": 3.32,
-      "avgAct": 3.35
+      "n": 295,
+      "hit": 0.671,
+      "miss": 0.288,
+      "chance": 0.429,
+      "hitTest": 0.706,
+      "nTest": 102,
+      "mae": 4.2,
+      "maeZero": 5.05,
+      "avgEst": 3.28,
+      "avgAct": 3.2
      },
      "out QB → backup QB starts": {
-      "n": 116,
-      "hit": 0.578,
-      "miss": 0.293,
+      "n": 117,
+      "hit": 0.573,
+      "miss": 0.291,
       "chance": 0.338,
-      "hitTest": 0.591,
-      "nTest": 44,
+      "hitTest": 0.578,
+      "nTest": 45,
       "mae": null,
       "maeZero": null,
       "avgEst": null,
@@ -2829,106 +2829,106 @@
       "avgAct": 1.09
      },
      "return RB → carries": {
-      "n": 45,
-      "hit": 0.733,
-      "miss": 0.244,
-      "chance": 0.495,
-      "hitTest": 0.636,
-      "nTest": 11,
-      "mae": 3.73,
-      "maeZero": 4.52,
-      "avgEst": -3.47,
-      "avgAct": -2.67
+      "n": 47,
+      "hit": 0.745,
+      "miss": 0.234,
+      "chance": 0.496,
+      "hitTest": 0.692,
+      "nTest": 13,
+      "mae": 3.64,
+      "maeZero": 4.61,
+      "avgEst": -3.53,
+      "avgAct": -2.83
      }
     },
     "byConf": {
      "lean": {
-      "n": 462,
-      "hit": 0.662,
-      "miss": 0.277,
-      "chance": 0.413,
-      "hitTest": 0.698,
-      "nTest": 149,
-      "mae": 4.1,
-      "maeZero": 5.04,
-      "avgEst": 2.4,
-      "avgAct": 2.6
+      "n": 476,
+      "hit": 0.651,
+      "miss": 0.286,
+      "chance": 0.412,
+      "hitTest": 0.663,
+      "nTest": 163,
+      "mae": 4.12,
+      "maeZero": 4.99,
+      "avgEst": 2.34,
+      "avgAct": 2.44
      },
      "toss": {
-      "n": 1189,
-      "hit": 0.522,
-      "miss": 0.32,
-      "chance": 0.452,
-      "hitTest": 0.494,
-      "nTest": 419,
-      "mae": 3.68,
-      "maeZero": 3.79,
-      "avgEst": -0.11,
-      "avgAct": -0.3
+      "n": 1221,
+      "hit": 0.525,
+      "miss": 0.317,
+      "chance": 0.453,
+      "hitTest": 0.503,
+      "nTest": 451,
+      "mae": 3.67,
+      "maeZero": 3.78,
+      "avgEst": -0.12,
+      "avgAct": -0.36
      }
     },
     "byBasis": {
      "Share rule (heuristic)": {
-      "n": 948,
+      "n": 962,
       "hit": 0.557,
-      "miss": 0.29,
+      "miss": 0.291,
       "chance": 0.476,
       "hitTest": 0.555,
-      "nTest": 321,
+      "nTest": 335,
       "mae": 4.28,
-      "maeZero": 4.59,
+      "maeZero": 4.58,
       "avgEst": -0.05,
-      "avgAct": 0.01
+      "avgAct": -0.02
      },
      "Seen this season (with/without split)": {
-      "n": 490,
-      "hit": 0.539,
-      "miss": 0.361,
+      "n": 506,
+      "hit": 0.53,
+      "miss": 0.368,
       "chance": 0.391,
-      "hitTest": 0.525,
-      "nTest": 179,
-      "mae": 2.89,
-      "maeZero": 3.06,
+      "hitTest": 0.503,
+      "nTest": 195,
+      "mae": 2.93,
+      "maeZero": 3.05,
       "avgEst": 1.89,
-      "avgAct": 1.29
+      "avgAct": 1.23
      }
     },
     "bySize": {
      "Estimate 3+ a game": {
-      "n": 149,
-      "hit": 0.799,
-      "miss": 0.174,
-      "chance": 0.429,
-      "hitTest": 0.852,
-      "nTest": 54,
-      "mae": 4.47,
-      "maeZero": 6.18,
-      "avgEst": 4.56,
-      "avgAct": 5.12
+      "n": 154,
+      "hit": 0.786,
+      "miss": 0.188,
+      "chance": 0.428,
+      "hitTest": 0.814,
+      "nTest": 59,
+      "mae": 4.55,
+      "maeZero": 6.13,
+      "avgEst": 4.5,
+      "avgAct": 4.97
      },
      "Estimate 1.5-3": {
-      "n": 199,
-      "hit": 0.543,
-      "miss": 0.387,
-      "chance": 0.407,
-      "hitTest": 0.6,
-      "nTest": 70,
+      "n": 202,
+      "hit": 0.535,
+      "miss": 0.391,
+      "chance": 0.406,
+      "hitTest": 0.575,
+      "nTest": 73,
       "mae": 3.4,
-      "maeZero": 3.48,
+      "maeZero": 3.45,
       "avgEst": 2.03,
-      "avgAct": 1.15
+      "avgAct": 1.11
      },
      "Estimate under 1.5": {
-      "n": 358,
-      "hit": 0.489,
-      "miss": 0.38,
-      "chance": 0.376,
-      "hitTest": 0.475,
-      "nTest": 141,
+      "n": 368,
+      "hit": 0.481,
+      "miss": 0.386,
+      "chance": 0.375,
+      "hitTest": 0.457,
+      "nTest": 151,
       "mae": 2.35,
-      "maeZero": 2.3,
+      "maeZero": 2.29,
       "avgEst": 1.02,
-      "avgAct": 0.73
+      "avgAct": 0.68
      }
     }
    },
@@ -2951,51 +2951,51 @@
      "rows": [
       [
        "out QB → pass catchers (points)",
-       732,
-       53.3,
-       29.1,
-       49.6,
-       49.8,
-       235,
+       744,
+       53.5,
+       29,
+       49.7,
+       50.6,
+       247,
        -0.77,
-       -0.84,
-       4.5,
+       -0.86,
+       4.49,
        4.66
       ],
       [
        "out WR → targets",
-       338,
-       48.2,
+       345,
+       47.8,
        38.8,
        37.2,
-       50,
-       152,
+       49.1,
+       159,
        1.19,
-       0.66,
-       2.41,
-       2.36
+       0.64,
+       2.4,
+       2.34
       ],
       [
        "out RB → carries",
-       285,
-       68.8,
-       27.4,
-       43.1,
-       76.1,
-       92,
-       3.32,
-       3.35,
-       4.15,
-       5.1
+       295,
+       67.1,
+       28.8,
+       42.9,
+       70.6,
+       102,
+       3.28,
+       3.2,
+       4.2,
+       5.05
       ],
       [
        "out QB → backup QB starts",
-       116,
-       57.8,
-       29.3,
+       117,
+       57.3,
+       29.1,
        33.8,
-       59.1,
-       44,
+       57.8,
+       45,
        null,
        null,
        null,
@@ -3016,16 +3016,16 @@
       ],
       [
        "return RB → carries",
-       45,
-       73.3,
-       24.4,
-       49.5,
-       63.6,
-       11,
-       -3.47,
-       -2.67,
-       3.73,
-       4.52
+       47,
+       74.5,
+       23.4,
+       49.6,
+       69.2,
+       13,
+       -3.53,
+       -2.83,
+       3.64,
+       4.61
       ]
      ]
     },
@@ -3047,29 +3047,29 @@
      "rows": [
       [
        "lean",
-       462,
-       66.2,
-       27.7,
-       41.3,
-       69.8,
-       149,
-       2.4,
-       2.6,
-       4.1,
-       5.04
+       476,
+       65.1,
+       28.6,
+       41.2,
+       66.3,
+       163,
+       2.34,
+       2.44,
+       4.12,
+       4.99
       ],
       [
        "toss",
-       1189,
-       52.2,
-       32,
-       45.2,
-       49.4,
-       419,
-       -0.11,
-       -0.3,
-       3.68,
-       3.79
+       1221,
+       52.5,
+       31.7,
+       45.3,
+       50.3,
+       451,
+       -0.12,
+       -0.36,
+       3.67,
+       3.78
       ]
      ]
     },
@@ -3091,29 +3091,29 @@
      "rows": [
       [
        "Share rule (heuristic)",
-       948,
+       962,
        55.7,
-       29,
+       29.1,
        47.6,
        55.5,
-       321,
+       335,
        -0.05,
-       0.01,
+       -0.02,
        4.28,
-       4.59
+       4.58
       ],
       [
        "Seen this season (with/without split)",
-       490,
-       53.9,
-       36.1,
+       506,
+       53,
+       36.8,
        39.1,
-       52.5,
-       179,
+       50.3,
+       195,
        1.89,
-       1.29,
-       2.89,
-       3.06
+       1.23,
+       2.93,
+       3.05
       ]
      ]
     },
@@ -3135,42 +3135,42 @@
      "rows": [
       [
        "Estimate 3+ a game",
-       149,
-       79.9,
-       17.4,
-       42.9,
-       85.2,
-       54,
-       4.56,
-       5.12,
-       4.47,
-       6.18
+       154,
+       78.6,
+       18.8,
+       42.8,
+       81.4,
+       59,
+       4.5,
+       4.97,
+       4.55,
+       6.13
       ],
       [
        "Estimate 1.5-3",
-       199,
-       54.3,
-       38.7,
-       40.7,
-       60,
-       70,
+       202,
+       53.5,
+       39.1,
+       40.6,
+       57.5,
+       73,
        2.03,
-       1.15,
+       1.11,
        3.4,
-       3.48
+       3.45
       ],
       [
        "Estimate under 1.5",
-       358,
-       48.9,
-       38,
-       37.6,
-       47.5,
-       141,
+       368,
+       48.1,
+       38.6,
+       37.5,
+       45.7,
+       151,
        1.02,
-       0.73,
+       0.68,
        2.35,
-       2.3
+       2.29
       ]
      ]
     },
@@ -3192,42 +3192,42 @@
      "rows": [
       [
        "Missing player had 14+ touches/targets a game",
-       157,
-       68.8,
-       27.4,
-       42.7,
-       72.2,
-       54,
-       3.59,
-       3.61,
-       4.24,
-       5.34
+       165,
+       66.7,
+       29.1,
+       42.5,
+       66.1,
+       62,
+       3.46,
+       3.37,
+       4.25,
+       5.2
       ],
       [
        "8-14",
-       255,
-       57.3,
-       32.2,
-       40.4,
-       62.1,
-       87,
-       2.16,
-       1.95,
-       3.35,
-       3.68
+       261,
+       56.3,
+       33,
+       40.3,
+       59.1,
+       93,
+       2.17,
+       1.9,
+       3.38,
+       3.67
       ],
       [
        "under 8",
-       294,
-       50.3,
-       38.8,
-       37.2,
+       298,
        50,
-       124,
+       38.9,
+       37.2,
+       49.2,
+       128,
        1.14,
-       0.65,
+       0.63,
        2.25,
-       2.25
+       2.24
       ]
      ]
     },
@@ -3249,29 +3249,29 @@
      "rows": [
       [
        "Not on report (IR / early rule-out)",
-       778,
-       51.7,
-       34.2,
+       795,
+       51.4,
+       34.5,
        46.2,
-       52.3,
-       260,
-       0.23,
-       -0.02,
-       4.02,
-       4.1
+       51.6,
+       277,
+       0.25,
+       -0.06,
+       4.03,
+       4.09
       ],
       [
        "Official Out / Doubtful",
-       660,
-       59.1,
-       28.2,
+       673,
+       58.7,
+       28.5,
        42.9,
-       56.7,
-       240,
-       1.07,
-       0.99,
-       3.56,
-       4.03
+       55.7,
+       253,
+       1.05,
+       0.96,
+       3.55,
+       4
       ]
      ]
     },
@@ -3288,27 +3288,27 @@
      "rows": [
       [
        "Targets",
-       5604,
-       34.7,
+       5666,
+       34.5,
        51.7,
        37.2,
-       47.9
+       48
       ],
       [
        "Carries",
-       1904,
-       39.4,
-       52.9,
-       43.1,
-       49.5
+       1925,
+       39.3,
+       53,
+       42.9,
+       49.6
       ],
       [
        "Points",
-       6154,
+       6219,
        32.9,
-       49.8,
+       49.9,
        33.8,
-       49.6
+       49.7
       ]
      ]
     }
@@ -3317,294 +3317,294 @@
   "E6": {
    "title": "Does matchup strength predict anything?",
    "findings": [
-    "Against a player's own average, the site's matchup number has a correlation of 0.055 with over/under-performance (soft vs tough third: 1.65 points). Best variant: \"Raw, season to date\" at 0.061 (1.28 points).",
-    "Against Sleeper's projection the same number is worth 0.011 correlation (0.62 points soft vs tough): some signal is left after the projection.",
-    "By position (best variant, vs own average): QB 0.195, RB 0.032, WR 0.022, TE 0.053."
+    "Against a player's own average, the site's matchup number has a correlation of 0.061 with over/under-performance (soft vs tough third: 1.67 points). Best variant: \"Raw, season to date\" at 0.063 (1.38 points).",
+    "Against Sleeper's projection the same number is worth 0.018 correlation (0.64 points soft vs tough): some signal is left after the projection.",
+    "By position (best variant, vs own average): QB 0.186, RB 0.042, WR 0.02, TE 0.062."
    ],
    "fit": {
     "Raw points allowed, last 6 weeks (site today)": {
      "QB": {
-      "vsAvgCorr": 0.165,
-      "vsAvgTier": 4.48,
-      "vsAvgSlope": 1.395,
+      "vsAvgCorr": 0.167,
+      "vsAvgTier": 4.54,
+      "vsAvgSlope": 1.41,
       "vsProjCorrTrain": 0.024,
-      "vsProjCorr": 0.053,
-      "vsProjTier": 1.6,
-      "vsProjSlope": 0.416,
+      "vsProjCorr": 0.055,
+      "vsProjTier": 1.62,
+      "vsProjSlope": 0.435,
       "slopeTrain": 0.527,
-      "n": 417
+      "n": 441
      },
      "RB": {
-      "vsAvgCorr": 0.077,
-      "vsAvgTier": 1.95,
-      "vsAvgSlope": 0.656,
+      "vsAvgCorr": 0.092,
+      "vsAvgTier": 2.16,
+      "vsAvgSlope": 0.793,
       "vsProjCorrTrain": 0.062,
-      "vsProjCorr": 0.017,
-      "vsProjTier": 0.56,
-      "vsProjSlope": 0.137,
+      "vsProjCorr": 0.033,
+      "vsProjTier": 0.78,
+      "vsProjSlope": 0.268,
       "slopeTrain": 0.688,
-      "n": 699
+      "n": 737
      },
      "WR": {
-      "vsAvgCorr": -0.008,
-      "vsAvgTier": 0.59,
-      "vsAvgSlope": -0.063,
+      "vsAvgCorr": -0.005,
+      "vsAvgTier": 0.43,
+      "vsAvgSlope": -0.041,
       "vsProjCorrTrain": 0.015,
-      "vsProjCorr": -0.01,
-      "vsProjTier": 0.33,
-      "vsProjSlope": -0.071,
+      "vsProjCorr": -0.009,
+      "vsProjTier": 0.17,
+      "vsProjSlope": -0.068,
       "slopeTrain": 0.278,
-      "n": 983
+      "n": 1037
      },
      "TE": {
-      "vsAvgCorr": 0.041,
-      "vsAvgTier": 0.96,
-      "vsAvgSlope": 0.289,
+      "vsAvgCorr": 0.048,
+      "vsAvgTier": 1.19,
+      "vsAvgSlope": 0.337,
       "vsProjCorrTrain": 0.016,
-      "vsProjCorr": 0.002,
-      "vsProjTier": 0.46,
-      "vsProjSlope": 0.014,
+      "vsProjCorr": 0.009,
+      "vsProjTier": 0.69,
+      "vsProjSlope": 0.06,
       "slopeTrain": 0.204,
-      "n": 354
+      "n": 374
      },
      "ALL": {
-      "vsAvgCorr": 0.055,
-      "vsAvgTier": 1.65,
-      "vsAvgSlope": 0.437,
+      "vsAvgCorr": 0.061,
+      "vsAvgTier": 1.67,
+      "vsAvgSlope": 0.494,
       "vsProjCorrTrain": 0.03,
-      "vsProjCorr": 0.011,
-      "vsProjTier": 0.62,
-      "vsProjSlope": 0.085,
+      "vsProjCorr": 0.018,
+      "vsProjTier": 0.64,
+      "vsProjSlope": 0.132,
       "slopeTrain": 0.425,
-      "n": 2453
+      "n": 2589
      }
     },
     "Raw, season to date": {
      "QB": {
-      "vsAvgCorr": 0.195,
-      "vsAvgTier": 4.4,
-      "vsAvgSlope": 1.626,
+      "vsAvgCorr": 0.186,
+      "vsAvgTier": 4.38,
+      "vsAvgSlope": 1.553,
       "vsProjCorrTrain": 0.045,
-      "vsProjCorr": 0.068,
-      "vsProjTier": 1.43,
-      "vsProjSlope": 0.526,
+      "vsProjCorr": 0.056,
+      "vsProjTier": 1.33,
+      "vsProjSlope": 0.434,
       "slopeTrain": 0.766,
-      "n": 417
+      "n": 441
      },
      "RB": {
-      "vsAvgCorr": 0.032,
-      "vsAvgTier": 0.55,
-      "vsAvgSlope": 0.268,
+      "vsAvgCorr": 0.042,
+      "vsAvgTier": 0.89,
+      "vsAvgSlope": 0.366,
       "vsProjCorrTrain": 0.069,
-      "vsProjCorr": -0.033,
-      "vsProjTier": -0.87,
-      "vsProjSlope": -0.258,
+      "vsProjCorr": -0.018,
+      "vsProjTier": -0.45,
+      "vsProjSlope": -0.145,
       "slopeTrain": 0.803,
-      "n": 699
+      "n": 737
      },
      "WR": {
-      "vsAvgCorr": 0.022,
-      "vsAvgTier": 0.78,
-      "vsAvgSlope": 0.17,
+      "vsAvgCorr": 0.02,
+      "vsAvgTier": 0.66,
+      "vsAvgSlope": 0.158,
       "vsProjCorrTrain": 0.012,
-      "vsProjCorr": 0.02,
-      "vsProjTier": 0.53,
-      "vsProjSlope": 0.142,
+      "vsProjCorr": 0.014,
+      "vsProjTier": 0.35,
+      "vsProjSlope": 0.104,
       "slopeTrain": 0.295,
-      "n": 983
+      "n": 1037
      },
      "TE": {
-      "vsAvgCorr": 0.053,
-      "vsAvgTier": 0.61,
-      "vsAvgSlope": 0.377,
+      "vsAvgCorr": 0.062,
+      "vsAvgTier": 1.02,
+      "vsAvgSlope": 0.441,
       "vsProjCorrTrain": 0.03,
-      "vsProjCorr": 0.008,
-      "vsProjTier": 0.03,
-      "vsProjSlope": 0.05,
+      "vsProjCorr": 0.018,
+      "vsProjTier": 0.37,
+      "vsProjSlope": 0.118,
       "slopeTrain": 0.307,
-      "n": 354
+      "n": 374
      },
      "ALL": {
-      "vsAvgCorr": 0.061,
-      "vsAvgTier": 1.28,
-      "vsAvgSlope": 0.488,
+      "vsAvgCorr": 0.063,
+      "vsAvgTier": 1.38,
+      "vsAvgSlope": 0.508,
       "vsProjCorrTrain": 0.036,
-      "vsProjCorr": 0.012,
-      "vsProjTier": 0.24,
-      "vsProjSlope": 0.087,
+      "vsProjCorr": 0.013,
+      "vsProjTier": 0.3,
+      "vsProjSlope": 0.097,
       "slopeTrain": 0.519,
-      "n": 2453
+      "n": 2589
      }
     },
     "Schedule-adjusted, last 6 weeks": {
      "QB": {
       "vsAvgCorr": 0.137,
-      "vsAvgTier": 2.69,
-      "vsAvgSlope": 1.152,
+      "vsAvgTier": 2.85,
+      "vsAvgSlope": 1.147,
       "vsProjCorrTrain": 0.021,
-      "vsProjCorr": 0.056,
-      "vsProjTier": 0.92,
-      "vsProjSlope": 0.436,
+      "vsProjCorr": 0.055,
+      "vsProjTier": 1.07,
+      "vsProjSlope": 0.432,
       "slopeTrain": 0.492,
-      "n": 417
+      "n": 441
      },
      "RB": {
-      "vsAvgCorr": 0.044,
-      "vsAvgTier": 0.68,
-      "vsAvgSlope": 0.373,
+      "vsAvgCorr": 0.052,
+      "vsAvgTier": 1,
+      "vsAvgSlope": 0.45,
       "vsProjCorrTrain": 0.043,
-      "vsProjCorr": -0.018,
-      "vsProjTier": -0.78,
-      "vsProjSlope": -0.142,
+      "vsProjCorr": -0.009,
+      "vsProjTier": -0.51,
+      "vsProjSlope": -0.076,
       "slopeTrain": 0.465,
-      "n": 699
+      "n": 737
      },
      "WR": {
-      "vsAvgCorr": 0.013,
-      "vsAvgTier": 0.44,
-      "vsAvgSlope": 0.098,
+      "vsAvgCorr": 0.008,
+      "vsAvgTier": 0.29,
+      "vsAvgSlope": 0.063,
       "vsProjCorrTrain": 0.034,
-      "vsProjCorr": 0.009,
-      "vsProjTier": 0.32,
-      "vsProjSlope": 0.062,
+      "vsProjCorr": 0.003,
+      "vsProjTier": 0.16,
+      "vsProjSlope": 0.024,
       "slopeTrain": 0.417,
-      "n": 983
+      "n": 1037
      },
      "TE": {
-      "vsAvgCorr": -0.031,
-      "vsAvgTier": -1.17,
-      "vsAvgSlope": -0.222,
+      "vsAvgCorr": -0.019,
+      "vsAvgTier": -0.95,
+      "vsAvgSlope": -0.134,
       "vsProjCorrTrain": 0.003,
-      "vsProjCorr": -0.057,
-      "vsProjTier": -1.32,
-      "vsProjSlope": -0.386,
+      "vsProjCorr": -0.044,
+      "vsProjTier": -1.09,
+      "vsProjSlope": -0.294,
       "slopeTrain": 0.069,
-      "n": 354
+      "n": 374
      },
      "ALL": {
-      "vsAvgCorr": 0.039,
-      "vsAvgTier": 0.72,
-      "vsAvgSlope": 0.314,
+      "vsAvgCorr": 0.041,
+      "vsAvgTier": 0.8,
+      "vsAvgSlope": 0.333,
       "vsProjCorrTrain": 0.03,
-      "vsProjCorr": 0.001,
-      "vsProjTier": -0.1,
-      "vsProjSlope": 0.01,
+      "vsProjCorr": 0.003,
+      "vsProjTier": -0.03,
+      "vsProjSlope": 0.025,
       "slopeTrain": 0.391,
-      "n": 2453
+      "n": 2589
      }
     },
     "Schedule-adjusted, season to date": {
      "QB": {
-      "vsAvgCorr": 0.159,
-      "vsAvgTier": 3.86,
-      "vsAvgSlope": 1.325,
+      "vsAvgCorr": 0.15,
+      "vsAvgTier": 3.64,
+      "vsAvgSlope": 1.249,
       "vsProjCorrTrain": 0.022,
-      "vsProjCorr": 0.068,
-      "vsProjTier": 1.6,
-      "vsProjSlope": 0.523,
+      "vsProjCorr": 0.055,
+      "vsProjTier": 1.35,
+      "vsProjSlope": 0.423,
       "slopeTrain": 0.552,
-      "n": 417
+      "n": 441
      },
      "RB": {
-      "vsAvgCorr": -0.008,
-      "vsAvgTier": -0.42,
-      "vsAvgSlope": -0.072,
+      "vsAvgCorr": -0.001,
+      "vsAvgTier": -0.23,
+      "vsAvgSlope": -0.013,
       "vsProjCorrTrain": 0.05,
-      "vsProjCorr": -0.07,
-      "vsProjTier": -1.6,
-      "vsProjSlope": -0.556,
+      "vsProjCorr": -0.06,
+      "vsProjTier": -1.36,
+      "vsProjSlope": -0.483,
       "slopeTrain": 0.559,
-      "n": 699
+      "n": 737
      },
      "WR": {
-      "vsAvgCorr": 0.031,
-      "vsAvgTier": 0.44,
-      "vsAvgSlope": 0.245,
+      "vsAvgCorr": 0.022,
+      "vsAvgTier": 0.14,
+      "vsAvgSlope": 0.174,
       "vsProjCorrTrain": 0.011,
-      "vsProjCorr": 0.024,
-      "vsProjTier": 0.2,
-      "vsProjSlope": 0.177,
+      "vsProjCorr": 0.012,
+      "vsProjTier": -0.19,
+      "vsProjSlope": 0.086,
       "slopeTrain": 0.262,
-      "n": 983
+      "n": 1037
      },
      "TE": {
-      "vsAvgCorr": 0.004,
-      "vsAvgTier": -0.22,
-      "vsAvgSlope": 0.026,
+      "vsAvgCorr": 0.023,
+      "vsAvgTier": 0.2,
+      "vsAvgSlope": 0.162,
       "vsProjCorrTrain": 0.028,
-      "vsProjCorr": -0.029,
-      "vsProjTier": -0.7,
-      "vsProjSlope": -0.195,
+      "vsProjCorr": -0.008,
+      "vsProjTier": -0.26,
+      "vsProjSlope": -0.055,
       "slopeTrain": 0.194,
-      "n": 354
+      "n": 374
      },
      "ALL": {
-      "vsAvgCorr": 0.04,
-      "vsAvgTier": 0.74,
-      "vsAvgSlope": 0.321,
+      "vsAvgCorr": 0.039,
+      "vsAvgTier": 0.68,
+      "vsAvgSlope": 0.316,
       "vsProjCorrTrain": 0.026,
-      "vsProjCorr": -0.002,
-      "vsProjTier": -0.18,
-      "vsProjSlope": -0.016,
+      "vsProjCorr": -0.004,
+      "vsProjTier": -0.26,
+      "vsProjSlope": -0.029,
       "slopeTrain": 0.384,
-      "n": 2453
+      "n": 2589
      }
     },
     "Schedule-adjusted + shrunk, season to date": {
      "QB": {
-      "vsAvgCorr": 0.159,
-      "vsAvgTier": 3.83,
-      "vsAvgSlope": 1.325,
+      "vsAvgCorr": 0.15,
+      "vsAvgTier": 3.61,
+      "vsAvgSlope": 1.25,
       "vsProjCorrTrain": 0.021,
-      "vsProjCorr": 0.068,
-      "vsProjTier": 1.62,
-      "vsProjSlope": 0.524,
+      "vsProjCorr": 0.055,
+      "vsProjTier": 1.37,
+      "vsProjSlope": 0.426,
       "slopeTrain": 0.542,
-      "n": 417
+      "n": 441
      },
      "RB": {
-      "vsAvgCorr": -0.007,
-      "vsAvgTier": -0.32,
-      "vsAvgSlope": -0.062,
+      "vsAvgCorr": 0,
+      "vsAvgTier": -0.13,
+      "vsAvgSlope": -0.002,
       "vsProjCorrTrain": 0.05,
-      "vsProjCorr": -0.069,
-      "vsProjTier": -1.52,
-      "vsProjSlope": -0.547,
+      "vsProjCorr": -0.059,
+      "vsProjTier": -1.27,
+      "vsProjSlope": -0.473,
       "slopeTrain": 0.554,
-      "n": 699
+      "n": 737
      },
      "WR": {
-      "vsAvgCorr": 0.032,
-      "vsAvgTier": 0.46,
-      "vsAvgSlope": 0.252,
+      "vsAvgCorr": 0.023,
+      "vsAvgTier": 0.16,
+      "vsAvgSlope": 0.182,
       "vsProjCorrTrain": 0.011,
-      "vsProjCorr": 0.025,
-      "vsProjTier": 0.22,
-      "vsProjSlope": 0.183,
+      "vsProjCorr": 0.013,
+      "vsProjTier": -0.17,
+      "vsProjSlope": 0.093,
       "slopeTrain": 0.263,
-      "n": 983
+      "n": 1037
      },
      "TE": {
-      "vsAvgCorr": 0.002,
-      "vsAvgTier": -0.35,
-      "vsAvgSlope": 0.014,
+      "vsAvgCorr": 0.021,
+      "vsAvgTier": 0.08,
+      "vsAvgSlope": 0.152,
       "vsProjCorrTrain": 0.028,
-      "vsProjCorr": -0.031,
-      "vsProjTier": -0.84,
-      "vsProjSlope": -0.208,
+      "vsProjCorr": -0.01,
+      "vsProjTier": -0.4,
+      "vsProjSlope": -0.065,
       "slopeTrain": 0.193,
-      "n": 354
+      "n": 374
      },
      "ALL": {
       "vsAvgCorr": 0.04,
-      "vsAvgTier": 0.75,
-      "vsAvgSlope": 0.325,
+      "vsAvgTier": 0.69,
+      "vsAvgSlope": 0.321,
       "vsProjCorrTrain": 0.026,
-      "vsProjCorr": -0.002,
-      "vsProjTier": -0.16,
-      "vsProjSlope": -0.013,
+      "vsProjCorr": -0.003,
+      "vsProjTier": -0.23,
+      "vsProjSlope": -0.024,
       "slopeTrain": 0.381,
-      "n": 2453
+      "n": 2589
      }
     }
    },
@@ -3625,252 +3625,252 @@
       [
        "Raw points allowed, last 6 weeks (site today)",
        "QB",
-       0.165,
-       4.48,
+       0.167,
+       4.54,
        0.024,
-       0.053,
-       1.6,
-       417
+       0.055,
+       1.62,
+       441
       ],
       [
        "Raw points allowed, last 6 weeks (site today)",
        "RB",
-       0.077,
-       1.95,
+       0.092,
+       2.16,
        0.062,
-       0.017,
-       0.56,
-       699
+       0.033,
+       0.78,
+       737
       ],
       [
        "Raw points allowed, last 6 weeks (site today)",
        "WR",
-       -0.008,
-       0.59,
+       -0.005,
+       0.43,
        0.015,
-       -0.01,
-       0.33,
-       983
+       -0.009,
+       0.17,
+       1037
       ],
       [
        "Raw points allowed, last 6 weeks (site today)",
        "TE",
-       0.041,
-       0.96,
+       0.048,
+       1.19,
        0.016,
-       0.002,
-       0.46,
-       354
+       0.009,
+       0.69,
+       374
       ],
       [
        "Raw points allowed, last 6 weeks (site today)",
        "ALL",
-       0.055,
-       1.65,
+       0.061,
+       1.67,
        0.03,
-       0.011,
-       0.62,
-       2453
+       0.018,
+       0.64,
+       2589
       ],
       [
        "Raw, season to date",
        "QB",
-       0.195,
-       4.4,
+       0.186,
+       4.38,
        0.045,
-       0.068,
-       1.43,
-       417
+       0.056,
+       1.33,
+       441
       ],
       [
        "Raw, season to date",
        "RB",
-       0.032,
-       0.55,
+       0.042,
+       0.89,
        0.069,
-       -0.033,
-       -0.87,
-       699
+       -0.018,
+       -0.45,
+       737
       ],
       [
        "Raw, season to date",
        "WR",
-       0.022,
-       0.78,
-       0.012,
        0.02,
-       0.53,
-       983
+       0.66,
+       0.012,
+       0.014,
+       0.35,
+       1037
       ],
       [
        "Raw, season to date",
        "TE",
-       0.053,
-       0.61,
+       0.062,
+       1.02,
        0.03,
-       0.008,
-       0.03,
-       354
+       0.018,
+       0.37,
+       374
       ],
       [
        "Raw, season to date",
        "ALL",
-       0.061,
-       1.28,
+       0.063,
+       1.38,
        0.036,
-       0.012,
-       0.24,
-       2453
+       0.013,
+       0.3,
+       2589
       ],
       [
        "Schedule-adjusted, last 6 weeks",
        "QB",
        0.137,
-       2.69,
+       2.85,
        0.021,
-       0.056,
-       0.92,
-       417
+       0.055,
+       1.07,
+       441
       ],
       [
        "Schedule-adjusted, last 6 weeks",
        "RB",
-       0.044,
-       0.68,
+       0.052,
+       1,
        0.043,
-       -0.018,
-       -0.78,
-       699
+       -0.009,
+       -0.51,
+       737
       ],
       [
        "Schedule-adjusted, last 6 weeks",
        "WR",
-       0.013,
-       0.44,
+       0.008,
+       0.29,
        0.034,
-       0.009,
-       0.32,
-       983
+       0.003,
+       0.16,
+       1037
       ],
       [
        "Schedule-adjusted, last 6 weeks",
        "TE",
-       -0.031,
-       -1.17,
+       -0.019,
+       -0.95,
        0.003,
-       -0.057,
-       -1.32,
-       354
+       -0.044,
+       -1.09,
+       374
       ],
       [
        "Schedule-adjusted, last 6 weeks",
+       "ALL",
+       0.041,
+       0.8,
+       0.03,
+       0.003,
+       -0.03,
+       2589
+      ],
+      [
+       "Schedule-adjusted, season to date",
+       "QB",
+       0.15,
+       3.64,
+       0.022,
+       0.055,
+       1.35,
+       441
+      ],
+      [
+       "Schedule-adjusted, season to date",
+       "RB",
+       -0.001,
+       -0.23,
+       0.05,
+       -0.06,
+       -1.36,
+       737
+      ],
+      [
+       "Schedule-adjusted, season to date",
+       "WR",
+       0.022,
+       0.14,
+       0.011,
+       0.012,
+       -0.19,
+       1037
+      ],
+      [
+       "Schedule-adjusted, season to date",
+       "TE",
+       0.023,
+       0.2,
+       0.028,
+       -0.008,
+       -0.26,
+       374
+      ],
+      [
+       "Schedule-adjusted, season to date",
        "ALL",
        0.039,
-       0.72,
-       0.03,
-       0.001,
-       -0.1,
-       2453
-      ],
-      [
-       "Schedule-adjusted, season to date",
-       "QB",
-       0.159,
-       3.86,
-       0.022,
-       0.068,
-       1.6,
-       417
-      ],
-      [
-       "Schedule-adjusted, season to date",
-       "RB",
-       -0.008,
-       -0.42,
-       0.05,
-       -0.07,
-       -1.6,
-       699
-      ],
-      [
-       "Schedule-adjusted, season to date",
-       "WR",
-       0.031,
-       0.44,
-       0.011,
-       0.024,
-       0.2,
-       983
-      ],
-      [
-       "Schedule-adjusted, season to date",
-       "TE",
-       0.004,
-       -0.22,
-       0.028,
-       -0.029,
-       -0.7,
-       354
-      ],
-      [
-       "Schedule-adjusted, season to date",
-       "ALL",
-       0.04,
-       0.74,
+       0.68,
        0.026,
-       -0.002,
-       -0.18,
-       2453
+       -0.004,
+       -0.26,
+       2589
       ],
       [
        "Schedule-adjusted + shrunk, season to date",
        "QB",
-       0.159,
-       3.83,
+       0.15,
+       3.61,
        0.021,
-       0.068,
-       1.62,
-       417
+       0.055,
+       1.37,
+       441
       ],
       [
        "Schedule-adjusted + shrunk, season to date",
        "RB",
-       -0.007,
-       -0.32,
+       0,
+       -0.13,
        0.05,
-       -0.069,
-       -1.52,
-       699
+       -0.059,
+       -1.27,
+       737
       ],
       [
        "Schedule-adjusted + shrunk, season to date",
        "WR",
-       0.032,
-       0.46,
+       0.023,
+       0.16,
        0.011,
-       0.025,
-       0.22,
-       983
+       0.013,
+       -0.17,
+       1037
       ],
       [
        "Schedule-adjusted + shrunk, season to date",
        "TE",
-       0.002,
-       -0.35,
+       0.021,
+       0.08,
        0.028,
-       -0.031,
-       -0.84,
-       354
+       -0.01,
+       -0.4,
+       374
       ],
       [
        "Schedule-adjusted + shrunk, season to date",
        "ALL",
        0.04,
-       0.75,
+       0.69,
        0.026,
-       -0.002,
-       -0.16,
-       2453
+       -0.003,
+       -0.23,
+       2589
       ]
      ]
     }
@@ -4347,16 +4347,16 @@
   "E10": {
    "title": "Game environment: betting lines and wind",
    "findings": [
-    "A team's implied total explains its skill-position fantasy output with correlation 0.408 (each implied point is worth about 2.57 team fantasy points).",
-    "After Sleeper's projection, the implied total adds 0.033 correlation (high-total vs low-total teams: 0.75 points per player); against a player's own average it adds 0.019.",
+    "A team's implied total explains its skill-position fantasy output with correlation 0.411 (each implied point is worth about 2.6 team fantasy points).",
+    "After Sleeper's projection, the implied total adds 0.035 correlation (high-total vs low-total teams: 0.83 points per player); against a player's own average it adds 0.022.",
     "Wind 15+ mph outdoors vs calm, relative to projection: QB -1.98, WR -0.74, TE -1.05, RB -0.7, K -1.28 points."
    ],
    "fit": {
-    "teamCorr": 0.408,
-    "ptsPerImpliedPoint": 2.57,
-    "afterProjCorr": 0.033,
-    "afterProjTier": 0.75,
-    "afterAvgCorr": 0.019,
+    "teamCorr": 0.411,
+    "ptsPerImpliedPoint": 2.6,
+    "afterProjCorr": 0.035,
+    "afterProjTier": 0.83,
+    "afterAvgCorr": 0.022,
     "wind": {
      "QB": {
       "calm": 0.4,
@@ -5094,10 +5094,10 @@
   "E12": {
    "title": "Do buy-low / sell-high signals work?",
    "findings": [
-    "QB: usage carries weight 0.4 next to 0.33 for recent points. Players running 4+ above their usage dropped 3.78 a game over the next month (0.88 more than an ordinary hot streak). Players 4+ below gained 3.87 (0.69 beyond the usual).",
-    "RB: usage carries weight 0.44 next to 0.32 for recent points. Players running 4+ above their usage dropped 4.34 a game over the next month (0.92 more than an ordinary hot streak). Players 4+ below gained 1.45 (1.91 beyond the usual).",
-    "WR: usage carries weight 0.34 next to 0.36 for recent points. Players running 4+ above their usage dropped 3.75 a game over the next month (0.7 more than an ordinary hot streak). Players 4+ below gained 0.8 (1.57 beyond the usual).",
-    "TE: usage carries weight 0.38 next to 0.22 for recent points. Players running 4+ above their usage dropped 4.8 a game over the next month (1.88 more than an ordinary hot streak). "
+    "QB: usage carries weight 0.4 next to 0.33 for recent points. Players running 4+ above their usage dropped 3.65 a game over the next month (0.75 more than an ordinary hot streak). Players 4+ below gained 3.98 (0.77 beyond the usual).",
+    "RB: usage carries weight 0.44 next to 0.32 for recent points. Players running 4+ above their usage dropped 4.23 a game over the next month (0.83 more than an ordinary hot streak). Players 4+ below gained 1.77 (2.21 beyond the usual).",
+    "WR: usage carries weight 0.34 next to 0.36 for recent points. Players running 4+ above their usage dropped 3.78 a game over the next month (0.75 more than an ordinary hot streak). Players 4+ below gained 0.8 (1.57 beyond the usual).",
+    "TE: usage carries weight 0.38 next to 0.22 for recent points. Players running 4+ above their usage dropped 4.77 a game over the next month (1.85 more than an ordinary hot streak). "
    ],
    "fit": {
     "QB": {
@@ -5117,29 +5117,29 @@
       0.49,
       0.05
      ],
-     "maeNaive": 4.59,
-     "maeT": 4.04,
-     "maeTX": 4.03,
-     "maeAll": 3.98,
-     "n": 333,
+     "maeNaive": 4.68,
+     "maeT": 4.18,
+     "maeTX": 4.18,
+     "maeAll": 4.08,
+     "n": 359,
      "groups": {
       "Scoring 4+ a game above usage": {
-       "n": 215,
-       "change": -3.78,
-       "beyondUsual": -0.88,
-       "beyondUsualTest": -1.84
+       "n": 223,
+       "change": -3.65,
+       "beyondUsual": -0.75,
+       "beyondUsualTest": -1.45
       },
       "Within 4 of usage": {
-       "n": 723,
-       "change": 0.5,
+       "n": 738,
+       "change": 0.51,
        "beyondUsual": -0.13,
-       "beyondUsualTest": -0.28
+       "beyondUsualTest": -0.27
       },
       "Scoring 4+ a game below usage": {
-       "n": 100,
-       "change": 3.87,
-       "beyondUsual": 0.69,
-       "beyondUsualTest": -0.05
+       "n": 103,
+       "change": 3.98,
+       "beyondUsual": 0.77,
+       "beyondUsualTest": 0.25
       }
      }
     },
@@ -5160,29 +5160,29 @@
       0.573,
       0.032
      ],
-     "maeNaive": 4.21,
-     "maeT": 3.95,
-     "maeTX": 3.79,
-     "maeAll": 3.71,
-     "n": 530,
+     "maeNaive": 4.27,
+     "maeT": 4.06,
+     "maeTX": 3.88,
+     "maeAll": 3.77,
+     "n": 564,
      "groups": {
       "Scoring 4+ a game above usage": {
-       "n": 179,
-       "change": -4.34,
-       "beyondUsual": -0.92,
-       "beyondUsualTest": -0.48
+       "n": 182,
+       "change": -4.23,
+       "beyondUsual": -0.83,
+       "beyondUsualTest": -0.27
       },
       "Within 4 of usage": {
-       "n": 1354,
-       "change": -0.7,
-       "beyondUsual": 0.12,
-       "beyondUsualTest": 0.26
+       "n": 1383,
+       "change": -0.67,
+       "beyondUsual": 0.16,
+       "beyondUsualTest": 0.35
       },
       "Scoring 4+ a game below usage": {
-       "n": 81,
-       "change": 1.45,
-       "beyondUsual": 1.91,
-       "beyondUsualTest": 3.38
+       "n": 83,
+       "change": 1.77,
+       "beyondUsual": 2.21,
+       "beyondUsualTest": 4.4
       }
      }
     },
@@ -5203,23 +5203,23 @@
       0.798,
       0.041
      ],
-     "maeNaive": 4.11,
-     "maeT": 3.79,
-     "maeTX": 3.68,
-     "maeAll": 3.78,
-     "n": 750,
+     "maeNaive": 4.13,
+     "maeT": 3.83,
+     "maeTX": 3.72,
+     "maeAll": 3.74,
+     "n": 797,
      "groups": {
       "Scoring 4+ a game above usage": {
-       "n": 137,
-       "change": -3.75,
-       "beyondUsual": -0.7,
-       "beyondUsualTest": -1.3
+       "n": 139,
+       "change": -3.78,
+       "beyondUsual": -0.75,
+       "beyondUsualTest": -1.45
       },
       "Within 4 of usage": {
-       "n": 2238,
-       "change": -0.91,
+       "n": 2283,
+       "change": -0.92,
        "beyondUsual": -0.15,
-       "beyondUsualTest": -0.47
+       "beyondUsualTest": -0.44
       },
       "Scoring 4+ a game below usage": {
        "n": 56,
@@ -5246,23 +5246,23 @@
       0.488,
       0.007
      ],
-     "maeNaive": 3.85,
-     "maeT": 3.6,
-     "maeTX": 3.51,
-     "maeAll": 3.4,
-     "n": 336,
+     "maeNaive": 3.86,
+     "maeT": 3.54,
+     "maeTX": 3.44,
+     "maeAll": 3.35,
+     "n": 365,
      "groups": {
       "Scoring 4+ a game above usage": {
        "n": 46,
-       "change": -4.8,
-       "beyondUsual": -1.88,
-       "beyondUsualTest": -1.67
+       "change": -4.77,
+       "beyondUsual": -1.85,
+       "beyondUsualTest": -1.59
       },
       "Within 4 of usage": {
-       "n": 879,
-       "change": -0.85,
-       "beyondUsual": 0.01,
-       "beyondUsualTest": -0.21
+       "n": 908,
+       "change": -0.94,
+       "beyondUsual": -0.08,
+       "beyondUsualTest": -0.42
       }
      }
     }
@@ -5285,41 +5285,41 @@
        "QB",
        0.33,
        0.4,
-       4.59,
-       4.04,
-       4.03,
-       3.98,
-       333
+       4.68,
+       4.18,
+       4.18,
+       4.08,
+       359
       ],
       [
        "RB",
        0.32,
        0.44,
-       4.21,
-       3.95,
-       3.79,
-       3.71,
-       530
+       4.27,
+       4.06,
+       3.88,
+       3.77,
+       564
       ],
       [
        "WR",
        0.36,
        0.34,
-       4.11,
-       3.79,
-       3.68,
-       3.78,
-       750
+       4.13,
+       3.83,
+       3.72,
+       3.74,
+       797
       ],
       [
        "TE",
        0.22,
        0.38,
-       3.85,
-       3.6,
-       3.51,
-       3.4,
-       336
+       3.86,
+       3.54,
+       3.44,
+       3.35,
+       365
       ]
      ]
     },
@@ -5341,98 +5341,98 @@
       [
        "QB",
        "Scoring 4+ a game above usage",
-       215,
+       223,
        23.4,
        17,
-       19.6,
-       -3.78,
-       -0.88,
-       -1.84,
-       84
+       19.7,
+       -3.65,
+       -0.75,
+       -1.45,
+       92
       ],
       [
        "QB",
        "Within 4 of usage",
-       723,
+       738,
        16.6,
        16.5,
-       17.2,
-       0.5,
+       17.1,
+       0.51,
        -0.13,
-       -0.28,
-       217
+       -0.27,
+       232
       ],
       [
        "QB",
        "Scoring 4+ a game below usage",
-       100,
-       11.8,
-       17.2,
+       103,
+       11.7,
+       17.1,
        15.7,
-       3.87,
-       0.69,
-       -0.05,
-       32
+       3.98,
+       0.77,
+       0.25,
+       35
       ],
       [
        "RB",
        "Scoring 4+ a game above usage",
-       179,
+       182,
        19.5,
-       13.4,
+       13.3,
        15.2,
-       -4.34,
-       -0.92,
-       -0.48,
-       62
+       -4.23,
+       -0.83,
+       -0.27,
+       65
       ],
       [
        "RB",
        "Within 4 of usage",
-       1354,
-       12.5,
+       1383,
+       12.6,
        12.4,
-       11.8,
-       -0.7,
-       0.12,
-       0.26,
-       448
+       11.9,
+       -0.67,
+       0.16,
+       0.35,
+       477
       ],
       [
        "RB",
        "Scoring 4+ a game below usage",
-       81,
-       11.6,
-       16.6,
-       13,
-       1.45,
-       1.91,
-       3.38,
-       20
+       83,
+       11.5,
+       16.5,
+       13.3,
+       1.77,
+       2.21,
+       4.4,
+       22
       ],
       [
        "WR",
        "Scoring 4+ a game above usage",
-       137,
+       139,
        18,
-       12.7,
-       14.3,
-       -3.75,
-       -0.7,
-       -1.3,
-       34
+       12.6,
+       14.2,
+       -3.78,
+       -0.75,
+       -1.45,
+       36
       ],
       [
        "WR",
        "Within 4 of usage",
-       2238,
+       2283,
        11.7,
        11.7,
-       10.7,
-       -0.91,
+       10.8,
+       -0.92,
        -0.15,
-       -0.47,
-       702
+       -0.44,
+       747
       ],
       [
        "WR",
@@ -5453,22 +5453,22 @@
        14.7,
        8.6,
        9.9,
-       -4.8,
-       -1.88,
-       -1.67,
+       -4.77,
+       -1.85,
+       -1.59,
        12
       ],
       [
        "TE",
        "Within 4 of usage",
-       879,
+       908,
        10.4,
        10,
-       9.6,
-       -0.85,
-       0.01,
-       -0.21,
-       323
+       9.5,
+       -0.94,
+       -0.08,
+       -0.42,
+       352
       ]
      ]
     }
@@ -5477,14 +5477,14 @@
   "E13": {
    "title": "Would the site have called this league's real trades right?",
    "findings": [
-    "50 two-team trades with players on both sides, 31 of them from Week 4 on. Where one side clearly won in hindsight (17 trades), the side the site valued higher was the side that won 47.1% of the time; correlation between the site's value gap and the delivered gap: -0.089.",
+    "50 two-team trades with players on both sides, 31 of them from Week 4 on. Where one side clearly won in hindsight (19 trades), the side the site valued higher was the side that won 47.4% of the time; correlation between the site's value gap and the delivered gap: -0.091.",
     "Accepted player-only trades were rarely even on the site's numbers: the median deal had the smaller side at 54% of the larger, and a quarter were below 37%. The finder's \"within 15%\" fairness test would have called most real, accepted trades unfair."
    ],
    "fit": {
     "n": 50,
-    "decided": 17,
-    "agree": 0.471,
-    "corr": -0.089,
+    "decided": 19,
+    "agree": 0.474,
+    "corr": -0.091,
     "balance": {
      "p10": 0.19,
      "p25": 0.37,
@@ -5550,6 +5550,17 @@
        "no"
       ],
       [
+       2026,
+       8,
+       "CadeCermak: James Cook III",
+       52.8,
+       22.8,
+       "HyperFire12: Chuba Hubbard + Michael Wilson + Jonah Coleman",
+       49.7,
+       72.1,
+       "no"
+      ],
+      [
        2025,
        5,
        "Jackblacknine: George Pickens",
@@ -5559,6 +5570,17 @@
        22.6,
        30.7,
        "yes"
+      ],
+      [
+       2026,
+       4,
+       "JamesKnowsBalls: Drake London",
+       34.1,
+       27.7,
+       "JohnTerno: Alvin Kamara + DK Metcalf + Jameson Williams",
+       11.5,
+       76.1,
+       "no"
       ],
       [
        2025,
@@ -5584,17 +5606,6 @@
       ],
       [
        2026,
-       4,
-       "JamesKnowsBalls: Drake London",
-       34.1,
-       21.9,
-       "JohnTerno: Alvin Kamara + DK Metcalf + Jameson Williams",
-       11.5,
-       66.4,
-       "no"
-      ],
-      [
-       2026,
        5,
        "Thisowenguy: A.J. Brown",
        4.4,
@@ -5603,17 +5614,6 @@
        33.3,
        43.8,
        "yes"
-      ],
-      [
-       2026,
-       6,
-       "CadeCermak: Player 5850",
-       0,
-       43.8,
-       "HyperFire12: Josh Downs",
-       4.3,
-       1.2,
-       "no"
       ],
       [
        2025,
@@ -5628,13 +5628,13 @@
       ],
       [
        2026,
-       8,
-       "CadeCermak: James Cook III",
-       52.8,
-       12.3,
-       "HyperFire12: Chuba Hubbard + Michael Wilson + Jonah Coleman",
-       49.7,
-       49.2,
+       6,
+       "CadeCermak: Player 5850",
+       0,
+       43.8,
+       "HyperFire12: Josh Downs",
+       4.3,
+       5.3,
        "no"
       ],
       [
@@ -5706,72 +5706,72 @@
   "E14": {
    "title": "How long are players out, and what are they worth when they return?",
    "findings": [
-    "After one missed game, 30.9% were back the next game; after three, 23.3%. 39.1% of players who had missed four games returned at all that season.",
-    "First game back: missed 1 game → 78% of prior scoring, missed 2-3 → 80% of prior scoring, missed 4+ → 77% of prior scoring. Games two and three back: 92%, 94%, 81%."
+    "After one missed game, 31.4% were back the next game; after three, 23.5%. 38.1% of players who had missed four games returned at all that season.",
+    "First game back: missed 1 game → 82% of prior scoring, missed 2-3 → 81% of prior scoring, missed 4+ → 77% of prior scoring. Games two and three back: 92%, 94%, 81%."
    ],
    "fit": {
     "hazard": [
      {
       "missed": 1,
-      "n": 505,
-      "backNext": 30.9,
-      "backEver": 65.1,
+      "n": 512,
+      "backNext": 31.4,
+      "backEver": 65.6,
       "moreGames": 2.2
      },
      {
       "missed": 2,
-      "n": 306,
-      "backNext": 24.2,
-      "backEver": 56.5,
+      "n": 315,
+      "backNext": 23.5,
+      "backEver": 55.6,
       "moreGames": 2.2
      },
      {
       "missed": 3,
-      "n": 202,
-      "backNext": 23.3,
-      "backEver": 49,
+      "n": 204,
+      "backNext": 23.5,
+      "backEver": 49.5,
       "moreGames": 2.1
      },
      {
       "missed": 4,
-      "n": 133,
-      "backNext": 16.5,
-      "backEver": 39.1,
+      "n": 139,
+      "backNext": 15.8,
+      "backEver": 38.1,
       "moreGames": 2.1
      },
      {
       "missed": 5,
-      "n": 92,
-      "backNext": 18.5,
-      "backEver": 32.6,
+      "n": 94,
+      "backNext": 19.1,
+      "backEver": 33,
       "moreGames": 1.9
      },
      {
       "missed": 6,
-      "n": 66,
-      "backNext": 7.6,
-      "backEver": 19.7,
+      "n": 67,
+      "backNext": 7.5,
+      "backEver": 19.4,
       "moreGames": 2.1
      }
     ],
     "production": {
      "Missed 1 game": {
-      "first": 0.78,
-      "firstSnap": 0.9,
+      "first": 0.82,
+      "firstSnap": 0.91,
       "next2": 0.92,
-      "n": 156
+      "n": 161
      },
      "Missed 2-3": {
-      "first": 0.8,
+      "first": 0.81,
       "firstSnap": 0.88,
       "next2": 0.94,
-      "n": 121
+      "n": 122
      },
      "Missed 4+": {
       "first": 0.77,
       "firstSnap": 0.78,
       "next2": 0.81,
-      "n": 52
+      "n": 53
      }
     }
    },
@@ -5788,44 +5788,44 @@
      "rows": [
       [
        1,
-       505,
-       30.9,
-       65.1,
+       512,
+       31.4,
+       65.6,
        2.2
       ],
       [
        2,
-       306,
-       24.2,
-       56.5,
+       315,
+       23.5,
+       55.6,
        2.2
       ],
       [
        3,
-       202,
-       23.3,
-       49,
+       204,
+       23.5,
+       49.5,
        2.1
       ],
       [
        4,
-       133,
-       16.5,
-       39.1,
+       139,
+       15.8,
+       38.1,
        2.1
       ],
       [
        5,
-       92,
-       18.5,
-       32.6,
+       94,
+       19.1,
+       33,
        1.9
       ],
       [
        6,
-       66,
-       7.6,
-       19.7,
+       67,
+       7.5,
+       19.4,
        2.1
       ]
      ]
@@ -5843,23 +5843,23 @@
      "rows": [
       [
        "Missed 1 game",
-       156,
-       0.78,
-       0.9,
+       161,
+       0.82,
+       0.91,
        0.92,
        111
       ],
       [
        "Missed 2-3",
-       121,
-       0.8,
+       122,
+       0.81,
        0.88,
        0.94,
-       87
+       90
       ],
       [
        "Missed 4+",
-       52,
+       53,
        0.77,
        0.78,
        0.81,
@@ -5879,31 +5879,31 @@
      "rows": [
       [
        "Not on report",
-       148,
+       152,
        4.2,
-       14.2,
-       42.6
+       14.5,
+       42.8
       ],
       [
        "Out",
-       218,
-       2.6,
-       27.1,
-       69.3
+       220,
+       2.7,
+       27.3,
+       69.5
       ],
       [
        "Questionable",
-       105,
+       106,
        1.5,
-       60,
-       85.7
+       61.3,
+       86.8
       ],
       [
        "Doubtful",
        34,
        2.7,
-       38.2,
-       73.5
+       41.2,
+       76.5
       ]
      ]
     }
@@ -5912,39 +5912,39 @@
   "E14b": {
    "title": "Does the projection already allow for a player's first game back?",
    "findings": [
-    "Players who played the week before scored 100.2% of their projection; first game back after one missed game 93.1%, after 2-3 85.5%, after 4+ 105.7%. Only the 2-3-game group fell short in both periods, so those players are now valued at 85.6% of projection in their first game back; the other groups are inconsistent between periods and get no extra discount. The projection itself sits at 89.7-80.9% of pre-absence scoring for returning players."
+    "Players who played the week before scored 100.2% of their projection; first game back after one missed game 96.2%, after 2-3 86.4%, after 4+ 105.1%. Only the 2-3-game group fell short in both periods, so those players are now valued at 85.6% of projection in their first game back; the other groups are inconsistent between periods and get no extra discount. The projection itself sits at 90.1-80.9% of pre-absence scoring for returning players."
    ],
    "fit": {
     "Played last week": {
-     "n": 8718,
+     "n": 8847,
      "ratio": 1.002,
      "train": 1.019,
-     "test": 0.968,
-     "nTest": 2749,
+     "test": 0.969,
+     "nTest": 2878,
      "projVsBefore": 0.933
     },
     "Back after 1 game out": {
-     "n": 157,
-     "ratio": 0.931,
+     "n": 163,
+     "ratio": 0.962,
      "train": 0.898,
-     "test": 0.996,
-     "nTest": 52,
-     "projVsBefore": 0.897
+     "test": 1.073,
+     "nTest": 58,
+     "projVsBefore": 0.901
     },
     "Back after 2-3": {
-     "n": 122,
-     "ratio": 0.855,
+     "n": 124,
+     "ratio": 0.864,
      "train": 0.872,
-     "test": 0.809,
-     "nTest": 30,
+     "test": 0.843,
+     "nTest": 32,
      "projVsBefore": 0.941
     },
     "Back after 4+": {
-     "n": 45,
-     "ratio": 1.057,
+     "n": 46,
+     "ratio": 1.051,
      "train": 1.047,
-     "test": 1.083,
-     "nTest": 12,
+     "test": 1.063,
+     "nTest": 13,
      "projVsBefore": 0.809
     },
     "factors": {
@@ -5968,35 +5968,35 @@
      "rows": [
       [
        "Played last week",
-       8718,
+       8847,
        93.3,
        101.9,
-       96.8,
-       2749
+       96.9,
+       2878
       ],
       [
        "Back after 1 game out",
-       157,
-       89.7,
+       163,
+       90.1,
        89.8,
-       99.6,
-       52
+       107.3,
+       58
       ],
       [
        "Back after 2-3",
-       122,
+       124,
        94.1,
        87.2,
-       80.9,
-       30
+       84.3,
+       32
       ],
       [
        "Back after 4+",
-       45,
+       46,
        80.9,
        104.7,
-       108.3,
-       12
+       106.3,
+       13
       ]
      ]
     }
@@ -6005,8 +6005,8 @@
   "E15": {
    "title": "What are keepers and draft picks worth?",
    "findings": [
-    "Value kept year to year: QB 25 or younger 83%, QB 26-29 75%, QB 30-33 70%, QB 34+ 73%, RB 23 or younger 94%, RB 24-25 78%, RB 26-27 74%, RB 28+ 74%, WR 23 or younger 92%, WR 24-26 86%, WR 27-29 76%, WR 30+ 85%.",
-    "Draft picks in this league: round 1 returned 141.1 season points above replacement, round 2 82.5, round 3 60.5; by round 6 it is 18.4."
+    "Value kept year to year: QB 25 or younger 83%, QB 26-29 75%, QB 30-33 71%, QB 34+ 73%, RB 23 or younger 95%, RB 24-25 78%, RB 26-27 75%, RB 28+ 75%, WR 23 or younger 92%, WR 24-26 86%, WR 27-29 78%, WR 30+ 85%.",
+    "Draft picks in this league: round 1 returned 146.9 season points above replacement, round 2 81.8, round 3 62.5; by round 6 it is 19.3."
    ],
    "fit": {
     "ages": {
@@ -6024,7 +6024,7 @@
      },
      "QB 30-33": {
       "n": 21,
-      "retention": 0.7,
+      "retention": 0.71,
       "held85": 47.6,
       "gone": 28.6
      },
@@ -6036,63 +6036,63 @@
      },
      "RB 23 or younger": {
       "n": 34,
-      "retention": 0.94,
+      "retention": 0.95,
       "held85": 70.6,
       "gone": 5.9
      },
      "RB 24-25": {
       "n": 57,
       "retention": 0.78,
-      "held85": 43.9,
+      "held85": 45.6,
       "gone": 8.8
      },
      "RB 26-27": {
       "n": 33,
-      "retention": 0.74,
+      "retention": 0.75,
       "held85": 45.5,
-      "gone": 15.2
+      "gone": 12.1
      },
      "RB 28+": {
       "n": 25,
-      "retention": 0.74,
-      "held85": 48,
+      "retention": 0.75,
+      "held85": 52,
       "gone": 12
      },
      "TE 24-26": {
       "n": 18,
-      "retention": 0.89,
+      "retention": 0.87,
       "held85": 50,
       "gone": 0
      },
      "TE 27-29": {
       "n": 18,
       "retention": 0.87,
-      "held85": 55.6,
+      "held85": 50,
       "gone": 0
      },
      "TE 30+": {
       "n": 18,
-      "retention": 0.78,
+      "retention": 0.77,
       "held85": 55.6,
       "gone": 11.1
      },
      "WR 23 or younger": {
       "n": 58,
       "retention": 0.92,
-      "held85": 63.8,
+      "held85": 62.1,
       "gone": 5.2
      },
      "WR 24-26": {
       "n": 86,
       "retention": 0.86,
-      "held85": 52.3,
+      "held85": 53.5,
       "gone": 7
      },
      "WR 27-29": {
       "n": 47,
-      "retention": 0.76,
-      "held85": 42.6,
-      "gone": 6.4
+      "retention": 0.78,
+      "held85": 40.4,
+      "gone": 4.3
      },
      "WR 30+": {
       "n": 23,
@@ -6104,99 +6104,99 @@
     "rounds": {
      "1": {
       "n": 18,
-      "ppg": 19.6,
-      "aboveReplacement": 141.1,
+      "ppg": 20,
+      "aboveReplacement": 146.9,
       "hit": 94.4
      },
      "2": {
       "n": 18,
-      "ppg": 16.2,
-      "aboveReplacement": 82.5,
-      "hit": 77.8
+      "ppg": 16.3,
+      "aboveReplacement": 81.8,
+      "hit": 83.3
      },
      "3": {
       "n": 18,
-      "ppg": 15.2,
-      "aboveReplacement": 60.5,
+      "ppg": 15.3,
+      "aboveReplacement": 62.5,
       "hit": 77.8
      },
      "4": {
       "n": 18,
-      "ppg": 16,
-      "aboveReplacement": 57.4,
+      "ppg": 16.1,
+      "aboveReplacement": 56.6,
       "hit": 83.3
      },
      "5": {
       "n": 18,
-      "ppg": 13.5,
-      "aboveReplacement": 36.9,
-      "hit": 66.7
+      "ppg": 13.3,
+      "aboveReplacement": 34.1,
+      "hit": 61.1
      },
      "6": {
       "n": 18,
-      "ppg": 12.8,
-      "aboveReplacement": 18.4,
-      "hit": 55.6
+      "ppg": 13,
+      "aboveReplacement": 19.3,
+      "hit": 61.1
      },
      "7": {
       "n": 18,
-      "ppg": 13.1,
-      "aboveReplacement": 35.5,
-      "hit": 61.1
+      "ppg": 13,
+      "aboveReplacement": 34.1,
+      "hit": 55.6
      },
      "8": {
       "n": 18,
-      "ppg": 11.3,
-      "aboveReplacement": 25.2,
-      "hit": 50
+      "ppg": 11.8,
+      "aboveReplacement": 29.2,
+      "hit": 55.6
      },
      "9": {
       "n": 18,
       "ppg": 10.3,
-      "aboveReplacement": 9.7,
+      "aboveReplacement": 9.3,
       "hit": 38.9
      },
      "10": {
       "n": 18,
-      "ppg": 10.3,
-      "aboveReplacement": 15.2,
+      "ppg": 10.4,
+      "aboveReplacement": 16.2,
       "hit": 44.4
      },
      "11": {
       "n": 18,
-      "ppg": 9.5,
-      "aboveReplacement": 1,
-      "hit": 11.1
+      "ppg": 9.6,
+      "aboveReplacement": 2.9,
+      "hit": 22.2
      },
      "12": {
       "n": 18,
-      "ppg": 10.6,
-      "aboveReplacement": 13.1,
+      "ppg": 10.7,
+      "aboveReplacement": 15.2,
       "hit": 33.3
      },
      "13": {
       "n": 18,
-      "ppg": 10.4,
-      "aboveReplacement": 12.9,
+      "ppg": 10.5,
+      "aboveReplacement": 13.1,
       "hit": 50
      },
      "14": {
       "n": 18,
-      "ppg": 9.9,
-      "aboveReplacement": 8.7,
-      "hit": 50
+      "ppg": 9.8,
+      "aboveReplacement": 8.1,
+      "hit": 55.6
      },
      "15": {
       "n": 18,
       "ppg": 9.4,
-      "aboveReplacement": 9.3,
+      "aboveReplacement": 10.5,
       "hit": 33.3
      },
      "16": {
       "n": 18,
-      "ppg": 10.9,
-      "aboveReplacement": 11.6,
-      "hit": 38.9
+      "ppg": 11.3,
+      "aboveReplacement": 12.3,
+      "hit": 27.8
      }
     }
    },
@@ -6239,8 +6239,8 @@
        "30-33",
        21,
        15.8,
-       15.5,
-       0.7,
+       15.8,
+       0.71,
        47.6,
        28.6
       ],
@@ -6259,8 +6259,8 @@
        "23 or younger",
        34,
        14.3,
-       14.2,
-       0.94,
+       14.4,
+       0.95,
        70.6,
        5.9
       ],
@@ -6271,7 +6271,7 @@
        13.3,
        11.4,
        0.78,
-       43.9,
+       45.6,
        8.8
       ],
       [
@@ -6279,19 +6279,19 @@
        "26-27",
        33,
        15.1,
-       13.1,
-       0.74,
+       12.9,
+       0.75,
        45.5,
-       15.2
+       12.1
       ],
       [
        "RB",
        "28+",
        25,
        14.4,
-       12.1,
-       0.74,
-       48,
+       12.4,
+       0.75,
+       52,
        12
       ],
       [
@@ -6299,8 +6299,8 @@
        "24-26",
        18,
        11.8,
-       10.5,
-       0.89,
+       10.3,
+       0.87,
        50,
        0
       ],
@@ -6311,7 +6311,7 @@
        11.3,
        9.9,
        0.87,
-       55.6,
+       50,
        0
       ],
       [
@@ -6319,8 +6319,8 @@
        "30+",
        18,
        12.1,
-       10.7,
-       0.78,
+       10.6,
+       0.77,
        55.6,
        11.1
       ],
@@ -6329,9 +6329,9 @@
        "23 or younger",
        58,
        13.1,
-       12.7,
+       12.8,
        0.92,
-       63.8,
+       62.1,
        5.2
       ],
       [
@@ -6341,7 +6341,7 @@
        13.9,
        12.8,
        0.86,
-       52.3,
+       53.5,
        7
       ],
       [
@@ -6349,10 +6349,10 @@
        "27-29",
        47,
        13.8,
-       11.2,
-       0.76,
-       42.6,
-       6.4
+       11.1,
+       0.78,
+       40.4,
+       4.3
       ],
       [
        "WR",
@@ -6380,129 +6380,129 @@
       [
        1,
        18,
-       19.6,
-       141.1,
+       20,
+       146.9,
        94.4,
        5
       ],
       [
        2,
        18,
-       16.2,
-       82.5,
-       77.8,
+       16.3,
+       81.8,
+       83.3,
        0
       ],
       [
        3,
        18,
-       15.2,
-       60.5,
+       15.3,
+       62.5,
        77.8,
        0
       ],
       [
        4,
        18,
-       16,
-       57.4,
+       16.1,
+       56.6,
        83.3,
        0
       ],
       [
        5,
        18,
-       13.5,
-       36.9,
-       66.7,
+       13.3,
+       34.1,
+       61.1,
        0
       ],
       [
        6,
        18,
-       12.8,
-       18.4,
-       55.6,
+       13,
+       19.3,
+       61.1,
        0
       ],
       [
        7,
        18,
-       13.1,
-       35.5,
-       61.1,
+       13,
+       34.1,
+       55.6,
        0
       ],
       [
        8,
        18,
-       11.3,
-       25.2,
-       50,
+       11.8,
+       29.2,
+       55.6,
        0
       ],
       [
        9,
        18,
        10.3,
-       9.7,
+       9.3,
        38.9,
        0
       ],
       [
        10,
        18,
-       10.3,
-       15.2,
+       10.4,
+       16.2,
        44.4,
        0
       ],
       [
        11,
        18,
-       9.5,
-       1,
-       11.1,
+       9.6,
+       2.9,
+       22.2,
        0
       ],
       [
        12,
        18,
-       10.6,
-       13.1,
+       10.7,
+       15.2,
        33.3,
        0
       ],
       [
        13,
        18,
-       10.4,
-       12.9,
+       10.5,
+       13.1,
        50,
        0
       ],
       [
        14,
        18,
-       9.9,
-       8.7,
-       50,
+       9.8,
+       8.1,
+       55.6,
        0
       ],
       [
        15,
        18,
        9.4,
-       9.3,
+       10.5,
        33.3,
        0
       ],
       [
        16,
        18,
-       10.9,
-       11.6,
-       38.9,
+       11.3,
+       12.3,
+       27.8,
        0
       ]
      ]
@@ -6512,8 +6512,8 @@
   "E16": {
    "title": "Floor and ceiling: are the ranges honest, and does playing for them help?",
    "findings": [
-    "The last-six-games range contained the actual score 35.3% of the time (target 50%); the projection-based range 49.5%. The projection-based range is better calibrated and is now the one shown.",
-    "Posture tiebreak: the higher recent floor avoided a bust 59.3% vs 60.3% for the higher projection; the higher recent ceiling boomed 22.8% vs 23%. Recent floors and ceilings add nothing the projection does not, so the posture step is removed."
+    "The last-six-games range contained the actual score 35.2% of the time (target 50%); the projection-based range 49.4%. The projection-based range is better calibrated and is now the one shown.",
+    "Posture tiebreak: the higher recent floor avoided a bust 59.4% vs 60.1% for the higher projection; the higher recent ceiling boomed 22.8% vs 23.1%. Recent floors and ceilings add nothing the projection does not, so the posture step is removed."
    ],
    "fit": {
     "bands": [
@@ -6645,75 +6645,75 @@
      }
     },
     "QB": {
-     "recentInside": 0.337,
-     "modelInside": 0.473,
-     "recentBelow": 0.346,
-     "modelBelow": 0.278
+     "recentInside": 0.333,
+     "modelInside": 0.472,
+     "recentBelow": 0.343,
+     "modelBelow": 0.277
     },
     "RB": {
-     "recentInside": 0.349,
-     "modelInside": 0.503,
+     "recentInside": 0.35,
+     "modelInside": 0.5,
      "recentBelow": 0.304,
-     "modelBelow": 0.274
+     "modelBelow": 0.273
     },
     "WR": {
-     "recentInside": 0.343,
-     "modelInside": 0.49,
-     "recentBelow": 0.335,
-     "modelBelow": 0.264
+     "recentInside": 0.339,
+     "modelInside": 0.484,
+     "recentBelow": 0.337,
+     "modelBelow": 0.265
     },
     "TE": {
-     "recentInside": 0.355,
-     "modelInside": 0.52,
-     "recentBelow": 0.365,
-     "modelBelow": 0.258
+     "recentInside": 0.354,
+     "modelInside": 0.519,
+     "recentBelow": 0.367,
+     "modelBelow": 0.265
     },
     "K": {
-     "recentInside": 0.404,
-     "modelInside": 0.475,
-     "recentBelow": 0.322,
-     "modelBelow": 0.271
+     "recentInside": 0.403,
+     "modelInside": 0.485,
+     "recentBelow": 0.324,
+     "modelBelow": 0.264
     },
     "DEF": {
-     "recentInside": 0.372,
-     "modelInside": 0.519,
-     "recentBelow": 0.284,
-     "modelBelow": 0.278
+     "recentInside": 0.375,
+     "modelInside": 0.521,
+     "recentBelow": 0.28,
+     "modelBelow": 0.271
     },
     "ALL": {
-     "recentInside": 0.353,
-     "modelInside": 0.495,
+     "recentInside": 0.352,
+     "modelInside": 0.494,
      "recentBelow": 0.327,
      "modelBelow": 0.269
     },
     "posture": {
      "floorPick": {
       "rate": 0.516,
-      "n": 13510
+      "n": 14146
      },
      "ceilPick": {
-      "rate": 0.502,
-      "n": 14057
+      "rate": 0.5,
+      "n": 14709
      },
      "projPick": {
-      "rate": 0.539,
-      "n": 15180
+      "rate": 0.537,
+      "n": 15882
      },
      "ceilBoom": {
       "rate": 0.228,
-      "n": 14057
+      "n": 14709
      },
      "projBoom": {
-      "rate": 0.23,
-      "n": 14057
+      "rate": 0.231,
+      "n": 14709
      },
      "floorSafe": {
-      "rate": 0.593,
-      "n": 13510
+      "rate": 0.594,
+      "n": 14146
      },
      "projSafe": {
-      "rate": 0.603,
-      "n": 13510
+      "rate": 0.601,
+      "n": 14146
      }
     },
     "useModel": true,
@@ -6735,73 +6735,73 @@
      "rows": [
       [
        "QB",
-       33.7,
-       34.6,
+       33.3,
+       34.3,
        7.7,
-       47.3,
-       27.8,
+       47.2,
+       27.7,
        10.3,
-       457
+       481
       ],
       [
        "RB",
-       34.9,
+       35,
        30.4,
        7.1,
-       50.3,
-       27.4,
-       10.5,
-       774
+       50,
+       27.3,
+       10.4,
+       812
       ],
       [
        "WR",
-       34.3,
-       33.5,
+       33.9,
+       33.7,
        7.1,
-       49,
-       26.4,
+       48.4,
+       26.5,
        9.8,
-       1084
+       1138
       ],
       [
        "TE",
-       35.5,
-       36.5,
+       35.4,
+       36.7,
        6.7,
-       52,
-       25.8,
+       51.9,
+       26.5,
        9.1,
-       392
+       412
       ],
       [
        "K",
-       40.4,
-       32.2,
+       40.3,
+       32.4,
        5.1,
-       47.5,
-       27.1,
+       48.5,
+       26.4,
        6.3,
-       314
+       330
       ],
       [
        "DEF",
-       37.2,
-       28.4,
-       5.7,
-       51.9,
-       27.8,
+       37.5,
+       28,
+       5.8,
+       52.1,
+       27.1,
        7.7,
-       320
+       336
       ],
       [
        "ALL",
-       35.3,
+       35.2,
        32.7,
        6.8,
-       49.5,
+       49.4,
        26.9,
        9.4,
-       3341
+       3509
       ]
      ]
     },
@@ -6817,44 +6817,44 @@
       [
        "Higher projection",
        "outscored the other",
-       53.9,
-       15180
+       53.7,
+       15882
       ],
       [
        "Higher recent floor",
        "outscored the other",
        51.6,
-       13510
+       14146
       ],
       [
        "Higher recent ceiling",
        "outscored the other",
-       50.2,
-       14057
+       50,
+       14709
       ],
       [
        "Higher recent floor",
        "avoided a bust (under 70% of projection)",
-       59.3,
-       13510
+       59.4,
+       14146
       ],
       [
        "Higher projection",
        "avoided a bust",
-       60.3,
-       13510
+       60.1,
+       14146
       ],
       [
        "Higher recent ceiling",
        "boomed (140%+ of projection)",
        22.8,
-       14057
+       14709
       ],
       [
        "Higher projection",
        "boomed",
-       23,
-       14057
+       23.1,
+       14709
       ]
      ]
     }
@@ -7478,7 +7478,7 @@
    "title": "A second volume model: ffopportunity expected points vs the site's own",
    "findings": [
     "Rest of season: ffopportunity in place of the site's volume model did not do better (QB 3.5 vs 3.25, RB 3.15 vs 3.1, WR 3.48 vs 3.49, TE 2.83 vs 2.72).",
-    "Next four weeks (buy/sell): QB 4.06 vs 4.06, RB 3.92 vs 3.9, WR 3.82 vs 3.82, TE 3.53 vs 3.5. No consistent gain."
+    "Next four weeks (buy/sell): QB 4.2 vs 4.2, RB 4 vs 3.99, WR 3.83 vs 3.86, TE 3.43 vs 3.4. No consistent gain."
    ],
    "fit": {
     "ros": {
@@ -7521,44 +7521,44 @@
     },
     "next4": {
      "QB": {
-      "mine": 4.06,
-      "theirs": 4.06,
+      "mine": 4.2,
+      "theirs": 4.2,
       "coefTheirs": [
        6.918,
        0.301,
        0.299
       ],
-      "n": 330
+      "n": 356
      },
      "RB": {
-      "mine": 3.9,
-      "theirs": 3.92,
+      "mine": 3.99,
+      "theirs": 4,
       "coefTheirs": [
        3.332,
        0.309,
        0.391
       ],
-      "n": 502
+      "n": 533
      },
      "WR": {
-      "mine": 3.82,
-      "theirs": 3.82,
+      "mine": 3.86,
+      "theirs": 3.83,
       "coefTheirs": [
        2.827,
        0.143,
        0.601
       ],
-      "n": 698
+      "n": 743
      },
      "TE": {
-      "mine": 3.5,
-      "theirs": 3.53,
+      "mine": 3.4,
+      "theirs": 3.43,
       "coefTheirs": [
        4.238,
        0.236,
        0.32
       ],
-      "n": 320
+      "n": 349
      }
     },
     "switchRos": false,
@@ -7586,9 +7586,9 @@
        3.5,
        3.31,
        218,
-       4.06,
-       4.06,
-       330
+       4.2,
+       4.2,
+       356
       ],
       [
        "RB",
@@ -7597,9 +7597,9 @@
        3.15,
        3.15,
        314,
-       3.9,
-       3.92,
-       502
+       3.99,
+       4,
+       533
       ],
       [
        "WR",
@@ -7608,9 +7608,9 @@
        3.48,
        3.4,
        489,
-       3.82,
-       3.82,
-       698
+       3.86,
+       3.83,
+       743
       ],
       [
        "TE",
@@ -7619,9 +7619,9 @@
        2.83,
        2.91,
        203,
-       3.5,
-       3.53,
-       320
+       3.4,
+       3.43,
+       349
       ]
      ]
     }
@@ -7985,69 +7985,69 @@
   "E20": {
    "title": "Would the site's waiver suggestions have helped?",
    "findings": [
-    "The site's top waiver suggestion gained 8.1 lineup points over three weeks on average and helped 85.3% of the time. The best-projected free agent gained 5.4; managers' actual adds 9.5 (741 adds). Doing nothing: 0.",
-    "By tier: Tier 1 (riser) 4 (n=20), Tier 2 (riser) 7.4 (n=24), Tier 3 (riser) 9 (n=112).",
-    "Ranking candidates: best rule on 2025 was \"Impact this week only\" (9.3), which gained 7.4 on 2026; the site's own order gained 8.7 and 7.4."
+    "The site's top waiver suggestion gained 8.8 lineup points over three weeks on average and helped 87.3% of the time. The best-projected free agent gained 5.1; managers' actual adds 9.5 (786 adds). Doing nothing: 0.",
+    "By tier: Tier 1 (riser) 12.2 (n=7), Tier 2 (riser) 7.5 (n=28), Tier 3 (riser) 8.9 (n=131).",
+    "Ranking candidates: best rule on 2025 was \"Site order (tier, then impact)\" (9.4), which gained 8.5 on 2026; the site's own order gained 9.4 and 8.5."
    ],
    "fit": {
     "site": {
-     "mean": 8.1,
-     "hit": 0.853,
-     "n": 156
+     "mean": 8.78,
+     "hit": 0.873,
+     "n": 166
     },
     "naive": {
-     "mean": 5.44,
-     "hit": 0.583,
-     "n": 156
+     "mean": 5.14,
+     "hit": 0.554,
+     "n": 166
     },
     "real": {
      "mean": 9.5,
-     "n": 741
+     "n": 786
     },
     "tiers": {
      "Tier 1 (riser)": {
-      "n": 20,
-      "mean": 4,
-      "hit": 75,
-      "dropBeat": 25
+      "n": 7,
+      "mean": 12.2,
+      "hit": 85.7,
+      "dropBeat": 0
      },
      "Tier 2 (riser)": {
-      "n": 24,
-      "mean": 7.4,
-      "hit": 83.3,
+      "n": 28,
+      "mean": 7.5,
+      "hit": 85.7,
       "dropBeat": 11.1
      },
      "Tier 3 (riser)": {
-      "n": 112,
-      "mean": 9,
-      "hit": 87.5,
-      "dropBeat": 7.7
+      "n": 131,
+      "mean": 8.9,
+      "hit": 87.8,
+      "dropBeat": 6.3
      }
     },
     "rules": {
      "Site order (tier, then impact)": {
-      "y2025": 8.7,
-      "y2026": 7.4
+      "y2025": 9.4,
+      "y2026": 8.5
      },
      "Impact this week only": {
       "y2025": 9.3,
-      "y2026": 7.4
+      "y2026": 8.5
      },
      "Recent scoring (last 3)": {
       "y2025": 3,
-      "y2026": 2.3
+      "y2026": 2
      },
      "Season average": {
       "y2025": 2.9,
-      "y2026": 4.6
+      "y2026": 5
      },
      "Projection this week": {
       "y2025": 8.6,
-      "y2026": 7.3
+      "y2026": 8.5
      },
      "Impact + 0.3 x last 3": {
       "y2025": 3.7,
-      "y2026": 3.6
+      "y2026": 4.2
      }
     }
    },
@@ -8065,39 +8065,39 @@
      "rows": [
       [
        "Site's top suggestion",
-       156,
-       8.1,
-       "6.2 to 10.4",
-       85.3,
-       34.6
+       166,
+       8.8,
+       "7 to 10.6",
+       87.3,
+       38.6
       ],
       [
        "Naive: best-projected free agent",
-       156,
-       5.4,
-       "3.8 to 8",
-       58.3,
-       23.1
+       166,
+       5.1,
+       "3.5 to 7.5",
+       55.4,
+       21.7
       ],
       [
        "Naive: best season average free agent",
-       138,
-       6.3,
-       "3.9 to 9.3",
-       55.1,
-       26.8
+       148,
+       7.2,
+       "4.3 to 10.1",
+       58.8,
+       31.8
       ],
       [
        "Managers' actual adds (each add)",
-       741,
+       786,
        9.5,
        "",
-       74.6,
-       39.7
+       74.8,
+       40.3
       ],
       [
        "Doing nothing",
-       156,
+       166,
        0,
        "",
        0,
@@ -8105,11 +8105,11 @@
       ],
       [
        "Injured stash (separately, over 8 weeks)",
-       138,
-       1.9,
+       148,
+       1.7,
        "",
-       14.5,
-       13
+       13.5,
+       12.2
       ]
      ]
     },
@@ -8125,24 +8125,24 @@
      "rows": [
       [
        "Tier 1 (riser)",
-       20,
-       4,
-       75,
-       25
+       7,
+       12.2,
+       85.7,
+       0
       ],
       [
        "Tier 2 (riser)",
-       24,
-       7.4,
-       83.3,
+       28,
+       7.5,
+       85.7,
        11.1
       ],
       [
        "Tier 3 (riser)",
-       112,
-       9,
-       87.5,
-       7.7
+       131,
+       8.9,
+       87.8,
+       6.3
       ]
      ]
     },
@@ -8158,45 +8158,100 @@
      "rows": [
       [
        "Site order (tier, then impact)",
-       8.7,
+       9.4,
        96,
-       7.4,
-       60
+       8.5,
+       70
       ],
       [
        "Impact this week only",
        9.3,
        96,
-       7.4,
-       60
+       8.5,
+       70
       ],
       [
        "Recent scoring (last 3)",
        3,
        96,
-       2.3,
-       60
+       2,
+       70
       ],
       [
        "Season average",
        2.9,
        96,
-       4.6,
-       60
+       5,
+       70
       ],
       [
        "Projection this week",
        8.6,
        96,
-       7.3,
-       60
+       8.5,
+       70
       ],
       [
        "Impact + 0.3 x last 3",
        3.7,
        96,
-       3.6,
-       60
+       4.2,
+       70
+      ]
+     ]
+    }
+   ]
+  },
+  "E20b": {
+   "title": "Waiver tiers on synthetic leagues, 2022-2025",
+   "findings": [
+    "Current tiers on held-out 2025: tier 1 25.6 (n=49), tier 2 15 (n=56), tier 3 8.9 (n=605) points over three weeks.",
+    "Best cut-offs on 2022-24: tier 1 at impact 2, tier 2 at 1."
+   ],
+   "fit": {
+    "n": 480,
+    "current": {
+     "t1": 25.61,
+     "t2": 14.96,
+     "t3": 8.88,
+     "top": 16.37
+    },
+    "best": {
+     "t1": 2,
+     "t2": 1
+    }
+   },
+   "tables": [
+    {
+     "caption": "10-team leagues drafted by projection; every team, Weeks 3-14 (480 team-weeks). Gain = best-lineup points over three weeks with real scores. Fit on 2022-24, checked on 2025.",
+     "head": [
+      "Rule",
+      "Top claim gain 2022-24",
+      "Top claim gain 2025",
+      "Tier 1 / 2 / 3 gain, 2025",
+      "n"
+     ],
+     "rows": [
+      [
+       "Current (tier 1 at impact 3, tier 2 at 1)",
+       17.4,
+       16.4,
+       "25.6 / 15 / 8.9",
+       "49 / 56 / 605"
+      ],
+      [
+       "Best on 2022-24 (tier 1 at 2, tier 2 at 1)",
+       17.4,
+       16.4,
+       "23.3 / 12.7 / 8.9",
+       "72 / 33 / 605"
+      ],
+      [
+       "Projection only, no tiers",
+       14.3,
+       14.4,
+       "",
+       ""
       ]
      ]
     }

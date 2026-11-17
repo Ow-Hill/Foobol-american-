@@ -797,7 +797,7 @@ export function waiverRows() {
         const real = (realAdds[m.rid] || []).filter((x) => M.snap.players[x.add]);
         if (real.length) row.real = real.map((x) => ({ ...x, gain: moveGain(M, S, wk, roster, x.add, x.drop && roster.includes(x.drop) ? x.drop : null) }));
         // features for every candidate, to refit the ranking
-        row.cards = cands.slice(0, 12).map((c) => ({ id: c.id, tier: c.tier, group: c.group, impact: c.impact, ppg3: c.p.ppg3 || 0, ppg: c.p.ppg || 0, proj: c.p.proj || 0, nWhy: (c.why || []).length, gain: moveGain(M, S, wk, roster, c.id, c.drop?.pid || null) }));
+        row.cards = cands.slice(0, 12).map((c) => ({ id: c.id, tier: c.tier, group: c.group, impact: c.impact, impactNext: c.impactNext || 0, pos: c.p.pos, stash: isStash(c), takeover: c.p.depth === 1 && c.p.pos === 'RB' && (c.p.ppg3 || 0) >= 12, dropPos: c.drop?.pid ? M.P(c.drop.pid).pos : null, ppg3: c.p.ppg3 || 0, ppg: c.p.ppg || 0, proj: c.p.proj || 0, nWhy: (c.why || []).length, gain: moveGain(M, S, wk, roster, c.id, c.drop?.pid || null) }));
         rows.push(row);
       }
     }
@@ -880,5 +880,87 @@ export function e20() {
       `Ranking candidates: best rule on 2025 was "${bestRule[0]}" (${bestRule[1]}), which gained ${bestRule[3]} on 2026; the site's own order gained ${ruleRows[0][1]} and ${ruleRows[0][3]}.`,
     ],
     fit,
+  };
+}
+
+// E20b: the same waiver replay on synthetic 10-team leagues drafted by projection, 2022-2025, so
+// tier cut-offs can be fit on 2022-24 and checked on 2025 with hundreds of cases, not twenty.
+let e20bCache = null;
+export function synthWaiverRows() {
+  if (e20bCache) return e20bCache;
+  const rows = [];
+  for (const s of [2022, 2023, 2024, 2025]) {
+    const S = D.loadSeason(s);
+    for (let W = 3; W <= Math.min(14, S.lastWeek - 1); W++) {
+      const P0 = structuredClone(asOf(s, W));
+      if (USE_ROS) attachRosBt(P0, s, W);
+      const ids = Object.values(P0).filter((p) => p.proj && p.pos !== 'K' && p.pos !== 'DEF').sort((a, b) => (ppg(b) ?? b.proj.pts) - (ppg(a) ?? a.proj.pts)).slice(0, 150).map((p) => p.id);
+      const ks = (pos) => Object.values(P0).filter((p) => p.proj && p.pos === pos).sort((a, b) => b.proj.pts - a.proj.pts).slice(0, 10).map((p) => p.id);
+      const K = ks('K');
+      const DEF = ks('DEF');
+      const teams = Array.from({ length: 10 }, (_, i) => ({ id: i + 1, owner: 'T' + (i + 1), players: [...ids.filter((_, k) => (Math.floor(k / 10) % 2 === 0 ? k % 10 : 9 - (k % 10)) === i), K[i], DEF[i]].filter(Boolean), starters: [], reserve: [] }));
+      const { snap, now } = D.synthSnap(s, W, { teams, playersOverride: P0 });
+      for (const t of teams) {
+        let M, plan;
+        try {
+          M = buildModel(snap, t.id, now);
+          plan = M.waiverPlan();
+        } catch {
+          continue;
+        }
+        const cands = [...(plan.groups.risers || []), ...(plan.groups.lottery || [])].filter((c) => c.p.avail !== 'out');
+        if (!cands.length) continue;
+        rows.push({
+          season: s, wk: W, rid: t.id,
+          cards: cands.slice(0, 10).map((c) => ({ tier: c.tier, impact: c.impact, impactNext: c.impactNext || 0, proj: c.p.proj || 0, pos: c.p.pos, gain: moveGain(M, S, W, t.players, c.id, c.drop?.pid || null) })),
+        });
+      }
+    }
+  }
+  return (e20bCache = rows);
+}
+export function e20b() {
+  const rows = synthWaiverRows();
+  const tierRule = (t1, t2) => (c) => (c.impact >= t1 ? 1 : c.impact >= t2 ? 2 : 3);
+  const evalRule = (f, seasons) => {
+    const t = { 1: [], 2: [], 3: [] };
+    const top = [];
+    for (const r of rows.filter((x) => seasons.includes(x.season))) {
+      const cs = r.cards.map((c) => ({ ...c, t: f(c) }));
+      for (const c of cs) t[c.t].push(c.gain);
+      cs.sort((a, b) => a.t - b.t || b.proj - a.proj);
+      top.push(cs[0].gain);
+    }
+    return { top: mean(top), n: top.length, t1: mean(t[1]), t2: mean(t[2]), t3: mean(t[3]), n1: t[1].length, n2: t[2].length, n3: t[3].length };
+  };
+  const grid = [];
+  for (const t1 of [2, 3, 4, 5]) for (const t2 of [0.5, 1, 1.5, 2]) if (t2 < t1) grid.push({ t1, t2, train: evalRule(tierRule(t1, t2), [2022, 2023, 2024]) });
+  // pick: tiers in order on training (t1 >= t2 >= t3), then the best top-claim gain
+  const ordered = (x) => x.t1 >= x.t2 && x.t2 >= x.t3;
+  const best = grid.filter((g) => ordered(g.train)).sort((a, b) => b.train.top - a.train.top)[0] || grid.sort((a, b) => b.train.top - a.train.top)[0];
+  const cur = { t1: 3, t2: 1 };
+  const projOnly = (seasons) => {
+    const top = rows.filter((x) => seasons.includes(x.season)).map((r) => r.cards.slice().sort((a, b) => b.proj - a.proj)[0].gain);
+    return mean(top);
+  };
+  const row = (label, f) => {
+    const a = evalRule(f, [2022, 2023, 2024]);
+    const b = evalRule(f, [2025]);
+    return [label, r1(a.top), r1(b.top), `${r1(b.t1)} / ${r1(b.t2)} / ${r1(b.t3)}`, `${b.n1} / ${b.n2} / ${b.n3}`];
+  };
+  const table = [
+    row(`Current (tier 1 at impact ${cur.t1}, tier 2 at ${cur.t2})`, tierRule(cur.t1, cur.t2)),
+    row(`Best on 2022-24 (tier 1 at ${best.t1}, tier 2 at ${best.t2})`, tierRule(best.t1, best.t2)),
+    ['Projection only, no tiers', r1(projOnly([2022, 2023, 2024])), r1(projOnly([2025])), '', ''],
+  ];
+  const held = evalRule(tierRule(cur.t1, cur.t2), [2025]);
+  return {
+    id: 'E20b', title: 'Waiver tiers on synthetic leagues, 2022-2025',
+    tables: [{ caption: `10-team leagues drafted by projection; every team, Weeks 3-14 (${rows.length} team-weeks). Gain = best-lineup points over three weeks with real scores. Fit on 2022-24, checked on 2025.`, head: ['Rule', 'Top claim gain 2022-24', 'Top claim gain 2025', 'Tier 1 / 2 / 3 gain, 2025', 'n'], rows: table }],
+    findings: [
+      `Current tiers on held-out 2025: tier 1 ${r1(held.t1)} (n=${held.n1}), tier 2 ${r1(held.t2)} (n=${held.n2}), tier 3 ${r1(held.t3)} (n=${held.n3}) points over three weeks.`,
+      `Best cut-offs on 2022-24: tier 1 at impact ${best.t1}, tier 2 at ${best.t2}.`,
+    ],
+    fit: { n: rows.length, current: { t1: r2(held.t1), t2: r2(held.t2), t3: r2(held.t3), top: r2(held.top) }, best: { t1: best.t1, t2: best.t2 } },
   };
 }
