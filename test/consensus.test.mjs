@@ -135,3 +135,27 @@ test('waivers: a started game keeps its starters in their slots; an unset kickof
   assert.equal(games[1].date, '2026-11-22T18:00Z');
   assert.equal(games[1].tbd, true);
 });
+
+test('trade deadline: open through the deadline week\'s last game, closed after the week', () => {
+  const g = (home, away, date) => ({ id: home, date, state: 'pre', completed: false, detail: null, home: { t: home, imp: 22 }, away: { t: away, imp: 22 } });
+  const mk = (week) => ({
+    meta: { week, tz: 'America/Toronto', builtAt: Date.now(), playoffWeeks: [15, 16, 17] },
+    league: { name: 'T', rosterPositions: ['RB', 'BN'], settings: { reserve_slots: 0, playoff_week_start: 15, playoff_teams: 2, trade_deadline: 11, num_teams: 2, waiver_day_of_week: 2 }, scoring: {} },
+    teams: [{ id: 1, owner: 'me', isMe: true, w: 0, l: 0, players: [], starters: [null], reserve: [], taxi: [] }, { id: 2, owner: 'x', w: 0, l: 0, players: [], starters: [null], reserve: [], taxi: [] }],
+    players: {},
+    schedule: { 11: { games: [g('HOU', 'IND', '2026-11-20T01:15Z'), g('WAS', 'CIN', '2026-11-24T01:15Z'), g('DET', 'TB', '1993-01-31T23:30Z')], byes: [] }, 12: { games: [], byes: [] } },
+    results: {}, matchups: {}, transactions: [], picks: [], notes: [], articles: [], playerNews: { items: [] },
+  });
+  // Monday evening of the deadline week, after Thursday's game: still open
+  let M = buildModel(mk(11), 1, Date.parse('2026-11-24T00:30Z'));
+  assert.equal(M.deadlinePassed, false);
+  assert.equal(M.deadlineAt, Date.parse('2026-11-24T01:15Z') + 3.5 * 3600000, 'after the last game, ignoring placeholder dates');
+  assert.equal(M.acceptBy, M.deadlineAt);
+  // after Monday night's game: closed
+  M = buildModel(mk(11), 1, Date.parse('2026-11-24T06:00Z'));
+  assert.equal(M.deadlinePassed, true);
+  // the week after the deadline: closed even with no schedule for the deadline week
+  const s = mk(12);
+  delete s.schedule[11];
+  assert.equal(buildModel(s, 1, Date.parse('2026-11-26T00:00Z')).deadlinePassed, true);
+});

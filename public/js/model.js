@@ -684,9 +684,14 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
   // ---------- trade deadline / waiver clocks ----------
   const dl = cfgLeague.trade_deadline;
   const dlGames = snap.schedule[dl]?.games || [];
-  const deadlineAt = dlGames.length ? Math.min(...dlGames.map((g) => new Date(g.date).getTime())) : null;
-  const acceptBy = deadlineAt ? deadlineAt - 24 * 3600 * 1000 : null;
-  const deadlinePassed = W >= dl && deadlineAt != null ? now >= deadlineAt : false;
+  // Sleeper keeps trades open through the deadline week: this league's 2025 deadline-week trades
+  // went through as late as Monday night, during the last game. So the deadline is the end of the
+  // deadline week's last game (its kickoff + 3.5 h), not its first kickoff. Accepted trades were
+  // processed within 15 minutes despite the 1-day review setting, so "accept by" is the deadline.
+  const dlKicks = dlGames.map((g) => new Date(g.date).getTime()).filter((t) => Number.isFinite(t) && new Date(t).getFullYear() >= 2000);
+  const deadlineAt = dlKicks.length ? Math.max(...dlKicks) + 3.5 * 3600 * 1000 : null;
+  const acceptBy = deadlineAt;
+  const deadlinePassed = W > dl || (W === dl && deadlineAt != null && now >= deadlineAt);
 
   function nextWaiverRun() {
     // Sleeper waiver_day_of_week: 0 = Sunday ... 2 = Tuesday

@@ -98,7 +98,7 @@ export function render(M, ctx) {
     `<b>Odds check:</b> ${esc(v[1].toLowerCase())}. ${esc(v[2])}`,
     `<b>Schedule check:</b> see the playoff slate below — sell bad Weeks 15–17 slates, buy good ones.`,
     `<b>Consolidate:</b> run the Trade lab on each 2-for-1 that turns bench depth into a starter, and move the spare QB.`,
-    M.deadlineAt && !M.deadlinePassed ? `<b>Timing:</b> offers need to be accepted by ${esc(fmtDayTime(M.acceptBy))} (1-day review).` : '<b>Timing:</b> the deadline has passed.',
+    M.deadlineAt && !M.deadlinePassed ? `<b>Timing:</b> offers need to be accepted by about ${esc(fmtDayTime(M.acceptBy))}, the end of the deadline week's last game (confirm in Sleeper).` : '<b>Timing:</b> the deadline has passed.',
   ];
 
   const l = M.lineup(me);
