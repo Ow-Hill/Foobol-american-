@@ -3,6 +3,7 @@
 // ff-decision-engine skill, so the agent and the page always agree.
 // Deterministic: every verdict comes from model numbers or a dated report. No model calls.
 import { healthiestFallback } from './playernews.js';
+import { waiverIntel } from './waiverintel.js';
 import { fmtDayTime } from './util.js';
 
 export const DECISION_CONTRACT = {
@@ -188,14 +189,19 @@ export function buildDecisions(M, news = null) {
       basis: 'projection',
     });
   }
-  for (const c of plan.tier1.slice(0, 2)) {
+  // The scanner re-tiers the wire with news + usage (a confirmed starter opening can make a
+  // handcuff Tier 1); fall back to the projection-only Tier 1 list when news is unavailable.
+  const intel = news ? waiverIntel(M, plan, news) : null;
+  const claimRows = intel ? intel.claims : plan.tier1.map((c) => ({ c, reasons: [], confidence: null }));
+  for (const r of claimRows.slice(0, 2)) {
+    const c = r.c;
     add({
       id: `waiver-add-${c.id}`,
       kind: 'waiver',
       priority: 'watch',
       title: `Claim ${c.p.n} (${c.p.pos})`,
       verdict: `Projects +${n1(c.impact)} points this week; +${n1(c.impactNext)} next week.`,
-      because: [`Tier 1 add on the wire.`, c.p.own == null ? 'Unrostered.' : 'Currently rostered.'],
+      because: [`Tier 1 add on the wire${r.confidence ? ` (${r.confidence} confidence)` : ''}.`, ...r.reasons.slice(0, 2).map((x) => x.text + '.'), c.p.own == null ? 'Unrostered.' : 'Currently rostered.'],
       evidence: evidenceFor(byPid, c.id),
       risk: 'Bench points are free in this league only if he cracks the lineup; a stash can cost priority.',
       deadline: { label: 'Waivers process Tuesday', at: M.nextWaiverRun() },

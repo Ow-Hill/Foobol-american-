@@ -427,3 +427,20 @@ canvas.recap.vertical { max-width: 380px; }
   .dec-more > summary { display: none !important; }
   .dec-more:not([open]) > .dec-list { display: flex !important; }
 }
+
+/* waiver scanner board */
+.tier-row .score { font-size: 20px; font-weight: 800; margin-top: 6px; color: var(--text); }
+.sigs { list-style: none; margin: 4px 0 2px; padding: 0; font-size: 12.5px; color: var(--muted); }
+.sigs .sig { padding: 1px 0; overflow-wrap: anywhere; }
+.sigs .sig-k { display: inline-block; min-width: 72px; font-size: 10.5px; font-weight: 750; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.sigs .sig-pos .sig-k { color: var(--green); }
+.sigs .sig-neg .sig-k { color: var(--red); }
+.conf-high { color: var(--green); border-color: var(--green-d); }
+.conf-medium { color: #a8d4ff; border-color: #1e4670; }
+.conf-low { color: var(--muted); border-style: dashed; }
+@media (max-width: 600px) {
+  .tier-row { grid-template-columns: 1fr; gap: 6px; }
+  .tier-row .stats { text-align: left; white-space: normal; }
+  .tier-row .score { display: inline-block; margin: 0 0 0 8px; font-size: 16px; vertical-align: middle; }
+  .sigs .sig-k { display: block; min-width: 0; }
+}

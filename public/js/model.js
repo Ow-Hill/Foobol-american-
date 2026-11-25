@@ -795,6 +795,9 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       streams,
       rivalDrops: rivalDrops.slice(0, 8),
       tier1,
+      // every unrostered candidate with its lineup impact, for the news + stats scanner
+      pool: cards,
+      openIr,
       noNeed: needs.filter((n) => n.claim).length === 0,
       open: { spots: maxRoster - me.players.length, ir: irSlots - l.ir.length, max: maxRoster },
       wp: me.wp,
@@ -953,7 +956,7 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     P, val, solve, lineup, canStartNow, slotEligible,
     posture, margin, myOpt, oppOpt,
     swaps, startSit, tiebreakFor: tiebreak, problems, injuryRows, fallbackFor, nextManUp, irAllowed,
-    sim, runSim, tradeOdds, winProb, profiles, odds, waiverPlan, lookahead, marketFor, evalTrade, tradeLog, picksOwned,
+    sim, runSim, tradeOdds, winProb, profiles, odds, waiverPlan, dropFor, tierFor, lookahead, marketFor, evalTrade, tradeLog, picksOwned,
     reviewWeek, efficiency, wireItems, optimalPast,
     deadlineAt, acceptBy, deadlinePassed, deadlineWeek: dl, nextWaiverRun,
     ownerName, chipOwner, lastName, gameFor, isBye, weekScores, posMedian, profile, dayLabel, kick,

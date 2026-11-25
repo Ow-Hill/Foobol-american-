@@ -1,5 +1,6 @@
 import { esc, n1, signed, fmtDay, fmtDayTime, ago } from '../util.js';
 import { card, table, playerName, secondOpinionBtn, statusChip } from '../ui.js';
+import { waiverIntel, VERDICT_LABEL } from '../waiverintel.js';
 
 const tierName = { 1: 'Smash', 2: 'Conditional', 3: 'Pass', 4: 'Free agency' };
 const tierHelp = {
@@ -9,8 +10,32 @@ const tierHelp = {
   4: 'Handcuffs, bye fillers and K/DEF streams — claim Wednesday after waivers clear.',
 };
 
-function candRow(M, c, w) {
+const KIND_LABEL = { opportunity: 'Opening', injury: 'Injury', practice: 'Practice', role: 'Role', trade: 'Trade', camp: 'Camp', suspension: 'Suspension', usage: 'Usage', lineup: 'Lineup', market: 'Market', sample: 'Sample', speculative: 'Rumour' };
+const VERDICT_CLS = { claim: 'chip-tier1', 'claim-if-need': 'chip-tier2', watch: 'chip-amber', 'free-agency': 'chip-tier4', pass: 'chip-tier3', avoid: 'chip-red' };
+
+function signalLines(r) {
+  const line = (x, neg) => `<li class="sig ${neg ? 'sig-neg' : x.sign > 0 ? 'sig-pos' : ''}"><span class="sig-k">${KIND_LABEL[x.kind] || x.kind}</span> ${esc(x.text)}</li>`;
+  return `<ul class="sigs">${r.reasons.map((x) => line(x, false)).join('')}${r.risks.map((x) => line(x, true)).join('')}</ul>`;
+}
+
+function scanRow(M, r) {
+  const p = r.p;
+  return `<div class="tier-row">
+    <div><span class="chip ${VERDICT_CLS[r.verdict]}">${esc(VERDICT_LABEL[r.verdict])}</span><div class="score" title="0–100 blend: lineup gain 30, news 25, usage 20, trend 15, Sleeper adds 10; health scales it">${r.score}</div></div>
+    <div>
+      <div>${playerName(M, r.id)} <span class="chip chip-tier${r.tier}">T${r.tier}</span> <span class="chip conf-${r.confidence}" title="How many of stats, news, market and lineup gain agree">${r.confidence} confidence</span></div>
+      ${signalLines(r)}
+      <div class="why"><span class="dim">${esc(r.trigger)}</span></div>
+      ${r.drop ? `<div class="drop">${r.drop.none ? '✓ ' : '↳ '}${esc(r.drop.text)}</div>` : ''}
+    </div>
+    <div class="stats"><b>${n1(p.proj)}</b> proj<br />${p.avail === 'bye' ? 'BYE' : p.game ? `${p.game.home ? 'vs' : '@'} ${esc(p.game.opp)}` : '–'}<br />next: ${p.projNext != null ? n1(p.projNext) : '–'}</div>
+  </div>`;
+}
+
+function candRow(M, c, w, I) {
   const p = c.p;
+  const r = I?.byId.get(c.id);
+  const tier = r ? r.tier : c.tier;
   const nextTxt = p.avail === 'bye' ? 'bye' : M.isBye(p.team, M.W + 1) ? 'bye' : p.projNext != null ? n1(p.projNext) : '–';
   const g = p.game;
   const opp = p.avail === 'bye' ? 'BYE' : g ? `${g.home ? 'vs' : '@'} ${g.opp}` : '–';
@@ -24,11 +49,12 @@ function candRow(M, c, w) {
   if (p.trend?.add) usage.push(`#${p.trend.add.rank} add on Sleeper today`);
   const revisit = c.group === 'cuff' ? 'Revisit if the starter\u2019s injury news changes.' : c.group === 'lottery' ? 'Revisit after the next practice report.' : 'Revisit after two more games of usage data.';
   return `<div class="tier-row">
-    <div><span class="chip chip-tier${c.tier}">T${c.tier} · ${tierName[c.tier]}</span></div>
+    <div><span class="chip chip-tier${tier}">T${tier} · ${tierName[tier]}</span></div>
     <div>
       <div>${playerName(M, c.id)} ${clear}</div>
       ${why.length ? `<div class="why">${why.join(' — ')}</div>` : ''}
       <div class="why">${usage.join(' · ')}</div>
+      ${r && (r.tier !== c.tier || r.news.length || r.vacancy) ? `<div class="why">Scanner: <b>${esc(VERDICT_LABEL[r.verdict])}</b>${r.tier !== c.tier ? ` (moved from T${c.tier})` : ''}${(r.vacancy || r.risks[0] || r.reasons[0]) ? ' — ' + esc(r.vacancy ? r.reasons[0].text : (r.risks[0] || r.reasons[0]).text) : ''}</div>` : ''}
       <div class="why">Fills: ${c.impact >= 0.5 ? `your lineup this week (${signed(c.impact)} pts)` : c.impactNext >= 0.5 ? `Week ${M.W + 1} (${signed(c.impactNext)} pts)` : 'depth — no lineup spot right now'}. <span class="dim">${revisit}</span></div>
       <div class="drop">${c.drop.none ? '✓ ' : '↳ '}${esc(c.drop.text)}</div>
     </div>
@@ -36,8 +62,8 @@ function candRow(M, c, w) {
   </div>`;
 }
 
-function group(M, title, sub, list, w, empty) {
-  return card(title, list.length ? list.map((c) => candRow(M, c, w)).join('') : `<p class="empty">${empty}</p>`, { cls: 'flush', sub });
+function group(M, title, sub, list, w, empty, I) {
+  return card(title, list.length ? list.map((c) => candRow(M, c, w, I)).join('') : `<p class="empty">${empty}</p>`, { cls: 'flush', sub });
 }
 
 function streamTable(M, list, pos) {
@@ -58,9 +84,12 @@ export function render(M, ctx) {
   const w = M.waiverPlan();
   const l = M.lineup(M.me);
   const claimNeeds = w.needs.filter((n) => n.claim);
-  const spend = w.tier1[0];
+  const I = waiverIntel(M, w);
+  const spendR = I.claims[0];
+  const spend = spendR ? spendR.c : w.tier1[0];
+  const why1 = spendR ? (spendR.reasons[0]?.text || '') : '';
   const advice = spend
-    ? `<div class="callout good"><b>Spend priority on ${esc(spend.p.n)}</b>He is the only Tier 1 here. A successful claim moves you from #${w.wp} to last, so don't spend it on anything lower.</div>`
+    ? `<div class="callout good"><b>Spend priority on ${esc(spend.p.n)}</b>${why1 ? esc(why1) + '. ' : ''}${(I.claims.length || w.tier1.length) > 1 ? 'He tops the Tier 1 list.' : 'He is the only Tier 1 here.'} A successful claim moves you from #${w.wp} to last, so don't spend it on anything lower.</div>`
     : `<div class="callout"><b>Hold your waiver priority (#${w.wp ?? '–'})</b>Nothing in the pool clears the Tier 1 bar — no starter takeover and no big lineup upgrade. A successful claim sends you to the back of the line, so keep it for a real need.${claimNeeds.length ? ` The one real need is below — and it can wait for free agency.` : ''}</div>`;
 
   const needRows = w.needs.map((n) => [`<span class="chip">${n.pri}</span>`, `<b>${esc(n.label)}</b>`, `<span class="muted">${esc(n.detail)}</span>`, n.claim ? '<span class="chip chip-amber">Needs a claim</span>' : '<span class="chip chip-fa">Covered</span>']);
@@ -86,10 +115,11 @@ export function render(M, ctx) {
     </div>
     <div class="stack">
       ${card('Needs, in priority order', w.needs.length ? table(['#', 'Need', 'Detail', ''], needRows) : `<div class="allclear"><span class="dot dot-green"></span> No need — holding is a real option.</div>`, { cls: 'flush', sub: 'Empty slot → starter out → bye → thin spot → insurance' })}
+      ${card('Scanner board', I.board.length ? I.board.map((r) => scanRow(M, r)).join('') : '<p class="empty">No free agent clears the bar on stats or news this week.</p>', { cls: 'flush', sub: `Every free agent ranked on lineup gain, usage and trend, and typed news (injury, practice, role, trade, camp), including openings created by injured or traded teammates. ${I.scanned} scanned, ${I.withNews} with news.${I.flags.degraded ? ' <b>News feed partly stale</b> — treat news reasons with care.' : ''}${I.flags.disabled ? ' <b>News search is off</b> — ranking uses stats only.' : ''}` })}
       ${card('Bye look-ahead', look)}
-      ${group(M, 'Proven risers', 'Rising scoring or snap share, trending adds, or a lineup upgrade', w.groups.risers, w, 'No unrostered player clears the bar this week.')}
-      ${group(M, 'Handcuff stashes', 'The next man up behind your starting backs', w.groups.cuffs, w, 'No unrostered handcuffs for your backs.')}
-      ${group(M, 'Lottery tickets', 'Trending, young and ascending, or a talented player stashable on IR', w.groups.lottery, w, 'Nothing interesting beyond the lists above.')}
+      ${group(M, 'Proven risers', 'Rising scoring or snap share, trending adds, or a lineup upgrade', w.groups.risers, w, 'No unrostered player clears the bar this week.', I)}
+      ${group(M, 'Handcuff stashes', 'The next man up behind your starting backs', w.groups.cuffs, w, 'No unrostered handcuffs for your backs.', I)}
+      ${group(M, 'Lottery tickets', 'Trending, young and ascending, or a talented player stashable on IR', w.groups.lottery, w, 'Nothing interesting beyond the lists above.', I)}
       <div class="grid g2">
         ${card('Defense streams', streamTable(M, w.streams.DEF, 'DEF'), { cls: 'flush', sub: 'Opponent team total under ~20.5 is a soft spot (this league pays +10 for a shutout, −4 at 35+)' })}
         ${card('Kicker streams', streamTable(M, w.streams.K, 'K'), { cls: 'flush', sub: 'Long-range kickers in domes or calm weather earn more (4/5/6 for 40+/50+/60+)' })}

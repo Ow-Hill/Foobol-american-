@@ -21,6 +21,10 @@ const RX = {
   depth: /workload|carries|touches|targets|snaps|backfield|committee|featured|depth chart|goal.?line/i,
   suspension: /suspend|suspended|suspension/i,
   performance: /touchdown|throws|yards|recap|scores|leads|beats|rushes/i,
+  camp: /training camp|\bcamp\b|\bOTAs?\b|minicamp|preseason|organized team activities/i,
+  // role direction: depth-chart and workload language, read from the player's own headline
+  roleUp: /named (the )?starter|will start|(expected|set|slated|in line) to start|start(s|ing)? (in place of|for the injured)|takes? over|lead (back|role|runner)|featured (back|role)|(expanded|bigger|larger|increased) role|more (snaps|touches|targets|work|carries)|promot(ed|ion)|first.team|top of the depth chart|bell.?cow|workhorse|breakout|emerg(es|ing)|next man up|step(s|ping)? (in|up)|fill(s|ing)? in for/i,
+  roleDown: /demot(ed|ion)|benched|healthy scratch|losing (snaps|work|touches|carries)|(reduced|smaller|diminished) role|fewer (snaps|touches|targets|carries)|\breleased\b|\bwaived\b|\bcut by\b|backup role|split(ting)? (work|carries|the backfield)|phased out/i,
   body: /\b(ankle|knee|hamstring|concussion|shoulder|quad|calf|wrist|foot|hip|neck|chest|ligament|oblique|ribs?|toe|groin|elbow|illness|head)\b|back injury|hip pointer/i,
 };
 const STATUS_RANK = { IR: 5, PUP: 5, Sus: 5, NA: 4, DNR: 4, COV: 4, Out: 4, Doubtful: 3, Questionable: 2, Probable: 1 };
@@ -52,16 +56,21 @@ export function classify(title, text, kind, statusHint) {
   if (RX.trade.test(blob)) cats.push('trade');
   if (RX.depth.test(blob)) cats.push('depth');
   if (RX.suspension.test(blob)) cats.push('suspension');
+  if (RX.camp.test(blob)) cats.push('camp');
+  // Down wins a tie: "benched after losing snaps; X takes over" is bad news for this player
+  // only when he is the subject, which a headline matcher cannot tell, so stay conservative.
+  const role = RX.roleDown.test(blob) ? 'down' : RX.roleUp.test(blob) ? 'up' : null;
+  if (role && !cats.includes('depth')) cats.push('depth');
   if (!cats.length && RX.performance.test(blob)) cats.push('performance');
 
   const speculative = kind !== 'note' && RX.rumour.test(blob) && !/official|announc|confirm|activated|cleared to/i.test(blob);
   const posture = speculative ? 'speculative' : kind === 'note' && !RX.rumour.test(blob) ? 'confirmed' : 'reported';
   const better = !speculative && (RX.activated.test(blob) || (status === 'Questionable' && practice === 'FP'));
 
-  return { cats: [...new Set(cats)], practice, status, posture, better };
+  return { cats: [...new Set(cats)], practice, status, posture, better, role };
 }
 
-function tierOf(src) {
+export function tierOf(src) {
   if (!src) return 3;
   if (TIER1.test(src)) return 1;
   if (TIER2.test(src)) return 2;
@@ -189,6 +198,7 @@ export function buildPlayerNews(M) {
       status: c.status,
       posture: c.posture,
       better: c.better,
+      role: c.role,
       tier: tierOf(r.src),
       headlineOnly: r.kind === 'search',
       reps: 1,
@@ -471,6 +481,7 @@ export function lookupItems(M, pid, raw) {
         status: c.status,
         posture: c.posture,
         better: c.better,
+        role: c.role,
         tier: tierOf(g.src),
         headlineOnly: true,
         reps: 1,
