@@ -130,7 +130,7 @@ test('role news lifts a player and a rumour-only story is flagged unconfirmed', 
   const rumour = scan(null, [headline('5003', 'Tom Tango linked to trade talks, per a source', 6, 'Some Blog')]);
   const r = row(rumour.I, '5003');
   assert.ok(r.risks.some((x) => x.kind === 'speculative'));
-  assert.ok(r.reasons.some((x) => x.kind === 'trade' && /unconfirmed/.test(x.text)));
+  assert.ok(!r.reasons.some((x) => x.kind === 'trade'), 'rumour-only trade talk is not a reason');
   assert.equal(r.confidence, 'low');
 });
 
@@ -158,4 +158,11 @@ test('the decision brief claims what the scanner claims and quotes its reason', 
   const M = buildModel(s, 1, NOW);
   const d = buildDecisions(M, buildPlayerNews(M)).decisions.filter((x) => x.kind === 'waiver' && /^Claim/.test(x.title));
   assert.ok(d.some((x) => /Sam Sierra/.test(x.title) && x.because.some((b) => /next up/.test(b))));
+});
+
+test('trade talk about a teammate never opens a role; only injury reports do', () => {
+  const { I } = scan((s) => (s.players['1003'].hist = hist([[15], [16], [14]])), [headline('1003', 'Cy Cook traded? Why the Bears should have dealt him')]);
+  const r = row(I, '5002');
+  assert.equal(r.vacancy, null);
+  assert.ok(!r.reasons.some((x) => x.kind === 'opportunity'));
 });

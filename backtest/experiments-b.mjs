@@ -627,7 +627,17 @@ import fsE19 from 'node:fs';
 let rosMapCache = null;
 function rosWeek(season, wk) {
   const dir = path.join(DIR, 'ecr');
-  rosMapCache ||= JSON.parse(fsE19.readFileSync(path.join(dir, 'fp-to-sleeper.json'), 'utf8'));
+  // the expert-consensus cache comes from a separate step (backtest/fetch-ecr.mjs); without it the
+  // experiments run on the site's own values only instead of crashing
+  if (!rosMapCache) {
+    const f = path.join(dir, 'fp-to-sleeper.json');
+    if (!fsE19.existsSync(f)) {
+      if (!rosWeek.warned) console.warn('No expert-consensus cache (data/bt/ecr): run backtest/fetch-ecr.mjs for the ROS lens. Continuing without it.');
+      rosWeek.warned = true;
+      return null;
+    }
+    rosMapCache = JSON.parse(fsE19.readFileSync(f, 'utf8'));
+  }
   for (let w = wk; w >= Math.max(1, wk - 2); w--) {
     const f = path.join(dir, `ros-${season}-${w}.json`);
     if (!fsE19.existsSync(f)) continue;

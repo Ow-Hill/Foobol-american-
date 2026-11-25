@@ -133,10 +133,12 @@ export function vacancies(M, pid, byPid) {
     for (const it of byPid.get(q.id) || []) {
       if (it.dupe || it.better) continue;
       const spec = it.posture === 'speculative' ? 0.5 : 1;
-      const cand = it.status ? (VACANCY_W[it.status] || 0) * spec : it.practice === 'DNP' ? 0.35 * spec : it.cats?.includes('trade') && /\btraded\b|\bdealt\b/i.test(it.title || '') ? 0.5 * spec : 0;
+      // A real trade moves the player's team in Sleeper's data, so headline trade talk never opens a
+      // role here (live check 2026-11-25: one opinion piece read as "Caleb Williams traded").
+      const cand = it.status ? (VACANCY_W[it.status] || 0) * spec : it.practice === 'DNP' ? 0.35 * spec : 0;
       if (cand > w) {
         w = cand;
-        how = it.status ? `reported ${it.status}` : it.practice === 'DNP' ? 'missed practice' : 'reported traded';
+        how = it.status ? `reported ${it.status}` : 'missed practice';
         src = `${it.src}, ${agoTxt(M.now - it.time)}`;
       }
     }
@@ -196,7 +198,9 @@ export function scanCandidate(M, c, byPid, { claimPos = new Set(), openIr = 0, d
   const risks = [];
   if (topVac) reasons.push({ kind: 'opportunity', text: `${topVac.n} (${n1(topVac.ppg)} pts/g) is ${topVac.how}${topVac.nextUp ? ` — ${p.n} is next up` : ' — but another back-up sits ahead'} (${topVac.src})`, sign: 1 });
   for (const s of news.list) {
-    if (Math.abs(s.v) < 0.05 && s.kind !== 'trade' && s.kind !== 'camp') continue;
+    // Trade and camp news with no role direction is context, not a reason: a rumour-only trade
+    // mention is dropped (live check: a charity story about Deshaun Watson read as trade news).
+    if (Math.abs(s.v) < 0.05 && !((s.kind === 'trade' || s.kind === 'camp') && s.posture !== 'speculative')) continue;
     const head = s.title ? `“${s.title.length > 90 ? s.title.slice(0, 87) + '…' : s.title}”` : '';
     const line = { kind: s.kind, text: `${s.label}${head ? ': ' + head : ''} (${s.src}, ${agoTxt(M.now - s.at)}${s.posture === 'speculative' ? ', unconfirmed' : ''})`, sign: Math.sign(s.v) };
     (s.v < -0.05 ? risks : reasons).push(line);
