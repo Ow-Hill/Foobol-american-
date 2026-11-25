@@ -7,13 +7,13 @@ A live roster-management dashboard for the Sleeper league **James Cook Lovers**.
 ## Run it
 
 ```bash
-cd ff-roster-monitor
+cd Foobol-american-
 node server.js        # Node 18+, no dependencies
 npm test              # 70 tests
 # open http://localhost:4321
 ```
 
-Change the league, your Sleeper username or the port in `config.json`.
+Change the league, your Sleeper username or the port in `config.json` (a `PORT` environment variable wins over it).
 
 ## Where it runs
 
