@@ -2,7 +2,7 @@
 // points/game (blend of projection + recent form) x games left (byes) x health,
 // measured against replacement level for THIS league: its scoring, its lineup slots, its 10 teams.
 import { avg, sum } from './util.js';
-import { rosHealth, xpGame, VALUE_USAGE_WEIGHT, NEXT4, BUY_SELL_GAP, PICK_POINTS, keepShare, ROS_CONSENSUS, rosPoints } from './fitted.js';
+import { rosHealth, xpGame, VALUE_USAGE_WEIGHT, NEXT4, BUY_SELL_GAP, PICK_POINTS, keepShare, ROS_CONSENSUS, rosPoints, TRADE_CURVE } from './fitted.js';
 
 // How much a playoff week counts next to a regular-season week for a team certain to be in it.
 // Three games decide the title; a judgment, not a fitted number.
@@ -200,15 +200,27 @@ export function buildValues(M) {
     return { points: Math.round(next), share: keepShare(p.pos, p.age), net: Math.round(next - PICK_POINTS[1]), value: toValue(Math.max(0, next - PICK_POINTS[1]) * PICK_DISCOUNT) };
   }
 
+  // Trade value: league-adjusted value on the fitted curve plus a small credit for useful but
+  // replaceable starters (TRADE_CURVE, E21).
+  const tvOf = (pid, curve = TRADE_CURVE) => {
+    const v = by[pid]?.value ?? 0;
+    return 100 * Math.pow(v / 100, curve.k) + curve.ppgCredit * (by[pid]?.ppg ?? 0);
+  };
+
   const V = {
     rows, by, rep, games, finalWeek, weeksFor,
     rosRank: (pid) => snap.players[pid]?.ros?.ecr ?? null,
+    // Trade-market value (Dynasty Dealer, real Sleeper trades), 0-100; null when not loaded.
+    market: (pid) => snap.players[pid]?.mkt?.v ?? null,
+    marketSum: (ids) => (ids.some((id) => snap.players[id]?.mkt) ? sum(ids.map((id) => snap.players[id]?.mkt?.v ?? 0)) : null),
+    marketSource: () => snap.meta?.market || null,
     rosExperts: (pid) => (snap.players[pid]?.ros ? rosPoints(M.P(pid).pos, snap.players[pid].ros.ecr) : null), missedGames, usagePpg, signal, pickValue, keeperValue, playoffChance,
     ppg: (pid) => by[pid]?.ppg ?? ppg(pid),
     avail,
     value: (pid) => by[pid]?.value ?? 0,
     // trade value: league-adjusted value plus a small credit for useful-but-replaceable starters
-    tv: (pid) => (by[pid]?.value ?? 0) + 0.4 * (by[pid]?.ppg ?? 0),
+    tv: (pid) => tvOf(pid),
+    tvCurve: tvOf,
     vorp: (pid) => by[pid]?.vorp ?? 0,
     ros: (pid) => by[pid]?.ros ?? 0,
     rank: (pid) => by[pid]?.rank ?? null,
@@ -225,7 +237,7 @@ export function buildValues(M) {
     // share of his value players of his position and age kept the next season (E15); K and DEF
     // fall back to the age curve.
     tvH(pid, h = 'now') {
-      const base = (by[pid]?.value ?? 0) + 0.4 * (by[pid]?.ppg ?? 0);
+      const base = tvOf(pid);
       const p = M.P(pid);
       const k = ['QB', 'RB', 'WR', 'TE'].includes(p.pos) ? keepShare(p.pos, p.age) : ageFactor(p.pos, p.age);
       return h === 'future' ? base * k : h === 'balanced' ? base * (1 + k) / 2 : base;
@@ -286,7 +298,7 @@ export function buildValues(M) {
       return out;
     },
     sum: (ids) => sum(ids.map((id) => by[id]?.value ?? 0)),
-    tsum: (ids) => sum(ids.map((id) => (by[id]?.value ?? 0) + 0.4 * (by[id]?.ppg ?? 0))),
+    tsum: (ids) => sum(ids.map((id) => tvOf(id))),
   };
   return V;
 }

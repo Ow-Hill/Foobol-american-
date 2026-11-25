@@ -1,5 +1,5 @@
 import { esc, n1, n0, signed } from '../util.js';
-import { card, table, playerName, statusChip, callBadge, bar, secondOpinionBtn } from '../ui.js';
+import { card, table, playerName, statusChip, callBadge, bar, secondOpinionBtn, marketCredit } from '../ui.js';
 
 const POS = ['ALL', 'QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
 
@@ -23,17 +23,21 @@ function rankingsBody(M, ui) {
     .filter((r) => (ui.owner === 'ALL' ? true : ui.owner === 'FA' ? M.P(r.pid).own == null : ui.owner === 'MINE' ? M.P(r.pid).own === M.me.id : M.P(r.pid).own != null))
     .filter((r) => !q || M.P(r.pid).n.toLowerCase().includes(q))
     .slice(0, 60);
-  return table(
-    ['#', 'Player', 'Value', 'Trend', 'Experts ROS', 'Pos rank', 'PPG est.', 'This week', 'Games left', 'ROS pts', 'ADP'],
+  const mkt = !!M.V.marketSource();
+  const out = table(
+    ['#', 'Player', 'Value', ...(mkt ? ['Market'] : []), 'Trend', 'Experts ROS', 'Pos rank', 'PPG est.', 'This week', 'Games left', 'ROS pts', 'ADP'],
     rows.map((r) => {
       const p = M.P(r.pid);
       const s = M.V.signal(r.pid);
       const trend = !s ? '<span class="dim">–</span>' : `<span class="chip ${s.tag === 'Sell' ? 'chip-amber' : s.tag === 'Buy' ? 'chip-fa' : ''}" title="${esc(s.why)}">${s.tag}</span>`;
       const rr = M.V.rosRank(r.pid);
-      return [`<span class="num">${r.rank}</span>`, playerName(M, r.pid, { owner: true }), `<span class="num"><b>${n1(r.value)}</b></span> ${bar(r.value / 100)}`, trend, rr ? `<span class="num">${p.pos}${Math.round(rr)}</span>` : '<span class="dim">–</span>', `<span class="num">${p.pos}${r.posRank}</span>`, `<span class="num">${n1(r.ppg)}</span>`, `<span class="num">${p.avail === 'bye' ? 'bye' : n1(p.proj)}</span>`, `<span class="num">${n1(r.games)}</span>`, `<span class="num">${n0(r.ros)}</span>`, `<span class="num dim">${p.adp ? n0(p.adp[0]) : '–'}</span>`];
+      const mv = M.V.market(r.pid);
+      const mcell = mv == null ? '<span class="dim">–</span>' : `<span class="num ${Math.abs(mv - r.value) >= 15 ? (mv > r.value ? 'pos-num' : 'neg-num') : ''}" title="What managers pay for him in real Sleeper trades (0-100). Green: the market pays more than the site's value (a sell); red: less (a buy).">${n1(mv)}</span>`;
+      return [`<span class="num">${r.rank}</span>`, playerName(M, r.pid, { owner: true }), `<span class="num"><b>${n1(r.value)}</b></span> ${bar(r.value / 100)}`, ...(mkt ? [mcell] : []), trend, rr ? `<span class="num">${p.pos}${Math.round(rr)}</span>` : '<span class="dim">–</span>', `<span class="num">${p.pos}${r.posRank}</span>`, `<span class="num">${n1(r.ppg)}</span>`, `<span class="num">${p.avail === 'bye' ? 'bye' : n1(p.proj)}</span>`, `<span class="num">${n1(r.games)}</span>`, `<span class="num">${n0(r.ros)}</span>`, `<span class="num dim">${p.adp ? n0(p.adp[0]) : '–'}</span>`];
     }),
     { empty: 'No players match.' },
   );
+  return mkt ? out + `<p class="note">${marketCredit(M)}</p>` : out;
 }
 
 function compareBody(M, ui) {

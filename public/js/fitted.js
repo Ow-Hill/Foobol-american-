@@ -148,6 +148,14 @@ export function keepShare(pos, age) {
 // value formula; docs/backtest/results-current.json.)
 export const TRADE_BALANCE = { p25: 0.37, median: 0.54, p75: 0.78 };
 
+// E21 (to run): trade value = 100 x (value / 100)^k + ppgCredit x points per game. k > 1 makes one
+// star worth more than two players who add up to the same value, which is how real trades price
+// them. k = 1 and 0.4 are the hand-set values the site has always used; E21 fits both on real
+// trades from Sleeper leagues shaped like this one (backtest/fetch-market.mjs) and reports
+// whether the fit picks winners in this league's own trades (E13) better. Copy its suggestion
+// here only if it does.
+export const TRADE_CURVE = { k: 1, ppgCredit: 0.4 };
+
 // E16: 25th-75th percentile range as a share of the projection, by position and projection band
 // (bands: 0-5, 5-8, 8-11, 11-14, 14-18, 18+). The last-six-games range held the actual score only
 // 35% of the time (target 50%); this one 49.5% on 2025-26.
