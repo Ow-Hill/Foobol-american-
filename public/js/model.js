@@ -1058,7 +1058,7 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       if (t.type === 'trade') {
         const moves = {};
         for (const pid in t.adds || {}) (moves[t.adds[pid]] ||= []).push(name(pid));
-        for (const pk of t.picks) (moves[pk.to] ||= []).push(`${pk.season} R${pk.r}`);
+        for (const pk of t.picks) (moves[pk.to] ||= []).push(`${pk.s} R${pk.r}`);
         const parts = Object.keys(moves).map((rid) => `${ownerName(Number(rid))} gets ${moves[rid].join(', ')}`);
         items.push({ time: t.created, kind: 'trade', text: parts.join(' · '), rids: t.rids, mine: t.rids.includes(me.id) });
       } else {
