@@ -100,7 +100,7 @@ for rumours. A multi-week opening (IR/PUP/Sus) ahead of a next-man-up RB with a 
 Tier 1 takeover; a one-week Out is a short-term opening, a rumour is Watch. Bad news on the player
 himself (Out/IR, demoted) makes him Avoid. Confidence counts agreeing lenses (stats, news, market,
 lineup, opening). Verdicts: Claim (spend priority) · Claim only for the need · Watch · Free agency ·
-Avoid. Free agents' own news exists only if they were scanned (roster + trending names).
+Avoid. Free agents' own news exists only if they were scanned: the 15 free agents with a starter-job opening or the best projections (`freeAgentScan` in `lib/snapshot.js`), plus trending names. Anyone else needs **Refresh headlines** on the News page.
 
 ### Advanced position stats (`public/js/advstats.js`)
 
