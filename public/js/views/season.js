@@ -42,7 +42,7 @@ function effChart(M) {
 const STASH_GAIN = 4;
 
 function playoffSlate(M) {
-  const weeks = M.snap.meta.playoffWeeks.filter((wk) => wk >= M.W);
+  const weeks = (M.snap.meta.playoffWeeks || []).filter((wk) => wk >= M.W);
   if (!weeks.length) return '<p class="empty">The fantasy playoffs have started — use the Lineup tab week by week.</p>';
   const V = M.V;
   const plans = Object.fromEntries(weeks.map((wk) => [wk, V.weekPlan(M.me, wk)]));
@@ -75,7 +75,7 @@ function playoffSlate(M) {
 }
 
 function stashPlan(M) {
-  const weeks = M.snap.meta.playoffWeeks.filter((wk) => wk >= M.W);
+  const weeks = (M.snap.meta.playoffWeeks || []).filter((wk) => wk >= M.W);
   if (!weeks.length) return '';
   const V = M.V;
   const tot = (id) => weeks.reduce((s, wk) => s + V.weekPts(id, wk), 0);
@@ -184,7 +184,7 @@ export function render(M, ctx) {
       <div class="callout"><b>${me.w}-${me.l}, ${ord([...M.teams].sort((a, b) => b.w - a.w || b.pf - a.pf).findIndex((t) => t.id === me.id) + 1)} of ${M.teams.length} — ${ord([...M.teams].sort((a, b) => b.pf - a.pf).findIndex((t) => t.id === me.id) + 1)} in points scored</b>${n0(me.pp - me.pf)} points were left on the bench (${n1((me.pf / me.pp) * 100)}% lineup efficiency). ${me.pf > me.pa ? 'You have scored more than your opponents have — the record is running behind the points.' : ''}</div>
     </div>
     <div class="stack">
-      ${card('Playoff odds', table(['Team', 'Record', 'Points', 'Make playoffs', 'Bye', 'Title', 'Avg wins'], oddsRows, { cls: '' }) + `<details class="how"><summary>How these odds work — and where they're wrong</summary><ul><li>This site's own simulation: ${sim.n.toLocaleString()} seasons of the real remaining schedule. Each team's weekly score is drawn from its own season scoring (recent weeks weighted a bit more) with a spread shrunk toward the league's.</li><li>It ignores the league's 2 divisions in seeding, assumes nobody makes a roster move or trade, and doesn't know about injuries beyond what already shows in past scores. Ties break on wins, then points.</li><li>Title odds assume a 6-team bracket with the top 2 seeds on a bye. They are not Down Field's numbers and won't match them.</li><li>Treat anything within a few points of percentage as noise.</li></ul></details>`, { cls: 'flush', sub: `Top ${M.L.settings.playoff_teams} make the playoffs; top 2 get byes` })}
+      ${card('Playoff odds', table(['Team', 'Record', 'Points', 'Make playoffs', 'Bye', 'Title', 'Avg wins'], oddsRows, { cls: '' }) + `<details class="how"><summary>How these odds work — and where they're wrong</summary><ul><li>This site's own simulation: ${sim.n.toLocaleString()} seasons of the real remaining schedule. This week uses each team's projected best lineup. Later weeks blend each team's season scoring (recent weeks weighted a bit more, pulled toward the league average) half and half with its current roster's best lineup for that week, so injuries, byes, pickups and trades count.</li><li>Every division winner makes the playoffs, even behind a wild card on record (Sleeper's rule); seeds then follow wins, then points. Your commissioner can override seeding in Sleeper.</li><li>Title odds assume a 6-team bracket with the top 2 seeds on a bye. They are not Down Field's numbers and won't match them.</li><li>Treat anything within a few points of percentage as noise.</li></ul></details>`, { cls: 'flush', sub: `Top ${M.L.settings.playoff_teams} make the playoffs; top 2 get byes` })}
       <div class="grid g2">
         ${card(`Week ${M.W - 1} review`, reviewBlock(M), { cls: 'flush', sub: 'Final scores and points left on each bench' })}
         ${card('Your lineup efficiency, week by week', effChart(M), { sub: 'Best possible lineup vs what you started — uses actual points, so it grades decisions only by results; a worse outcome alone isn\u2019t a bad decision' })}

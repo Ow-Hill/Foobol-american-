@@ -538,6 +538,8 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
   };
   const cdf = (z) => 0.5 * (1 + erf(z / Math.SQRT2));
 
+  const ROSTER_WEIGHT = 0.5;
+  let rosterRelCache = null;
   let simCache = null;
   let profCache = null;
   function profiles() {
@@ -565,6 +567,29 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     const mb = mu ? mu[1] : p[b].mean;
     // with projected lineups, use the measured spread between projected and actual score gaps
     return cdf((ma - mb) / (mu ? WIN.lineupSd : Math.sqrt(p[a].sd ** 2 + p[b].sd ** 2)));
+  }
+
+  // Standings order with Sleeper's division rule: every division winner makes the playoffs, even
+  // with a worse record than a wild card (sleeper.com/blog/how-do-fantasy-playoffs-work). Seeds then
+  // follow record and points. Wins, then points for, break ties.
+  const divisions = (cfgLeague.divisions || 0) > 1 && teams.every((t) => t.division != null) ? [...new Set(teams.map((t) => t.division))] : null;
+  function seedOrder(w, pf, pcount) {
+    const order = teams.map((t) => t.id).sort((a, b) => w[b] - w[a] || pf[b] - pf[a]);
+    if (!divisions) return order;
+    const divOf = Object.fromEntries(teams.map((t) => [t.id, t.division]));
+    const winners = new Set(divisions.map((d) => order.find((id) => divOf[id] === d)));
+    const inField = order.slice(0, pcount);
+    const missing = [...winners].filter((id) => !inField.includes(id));
+    if (!missing.length) return order;
+    // drop the lowest wild cards to make room, keep standings order inside the field
+    const field = new Set(inField);
+    for (const id of missing) {
+      const cut = [...field].reverse().find((x) => !winners.has(x));
+      field.delete(cut);
+      field.add(id);
+    }
+    const sorted = order.filter((id) => field.has(id));
+    return sorted.concat(order.filter((id) => !field.has(id)));
   }
 
   // Monte Carlo of the rest of the season. force: [{rid, wk, win}] pins results. track: roster id to trace through the bracket.
@@ -595,7 +620,26 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       const a = meanAdj[id];
       return a == null ? 0 : typeof a === 'object' ? a[wk] || 0 : a;
     };
-    const sample = (id, wk) => prof[id].mean + adj(id, wk) + prof[id].sd * gauss();
+    // Later weeks: each team's strength relative to the league blends its season scoring with its
+    // current roster's best lineup for that week (Sleeper's projection for that week: injuries,
+    // byes, pickups and trades show up here before they show up in past scores). Level stays the
+    // league's scoring average. ROSTER_WEIGHT is a judgment; two seasons are too few to fit it.
+    const lm = avg(teams.map((t) => prof[t.id].mean));
+    const rosterRel = (rosterRelCache ||= {});
+    if (!rosterRel.done) for (let wk = W + 1; wk <= cfgLeague.playoff_week_start + 2; wk++) {
+      if (wk > W + 1 && !hasAhead) break;
+      const tot = {};
+      for (const t of teams) {
+        const act = lineup(t).active;
+        tot[t.id] = solve(act, { v: (id) => val(id, wk), can: (id) => P(id).effSev < 4 && !isBye(P(id).team, wk) }).total;
+      }
+      if (teams.some((t) => !(tot[t.id] > 0))) continue;
+      const m = avg(teams.map((t) => tot[t.id]));
+      rosterRel[wk] = Object.fromEntries(teams.map((t) => [t.id, WIN.meanShrink * (tot[t.id] - m)]));
+    }
+    rosterRel.done = true;
+    const meanFor = (id, wk) => (rosterRel[wk] ? lm + (1 - ROSTER_WEIGHT) * (prof[id].mean - lm) + ROSTER_WEIGHT * rosterRel[wk][id] : prof[id].mean);
+    const sample = (id, wk) => meanFor(id, wk) + adj(id, wk) + prof[id].sd * gauss();
     // This week: each team's projected best lineup, with the measured spread (E7). Later weeks
     // use the shrunk season averages.
     const lineNow = {};
@@ -624,7 +668,7 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
           if (sa > sb) w[a]++;
           else w[b]++;
         }
-      const order = teams.map((t) => t.id).sort((a, b) => w[b] - w[a] || pf[b] - pf[a]);
+      const order = seedOrder(w, pf, pcount);
       order.forEach((id, idx) => {
         res[id].wins += w[id];
         res[id].seedSum += idx + 1;
@@ -641,7 +685,7 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       const [s1, s2, s3, s4, s5, s6] = order;
       const game = (a, b, round) => {
         const wk = lastReg + round;
-        const wa = sample(a, wk) > sample(b, wk) ? a : b;
+        const wa = sampleWk(a, wk) > sampleWk(b, wk) ? a : b;
         if (path && (a === track || b === track)) {
           const opp = a === track ? b : a;
           path.opp[round][opp] = (path.opp[round][opp] || 0) + 1;

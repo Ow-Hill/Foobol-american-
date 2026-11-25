@@ -84,3 +84,42 @@ test('drops keep a bench player who starts a playoff week', () => {
   assert.notEqual(d.pid, '1010', 'Jett starts in the playoffs, so he is not the drop');
   assert.equal(d.pid, '1009');
 });
+
+// ---------------------------------------------------------------- season sim
+
+function seasonLeague(s) {
+  withFuture(s);
+  for (let wk = 11; wk <= 14; wk++) s.matchups[wk] = s.matchups[10].map((m) => ({ ...m }));
+  // nine played weeks of scores so every team has a spread
+  for (let wk = 1; wk <= 9; wk++) s.matchups[wk] = s.matchups[10].map((m) => ({ ...m, pts: 100 + (((wk * 7 + m.rid * 13) % 21) - 10) }));
+  for (const id of Object.keys(s.players)) s.players[id].ahead = Object.fromEntries([12, 13, 14, 15, 16, 17].map((wk) => [wk, s.players[id].proj?.pts || 0]));
+}
+
+test('season sim: a division winner makes the playoffs even with a worse record', () => {
+  const s = league((s) => {
+    seasonLeague(s);
+    s.league.settings.playoff_teams = 2;
+    s.league.settings.divisions = 2;
+    s.teams.forEach((t, i) => {
+      t.division = i < 2 ? 1 : 2;
+      t.w = i < 2 ? 9 : 1;
+      t.l = i < 2 ? 1 : 9;
+    });
+  });
+  const r = buildModel(s, 1, NOW).sim().res;
+  assert.ok(r[3].playoff + r[4].playoff > 0.99, 'one of the division 2 teams always gets in');
+  assert.ok(r[1].playoff + r[2].playoff < 1.01);
+  // without divisions the 1-9 teams have no path
+  const s2 = league((x) => { seasonLeague(x); x.league.settings.playoff_teams = 2; x.teams.forEach((t, i) => { t.w = i < 2 ? 9 : 1; t.l = i < 2 ? 1 : 9; }); });
+  const r2 = buildModel(s2, 1, NOW).sim().res;
+  assert.ok(r2[3].playoff + r2[4].playoff < 0.01);
+});
+
+test('season sim: injuries on a roster lower that team\'s odds in later weeks', () => {
+  const healthy = buildModel(league(seasonLeague), 1, NOW).sim().res;
+  const hurt = buildModel(league((s) => {
+    seasonLeague(s);
+    for (const id of ['2001', '2002', '2003']) s.players[id].inj = 'IR';
+  }), 1, NOW).sim().res;
+  assert.ok(hurt[2].wins < healthy[2].wins - 0.3, `rival wins ${healthy[2].wins.toFixed(2)} -> ${hurt[2].wins.toFixed(2)}`);
+});
