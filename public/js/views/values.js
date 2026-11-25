@@ -106,10 +106,62 @@ function startSitBody(M, ui) {
   <p class="note">Rest-of-season value: <b>${esc(P.n)}</b> ${n1(M.V.value(P.id))} vs <b>${esc(O.n)}</b> ${n1(M.V.value(O.id))}. The call uses one projection source plus the league's tiebreak order (health → matchup posture → game environment → kickoff). Check inactives before kickoff if either is questionable.</p>`;
 }
 
+// Keepers and draft picks on the same 0-100 scale as player values (values.js keeperValue,
+// pickValue): a keeper is worth his expected points above replacement next season (age-adjusted,
+// E15) less the first-round pick he takes the place of.
+function keeperRows(M, t) {
+  return t.players
+    .map((id) => ({ id, k: M.V.keeperValue(id) }))
+    .filter((r) => r.k && M.snap.players[r.id] && !['K', 'DEF'].includes(M.P(r.id).pos))
+    .sort((a, b) => b.k.net - a.k.net);
+}
+function nearestPlayer(M, value) {
+  let best = null;
+  for (const r of M.V.rows) if (r.value > 0 && (!best || Math.abs(r.value - value) < Math.abs(best.value - value))) best = r;
+  return best;
+}
+function keepersBody(M) {
+  const n = M.L.settings.max_keepers || 1;
+  const mine = keeperRows(M, M.me);
+  const top = mine[0];
+  const advice = !top
+    ? '<p class="empty">No keeper candidates found on your roster.</p>'
+    : top.k.net > 0
+      ? `<div class="callout good"><b>Keep ${esc(M.P(top.id).n)}</b>He should score about ${n0(top.k.points)} points above a replacement player next season, ${n0(top.k.net)} more than the first-round pick he replaces.${mine[1] && mine[1].k.net > 0 ? ` Next best: ${esc(M.P(mine[1].id).n)} (${signed(mine[1].k.net)}).` : ''}</div>`
+      : `<div class="callout warn"><b>No keeper beats a first-round pick</b>Your best, ${esc(M.P(top.id).n)}, projects ${n0(-top.k.net)} points below what this league's first-round picks have delivered. Keep him only if keeping costs a later pick than a first.</div>`;
+  const myTable = table(
+    ['Player', 'Age', 'Next season, pts above replacement', 'Share kept at his age', 'vs a 1st-round pick', 'Keeper value'],
+    mine.slice(0, 8).map((r) => {
+      const p = M.P(r.id);
+      return [playerName(M, r.id), `<span class="num">${p.age ?? '–'}</span>`, `<span class="num">${n0(r.k.points)}</span>`, `<span class="num">${Math.round(r.k.share * 100)}%</span>`, `<span class="num ${r.k.net >= 0 ? 'pos-num' : 'neg-num'}">${signed(r.k.net)}</span>`, `<span class="num"><b>${n1(r.k.value)}</b></span>`];
+    }),
+    { empty: 'No candidates.' },
+  );
+  const picks = M.picksOwned(M.me.id);
+  const allPicks = [...picks.own.map((p) => ({ ...p, how: 'own' })), ...picks.acquired.map((p) => ({ ...p, how: `from ${M.ownerName(p.from)}` }))].sort((a, b) => a.season - b.season || a.round - b.round);
+  const pickTable = table(
+    ['Pick', 'Value', 'About the same as', ''],
+    allPicks.map((pk) => {
+      const v = M.V.pickValue(pk.round);
+      const near = v > 0 ? nearestPlayer(M, v) : null;
+      return [`${pk.season} round ${pk.round}`, `<span class="num"><b>${n1(v)}</b></span>`, near ? playerName(M, near.pid, { owner: true }) : '<span class="dim">–</span>', `<span class="dim">${esc(pk.how)}</span>`];
+    }),
+    { empty: 'You have no picks in future drafts.' },
+  ) + (picks.sold.length ? `<p class="note">Traded away: ${picks.sold.map((p) => `${p.season} R${p.round} to ${esc(M.ownerName(p.to))}`).join(', ')}.</p>` : '');
+  const rivals = M.teams.filter((t) => t.id !== M.me.id).map((t) => ({ t, r: keeperRows(M, t)[0] })).filter((x) => x.r).sort((a, b) => b.r.k.net - a.r.k.net);
+  const rivalTable = table(
+    ['Team', 'Best keeper', 'vs a 1st', 'Keeper value'],
+    rivals.map(({ t, r }) => [esc(t.owner), playerName(M, r.id), `<span class="num ${r.k.net >= 0 ? 'pos-num' : 'neg-num'}">${signed(r.k.net)}</span>`, `<span class="num">${n1(r.k.value)}</span>`]),
+  );
+  return `<div class="stack">${card(`Your keeper (${n} per team)`, advice + myTable + '<p class="note">Next season = this season\'s points per game x the share players of his position and age kept the next year (this league\'s 2022-25 history, E15), above replacement, over a regular season. A first-round pick is what this league\'s first-rounders delivered. Keeper value is on the same 0-100 scale as player values.</p>', { cls: 'flush', sub: 'Who is worth more than the first-round pick he replaces' })}
+  ${card('Your draft picks', pickTable + '<p class="note">Pick value = what this league\'s picks in that round delivered the next season, less a fifth for the wait, on the player value scale. Use it to price a pick in a trade.</p>', { cls: 'flush', sub: 'Same 0-100 scale as players' })}
+  ${card('Rival keepers', rivalTable + '<p class="note">A team whose best keeper is far below a first-round pick may pay for one of yours.</p>', { cls: 'flush', sub: 'Each team\'s best keeper candidate' })}</div>`;
+}
+
 export function render(M, ctx) {
   const ui = (ctx.ui.values ||= { tab: 'rank', pos: 'ALL', owner: 'ALL', q: '', sel: [], ss: [null, null] });
   const opts = searchable(M).slice(0, 400).map((p) => `<option value="${esc(p.n)}"></option>`).join('');
-  const tabs = [['rank', 'Rankings'], ['compare', 'Compare players'], ['ss', 'Start / Sit']];
+  const tabs = [['rank', 'Rankings'], ['compare', 'Compare players'], ['ss', 'Start / Sit'], ['keep', 'Keepers & picks']];
   const intro = `<details class="how"><summary>How league-adjusted value works</summary><ul><li><b>Points per game</b> blends this week's projection (35%), last 3 games (35%) and the season average (30%), scored with <b>your league's exact scoring</b>.</li><li><b>Games left</b> counts every remaining week through the title game, minus byes; playoff weeks count 60% since only some teams get there.</li><li><b>Health</b> discounts IR (50%), Out (85%), Doubtful (92%) and Questionable (97%) — a heuristic, not a medical estimate.</li><li><b>Replacement level</b> is the best player left after all 10 teams fill QB, 2 RB, 2 WR, TE, 2 FLEX, K and DEF: QB ${n1(M.V.rep.QB)}, RB ${n1(M.V.rep.RB)}, WR ${n1(M.V.rep.WR)}, TE ${n1(M.V.rep.TE)} points a game. Value is points above that line, scaled so the top player is 100.</li></ul></details>`;
   const head = `<div class="tabs">${tabs.map(([k, l]) => `<button class="tab ${ui.tab === k ? 'active' : ''}" data-vtab="${k}">${l}</button>`).join('')}</div><datalist id="plist">${opts}</datalist>`;
   let body = '';
@@ -117,6 +169,8 @@ export function render(M, ctx) {
     body = card('League-adjusted rankings', `<div class="btn-row" style="margin-bottom:10px">${POS.map((p) => `<button class="tab ${ui.pos === p ? 'active' : ''}" data-vpos="${p}">${p}</button>`).join('')}<span style="flex:1"></span>${[['ALL', 'Everyone'], ['MINE', 'Mine'], ['FA', 'Free agents'], ['ROSTERED', 'Rostered']].map(([k, l]) => `<button class="tab ${ui.owner === k ? 'active' : ''}" data-vown="${k}">${l}</button>`).join('')}<input id="vq" type="search" placeholder="Search player…" value="${esc(ui.q)}" style="background:var(--panel2);border:1px solid var(--line2);border-radius:8px;padding:6px 10px;color:var(--text);min-width:170px" aria-label="Search players" /></div><div id="rk">${rankingsBody(M, ui)}</div>${intro}`, { cls: 'flush', sub: 'Value = points above replacement over the rest of the season, adjusted for byes and health' });
   } else if (ui.tab === 'compare') {
     body = card('Compare players', `<div class="btn-row" style="margin-bottom:12px"><input id="cmpIn" list="plist" placeholder="Type a player and press Enter…" style="background:var(--panel2);border:1px solid var(--line2);border-radius:8px;padding:7px 10px;color:var(--text);min-width:260px" aria-label="Add player to compare" /><button class="btn" id="cmpAdd">Add</button>${ui.sel.length ? '<button class="btn btn-ghost" id="cmpClear">Clear</button>' : ''}<button class="btn btn-ghost" id="cmpMine">Add my QB / FLEX options</button></div>${compareBody(M, ui)}`, { cls: '', sub: 'Up to 4 players, best number in each row highlighted' });
+  } else if (ui.tab === 'keep') {
+    body = keepersBody(M);
   } else {
     body = card('Start / sit', `<div class="two" style="margin-bottom:12px"><label class="muted">Player A<br /><input id="ssA" list="plist" value="${ui.ss[0] ? esc(M.P(ui.ss[0]).n) : ''}" placeholder="Type a name…" style="margin-top:4px;width:100%;background:var(--panel2);border:1px solid var(--line2);border-radius:8px;padding:7px 10px;color:var(--text)" /></label><label class="muted">Player B<br /><input id="ssB" list="plist" value="${ui.ss[1] ? esc(M.P(ui.ss[1]).n) : ''}" placeholder="Type a name…" style="margin-top:4px;width:100%;background:var(--panel2);border:1px solid var(--line2);border-radius:8px;padding:7px 10px;color:var(--text)" /></label></div>${startSitBody(M, ui)}`, { sub: 'Works for any two players — yours, a free agent, or someone you are trading for' });
   }

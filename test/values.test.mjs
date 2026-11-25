@@ -89,3 +89,16 @@ test('scanner gain counts rest-of-season value even with no lineup gain this wee
   assert.ok(big.score > none.score);
   assert.ok(big.reasons.some((r) => r.kind === 'value'));
 });
+
+test('keepers and picks share the player value scale, and the Values page has a keeper tab', async () => {
+  const M = model();
+  const k = M.V.keeperValue('1003');
+  assert.ok(k && k.value >= 0 && k.value <= 100);
+  assert.equal(k.net, k.points - 141, 'measured against a first-round pick (PICK_POINTS[1])');
+  assert.ok(M.V.pickValue(1) > M.V.pickValue(2) && M.V.pickValue(2) > M.V.pickValue(3));
+  const { render } = await import('../public/js/views/values.js');
+  const html = render(M, { ui: { values: { tab: 'keep', pos: 'ALL', owner: 'ALL', q: '', sel: [], ss: [null, null] } } });
+  assert.match(html, /Your keeper/);
+  assert.match(html, /Your draft picks/);
+  assert.match(html, /Rival keepers/);
+});
