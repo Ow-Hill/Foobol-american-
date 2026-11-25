@@ -9,7 +9,7 @@ A live roster-management dashboard for the Sleeper league **James Cook Lovers**.
 ```bash
 cd Foobol-american-
 node server.js        # Node 18+, no dependencies
-npm test              # 145 tests
+npm test              # 148 tests
 # open http://localhost:4321
 ```
 
@@ -23,11 +23,28 @@ Nothing is deployed. The app only runs on the machine that starts it:
 | --- | --- |
 | Local | `http://localhost:4321` |
 | Same Wi-Fi | `http://<your-lan-ip>:4321` — the server binds all interfaces |
-| Public internet | **No** — no domain, no tunnel, no cloud host |
+| Your phone, anywhere | `scripts/public.sh` (macOS/Linux) or `scripts/public.ps1` (Windows): a free Cloudflare tunnel behind a password, while your computer is on |
 
 * There is no database. Every page is rebuilt from live Sleeper/ESPN calls with short in-memory caching. `data/` (git-ignored) holds the player-list cache, the headline cache, a 7-day status-change log (`status-log.json`), each team's opening Vegas total, and the last good snapshot (`snapshot-last.json`). If Sleeper or ESPN is down, the site serves that snapshot with a "Showing saved data from …" banner instead of going blank.
 * If the `node server.js` process stops, the site is down. Nothing restarts it on boot.
-* To expose it: either run a tunnel (`cloudflared tunnel --url http://localhost:4321` or `ngrok http 4321`) for a temporary shareable URL, or deploy to any Node host and start it with `node server.js`. The server uses `PORT` when the host sets it, otherwise the port in `config.json`.
+* The server uses `PORT` when it is set, otherwise the port in `config.json`.
+
+### Open it on your phone (free)
+
+1. Install `cloudflared`: `brew install cloudflared` (macOS) or `winget install --id Cloudflare.cloudflared` (Windows).
+2. Start the site and the tunnel together, with a password of 10+ characters:
+   ```bash
+   SITE_PASSWORD='pick-something-long' ./scripts/public.sh          # macOS / Linux
+   $env:SITE_PASSWORD = 'pick-something-long'; .\scripts\public.ps1  # Windows PowerShell
+   ```
+3. Open the `https://….trycloudflare.com` address it prints. Any username works, the password is
+   `SITE_PASSWORD`, and the browser remembers it.
+
+Things to know: the computer has to stay on and awake (set it not to sleep while plugged in). The
+address changes every time you start the script; a fixed address needs a domain on Cloudflare and a
+named tunnel. The scripts refuse to start without a password, because `/api/news` makes outside
+requests for whoever calls it. Ten wrong passwords lock that visitor out for 10 minutes.
+`SITE_PASSWORD` also works without the tunnel, for example on your Wi-Fi.
 
 ## What's on each page
 

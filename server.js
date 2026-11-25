@@ -9,6 +9,8 @@ const { buildHistory } = require('./lib/history');
 const { playerNews: fetchPlayerNews } = require('./lib/playernews');
 const { checkAlerts } = require('./lib/alerts');
 const { recordCalls } = require('./lib/calls');
+const { makeAuth } = require('./lib/auth');
+const auth = makeAuth();
 
 const PUBLIC = path.join(__dirname, 'public');
 const MIME = {
@@ -109,6 +111,11 @@ function send(req, res, status, body, type) {
 }
 
 const server = http.createServer(async (req, res) => {
+  const denied = auth.check(req);
+  if (denied) {
+    res.writeHead(denied.status, { ...denied.headers, 'Cache-Control': 'no-store' });
+    return res.end(denied.body);
+  }
   const url = new URL(req.url, 'http://localhost');
   try {
     if (url.pathname === '/api/snapshot') {
@@ -169,7 +176,7 @@ const server = http.createServer(async (req, res) => {
 
 const port = process.env.PORT || cfg.port;
 server.listen(port, () => {
-  console.log(`Roster monitor running at http://localhost:${port}`);
+  console.log(`Roster monitor running at http://localhost:${port}${auth.enabled ? " (password on)" : ""}`);
   getSnapshot().then((s) => console.log(`Warm snapshot ready in ${s.meta.buildMs}ms`)).catch((e) => console.error('Warm-up failed:', e.message));
   buildHistory().then((h) => ((hist = h), (histAt = Date.now()), console.log(`History ready: ${h.seasons.map((s) => s.season).join(', ')}`))).catch((e) => console.error('History failed:', e.message));
 });
