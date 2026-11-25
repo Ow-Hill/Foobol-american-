@@ -22,11 +22,13 @@ import * as turning from './views/turning.js';
 import * as managers from './views/managers.js';
 import * as draft from './views/draft.js';
 import * as track from './views/track.js';
+import * as liveView from './views/live.js';
 
 const ROUTES = [
   { section: 'This week' },
   { id: 'briefing', label: 'Briefing', ico: '◉', mod: briefing },
   { id: 'lineup', label: 'Lineup', ico: '▤', mod: lineup },
+  { id: 'live', label: 'Live', ico: '◎', mod: liveView },
   { id: 'injuries', label: 'Injuries', ico: '✚', mod: injuries },
   { id: 'waivers', label: 'Waivers', ico: '⇄', mod: waivers },
   { id: 'news', label: 'News', ico: '≣', mod: news },
@@ -366,9 +368,11 @@ mqDesktop.addEventListener('change', () => {
 state.route = routeFromHash();
 load();
 setInterval(tick, 1000);
+// every 2 minutes; every minute on the Live page while games are on
+const refreshEvery = () => (state.route === 'live' && (state.snap?.schedule?.[state.snap.meta.week]?.games || []).some((g) => g.state === 'in') ? 60000 : 120000);
 setInterval(() => {
-  if (document.visibilityState === 'visible' && Date.now() - state.lastFetch > 120000) load();
-}, 30000);
+  if (document.visibilityState === 'visible' && Date.now() - state.lastFetch > refreshEvery()) load();
+}, 15000);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && Date.now() - state.lastFetch > 120000) load();
 });
