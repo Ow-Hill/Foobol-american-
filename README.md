@@ -9,7 +9,7 @@ A live roster-management dashboard for the Sleeper league **James Cook Lovers**.
 ```bash
 cd Foobol-american-
 node server.js        # Node 18+, no dependencies
-npm test              # 70 tests
+npm test              # 145 tests
 # open http://localhost:4321
 ```
 
