@@ -444,3 +444,6 @@ canvas.recap.vertical { max-width: 380px; }
   .tier-row .score { display: inline-block; margin: 0 0 0 8px; font-size: 16px; vertical-align: middle; }
   .sigs .sig-k { display: block; min-width: 0; }
 }
+.advs { display: flex; flex-wrap: wrap; gap: 4px 6px; margin: 6px 0 2px; }
+.advs .adv { font-family: var(--mono); font-size: 12px; color: var(--text); background: #121a24; border: 1px solid var(--line2); border-radius: 6px; padding: 1px 6px; }
+.advs .adv small { font-family: inherit; color: var(--muted); margin-right: 4px; font-size: 10.5px; }

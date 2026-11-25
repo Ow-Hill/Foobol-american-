@@ -87,3 +87,13 @@ Tier 1 takeover; a one-week Out is a short-term opening, a rumour is Watch. Bad 
 himself (Out/IR, demoted) makes him Avoid. Confidence counts agreeing lenses (stats, news, market,
 lineup, opening). Verdicts: Claim (spend priority) · Claim only for the need · Watch · Free agency ·
 Avoid. Free agents' own news exists only if they were scanned (roster + trending names).
+
+### Advanced position stats (`public/js/advstats.js`)
+
+Usage is scored per position against named benchmark players (per game, checked against StatsDeck
+on 2026-11-25): QB Burrow / Love / Allen (dropbacks, rush attempts, red-zone attempts), RB Gibbs
+(carries, targets, rush share, red-zone touches), WR Smith-Njigba (targets, target share, WOPR),
+TE McBride (targets, target share, est. routes, red-zone targets). Expected points from volume vs
+actual flags players running hot (likely to cool) or cold (due to catch up). Routes, YPRR, TPRR and
+WOPR are estimates (≈); inside-10 touches, slot/wide splits and completed QB air yards are not in
+Sleeper's feed. The Waivers page lists each metric's source in "Stats behind the scanner".

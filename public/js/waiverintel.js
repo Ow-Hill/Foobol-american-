@@ -6,6 +6,7 @@
 // Method follows skills/ff-waiver-plan (rolling priority, no FAAB): a won claim sends you to last,
 // so only a Tier 1 move spends priority; everything else waits for free agency.
 import { playerNewsFor } from './playernews.js';
+import { advancedOf, benchUsage, fmtMetric, XP_GAP } from './advstats.js';
 
 const DAY = 86400000;
 const SKILL_POS = new Set(['QB', 'RB', 'WR', 'TE']);
@@ -148,8 +149,14 @@ export function vacancies(M, pid, byPid) {
 export function scanCandidate(M, c, byPid, { claimPos = new Set(), openIr = 0 } = {}) {
   const p = c.p;
   const u = usageOf(p);
-  const usage = usageScore(p.pos, u);
-  const trend = trendScore(p.pos, u);
+  // position-specific volume (dropbacks, shares, red zone, WOPR, routes) against benchmark players,
+  // blended with the basic snaps/touches score; basic only when the feed sent no advanced fields
+  const adv = advancedOf(p.pos, p.hist);
+  const bench = benchUsage(p.pos, adv);
+  const usage = bench ? 0.6 * bench.score + 0.4 * usageScore(p.pos, u) : usageScore(p.pos, u);
+  const xpGap = adv?.m.xpGap?.v ?? null;
+  // efficiency: scoring far above what the volume normally produces tends to cool off, and below it, to catch up
+  const trend = clamp(trendScore(p.pos, u) + (xpGap == null ? 0 : xpGap >= XP_GAP ? -0.3 : xpGap <= -XP_GAP ? 0.3 : 0), -1, 1);
   const news = newsSignals(byPid.get(c.id), M.now);
   const vac = vacancies(M, c.id, byPid);
   const topVac = vac[0] || null;
@@ -181,6 +188,13 @@ export function scanCandidate(M, c, byPid, { claimPos = new Set(), openIr = 0 } 
   }
   const ul = usageLine(p.pos, u);
   if (ul) (trend <= -0.3 ? risks : reasons).push({ kind: 'usage', text: ul, sign: trend > 0.2 ? 1 : trend < -0.2 ? -1 : 0 });
+  if (bench) {
+    const top = [...bench.vs].sort((a, b) => b.ratio - a.ratio).slice(0, 3);
+    const txt = top.map((x) => `${x.label} ${fmtMetric(x)}${x.refName ? ` (${x.refName.split(' ').slice(-1)[0]} ${fmtMetric({ v: x.ref, pct: x.pct })})` : ''}`).join(' · ');
+    (bench.score >= 0.45 ? reasons : risks).push({ kind: 'volume', text: `${txt} — ${Math.round(bench.score * 100)}% of a benchmark role`, sign: bench.score >= 0.45 ? 1 : 0 });
+  }
+  if (xpGap != null && xpGap >= XP_GAP) risks.push({ kind: 'efficiency', text: `Scoring ${n1(xpGap)} pts/g above what his volume usually produces (≈${n1(adv.m.xp.v)}) — likely to cool`, sign: -1 });
+  else if (xpGap != null && xpGap <= -XP_GAP) reasons.push({ kind: 'efficiency', text: `Volume is worth ≈${n1(adv.m.xp.v)} pts/g, ${n1(-xpGap)} more than he has scored — due to catch up`, sign: 1 });
   if (c.impact >= 0.5) reasons.push({ kind: 'lineup', text: `+${n1(c.impact)} pts to your best lineup this week`, sign: 1 });
   else if (c.impactNext >= 0.5) reasons.push({ kind: 'lineup', text: `+${n1(c.impactNext)} pts to your lineup in Week ${M.W + 1}`, sign: 1 });
   if (addRank && addRank <= 25) reasons.push({ kind: 'market', text: `#${addRank} add on Sleeper in the last 24h`, sign: 1 });
@@ -227,7 +241,7 @@ export function scanCandidate(M, c, byPid, { claimPos = new Set(), openIr = 0 } 
   return {
     id: c.id, p, c, score, tier, verdict, confidence, takeover,
     parts: { gain, usage, trend, newsPart, opp, market, health, newsNet: news.net },
-    usage: u, news: news.list, vacancy: topVac, reasons, risks, trigger, lenses,
+    usage: u, adv, bench, news: news.list, vacancy: topVac, reasons, risks, trigger, lenses,
   };
 }
 

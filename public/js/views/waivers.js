@@ -1,6 +1,7 @@
 import { esc, n1, signed, fmtDay, fmtDayTime, ago } from '../util.js';
 import { card, table, playerName, secondOpinionBtn, statusChip } from '../ui.js';
 import { waiverIntel, VERDICT_LABEL } from '../waiverintel.js';
+import { BENCHMARKS, SOURCES, fmtMetric } from '../advstats.js';
 
 const tierName = { 1: 'Smash', 2: 'Conditional', 3: 'Pass', 4: 'Free agency' };
 const tierHelp = {
@@ -10,12 +11,34 @@ const tierHelp = {
   4: 'Handcuffs, bye fillers and K/DEF streams — claim Wednesday after waivers clear.',
 };
 
-const KIND_LABEL = { opportunity: 'Opening', injury: 'Injury', practice: 'Practice', role: 'Role', trade: 'Trade', camp: 'Camp', suspension: 'Suspension', usage: 'Usage', lineup: 'Lineup', market: 'Market', sample: 'Sample', speculative: 'Rumour' };
+const KIND_LABEL = { opportunity: 'Opening', injury: 'Injury', practice: 'Practice', role: 'Role', trade: 'Trade', camp: 'Camp', suspension: 'Suspension', usage: 'Usage', volume: 'Volume', efficiency: 'Efficiency', lineup: 'Lineup', market: 'Market', sample: 'Sample', speculative: 'Rumour' };
 const VERDICT_CLS = { claim: 'chip-tier1', 'claim-if-need': 'chip-tier2', watch: 'chip-amber', 'free-agency': 'chip-tier4', pass: 'chip-tier3', avoid: 'chip-red' };
 
 function signalLines(r) {
   const line = (x, neg) => `<li class="sig ${neg ? 'sig-neg' : x.sign > 0 ? 'sig-pos' : ''}"><span class="sig-k">${KIND_LABEL[x.kind] || x.kind}</span> ${esc(x.text)}</li>`;
   return `<ul class="sigs">${r.reasons.map((x) => line(x, false)).join('')}${r.risks.map((x) => line(x, true)).join('')}</ul>`;
+}
+
+// every advanced metric we have for him, last 3 games; ≈ marks an estimate
+function advLine(r) {
+  const m = r.adv?.m;
+  if (!m) return '';
+  const order = ['snap', 'dropbacks', 'passAtt', 'rushAtt', 'attSh', 'rec', 'tgt', 'tgtSh', 'routes', 'tprr', 'yprr', 'air', 'wopr', 'rz', 'rzTouch', 'rzTgt', 'rtg', 'rushPts', 'xp'];
+  const bits = order.filter((k) => m[k]).map((k) => `<span class="adv"><small>${esc(m[k].label)}</small>${fmtMetric(m[k])}</span>`);
+  return bits.length ? `<div class="advs">${bits.join('')}</div>` : '';
+}
+
+function sourcesCard() {
+  const rows = [];
+  for (const pos of ['QB', 'RB', 'WR', 'TE']) {
+    for (const [k, v] of Object.entries(SOURCES[pos])) {
+      const cls = /^missing/.test(v) ? 'chip-red' : /^estimate/.test(v) ? 'chip-amber' : 'chip-fa';
+      const tag = /^missing/.test(v) ? 'not available' : /^estimate/.test(v) ? 'estimate ≈' : /^computed/.test(v) ? 'computed' : 'Sleeper feed';
+      rows.push([`<b>${pos}</b>`, esc(k), `<span class="chip ${cls}">${tag}</span>`, `<span class="muted">${esc(v.replace(/^(feed|computed|estimate|missing)( — | )?/, ''))}</span>`]);
+    }
+  }
+  const bench = ['QB', 'RB', 'WR', 'TE'].flatMap((pos) => BENCHMARKS[pos].map((b) => `<b>${esc(b.n)}</b> (${pos}): ${Object.entries(b).filter(([k]) => !['n', 'team', 'gp'].includes(k)).map(([k, v]) => `${k} ${v < 1 && k !== 'ppg' ? Math.round(v * 100) + '%' : v}`).join(', ')}`));
+  return card('Stats behind the scanner', table(['Pos', 'Metric', 'Source', 'How'], rows) + `<p class="note">Benchmarks, per game, ${esc(BENCHMARKS.asOf)}: ${bench.join(' · ')}. A candidate's volume is scored as a share of the benchmark's number, capped at 100%.</p>`, { cls: 'flush', sub: 'Which of the advanced stats the data can supply, and which are estimates' });
 }
 
 function scanRow(M, r) {
@@ -25,6 +48,7 @@ function scanRow(M, r) {
     <div>
       <div>${playerName(M, r.id)} <span class="chip chip-tier${r.tier}">T${r.tier}</span> <span class="chip conf-${r.confidence}" title="How many of stats, news, market and lineup gain agree">${r.confidence} confidence</span></div>
       ${signalLines(r)}
+      ${advLine(r)}
       <div class="why"><span class="dim">${esc(r.trigger)}</span></div>
       ${r.drop ? `<div class="drop">${r.drop.none ? '✓ ' : '↳ '}${esc(r.drop.text)}</div>` : ''}
     </div>
@@ -124,6 +148,7 @@ export function render(M, ctx) {
         ${card('Defense streams', streamTable(M, w.streams.DEF, 'DEF'), { cls: 'flush', sub: 'Opponent team total under ~20.5 is a soft spot (this league pays +10 for a shutout, −4 at 35+)' })}
         ${card('Kicker streams', streamTable(M, w.streams.K, 'K'), { cls: 'flush', sub: 'Long-range kickers in domes or calm weather earn more (4/5/6 for 40+/50+/60+)' })}
       </div>
+      ${sourcesCard()}
       ${card('Recent drops by rivals', drops, { cls: 'flush', sub: 'Last 7 days — worth a no-cost claim if still unclaimed' })}
       ${card('How the tiers work', Object.keys(tierName).map((k) => `<p style="margin-bottom:6px"><span class="chip chip-tier${k}">T${k} · ${tierName[k]}</span> <span class="muted">${tierHelp[k]}</span></p>`).join('') + `<p class="note">Tier is set from how much the player would raise your best legal lineup (this week and next), plus role changes. These are the site's heuristics, not a model's verdict — a candidate list was triaged by projection and usage, not background-checked player by player. Always check the news before a claim is final.</p>`)}
     </div>`;
