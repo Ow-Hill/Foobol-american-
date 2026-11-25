@@ -20,6 +20,7 @@ import * as story from './views/story.js';
 import * as turning from './views/turning.js';
 import * as managers from './views/managers.js';
 import * as draft from './views/draft.js';
+import * as track from './views/track.js';
 
 const ROUTES = [
   { section: 'This week' },
@@ -38,6 +39,7 @@ const ROUTES = [
   { id: 'rate', label: 'Rate my team', ico: '★', mod: rate },
   { id: 'turning', label: 'Turning points', ico: '↯', mod: turning },
   { id: 'draft', label: 'Draft plan', ico: '✦', mod: draft },
+  { id: 'track', label: 'Track record', ico: '✓', mod: track },
   { section: 'League' },
   { id: 'report', label: 'Weekly report', ico: '✎', mod: report },
   { id: 'recap', label: 'Video recaps', ico: '▶', mod: recap },
@@ -248,7 +250,11 @@ function renderView() {
   const route = PAGES.find((r) => r.id === state.route);
   const scroll = window.scrollY;
   const ctx = { state, ui: state.ui, rerender: renderView, go, HM: state.HM };
-  viewEl.innerHTML = route.mod.render(M, ctx);
+  const meta = state.snap.meta;
+  const stale = meta.staleSince
+    ? `<div class="callout warn" role="status" style="margin-bottom:14px"><b>Showing saved data from ${esc(ago(meta.staleSince, Date.now()))}</b>Live league data could not be loaded (${esc(meta.staleReason || 'source unavailable')}). Statuses, lineups and news may have changed since — refresh before acting.</div>`
+    : '';
+  viewEl.innerHTML = stale + route.mod.render(M, ctx);
   route.mod.mount?.(viewEl, M, ctx);
   updateNavActive();
   document.querySelector('#nav a.active')?.scrollIntoView({ block: 'nearest' });
@@ -287,7 +293,7 @@ function tick() {
     clocks.push({ label: `Next lineup lock · ${mine[0].team} ${g.home ? 'vs' : '@'} ${g.opp}`, value: countdown(ms), sub: fmtKick(g.date), cls: ms < 3 * 3600000 ? 'urgent' : ms < 24 * 3600000 ? 'soon' : '', tip: `${same} of your players` });
   }
   const wv = M.nextWaiverRun();
-  clocks.push({ label: 'Waivers process', value: countdown(wv - now), sub: 'Tuesday', cls: '' });
+  clocks.push({ label: 'Waivers process', value: countdown(wv - now), sub: M.waiverDayName(), cls: '' });
   if (M.deadlineAt && !M.deadlinePassed) {
     const ms = M.acceptBy - now;
     clocks.push({ label: `Trade deadline (Wk ${M.deadlineWeek}) · accept by`, value: countdown(ms), sub: fmtDayTime(M.acceptBy), cls: ms < 24 * 3600000 ? 'urgent' : ms < 4 * 86400000 ? 'soon' : '' });

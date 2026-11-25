@@ -19,10 +19,14 @@ export function buildFeed(M) {
     const t = new Date(a.time).getTime();
     if (now - t > WEEK) continue;
     let r = a.pids.length ? rel(a.pids) : 'nfl';
+    // A story about a teammate of my players is about my players' teams, even when it names
+    // a free agent or a rival's player (a backup promoted, a QB hurt).
+    const named = a.pids.map((id) => M.P(id).team).filter(Boolean);
+    const hits = [...new Set([...(a.teams.length <= 3 ? a.teams : []), ...named].filter((x) => myTeams.has(x)))];
     let teamHit = null;
-    if (r === 'nfl' && a.teams.length <= 3 && a.teams.some((x) => myTeams.has(x))) {
-      r = 'team';
-      teamHit = a.teams.filter((x) => myTeams.has(x));
+    if (r !== 'mine' && hits.length) {
+      teamHit = hits;
+      if (r === 'nfl' || r === 'fa') r = 'team';
     }
     items.push({ id: 'a' + a.id, kind: 'article', time: t, title: a.headline, text: a.desc, url: a.url, src: 'ESPN', pids: a.pids, rel: r, teams: a.teams, teamHit });
   }

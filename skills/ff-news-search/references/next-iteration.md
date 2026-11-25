@@ -3,7 +3,15 @@
 The current engine is deterministic and local-first. These are the next changes in priority order.
 Each item names the file, the acceptance test, and the risk.
 
-## P5.1 — Same-name disambiguation
+## P5.1 — Same-name disambiguation — done (2026-11-25)
+
+Two layers in `lib/playernews.js`, both kept when the branches were merged:
+- `nameConflict` (every player): the words directly before the name are another NFL team or a
+  defensive position for an offensive player, and the headline never names the player's own team.
+- `isCollision` + `otherPlayerSignal` (names on `COLLISIONS`): one team-qualified query, a
+  positive-evidence filter, and a hyphen-compound guard (`Hines-Allen`). Golden set
+  (`test/fixtures/news-golden.json`) precision@10 0.863 → 0.957 with no recall loss.
+Remaining: grow `COLLISIONS` from real misses; consider deriving it from the Sleeper player DB.
 
 **Problem:** `Josh Allen` matches the Bills QB and the Jaguars edge rusher. `A.J. Brown` and other
 common names can collide with college or other-sport coverage.
@@ -50,7 +58,11 @@ a diversity rule: at most two items from the same source in a top-10 list.
 **Acceptance:** top-10 Wire/League lists contain at least three distinct sources when available;
 no source contributes more than 40% of a player’s rows.
 
-## P5.4 — Evaluation harness
+## P5.4 — Evaluation harness (done 2026-11-25)
+
+**Shipped:** `test/fixtures/news-golden.json` (12 players, hand-written labelled headlines) and
+`test/news-eval.test.js`, run by `npm test`. It asserts precision@10 ≥ 0.8 and coverage ≥ 80% and
+prints the misses. Remaining: replace synthetic headlines with real labelled RSS titles.
 
 **Problem:** the matcher and ranking are tested by hand. There is no precision/coverage number.
 

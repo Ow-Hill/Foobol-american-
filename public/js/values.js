@@ -2,22 +2,71 @@
 // points/game (blend of projection + recent form) x games left (byes) x health,
 // measured against replacement level for THIS league: its scoring, its lineup slots, its 10 teams.
 import { avg, sum } from './util.js';
+import { rosHealth, xpGame, VALUE_USAGE_WEIGHT, NEXT4, BUY_SELL_GAP, PICK_POINTS, keepShare, ROS_CONSENSUS, rosPoints } from './fitted.js';
 
-const AVAIL = { IR: 0.5, PUP: 0.5, Sus: 0.5, NA: 0.5, DNR: 0.5, COV: 0.5, Out: 0.85, Doubtful: 0.92, Questionable: 0.97 };
+// How much a playoff week counts next to a regular-season week for a team certain to be in it.
+// Three games decide the title; a judgment, not a fitted number.
+const PLAYOFF_WEEK_WEIGHT = 1.5;
 
 export function buildValues(M) {
   const { snap, W, L } = M;
   const finalWeek = L.settings.playoff_week_start + 2;
   const regEnd = L.settings.playoff_week_start - 1;
-  const weeks = [];
-  for (let wk = W; wk <= finalWeek; wk++) weeks.push({ wk, w: wk <= regEnd ? 1 : 0.6 });
+  // Weeks 15-17 only matter to a team that gets there: weight them by that team's playoff chance.
+  // (They used to count 0.6 for everyone, contender or not.)
+  const weeksCache = {};
+  let oddsCache;
+  const playoffChance = (rid) => {
+    if (oddsCache === undefined) {
+      try {
+        oddsCache = M.odds();
+      } catch {
+        oddsCache = null;
+      }
+    }
+    return oddsCache?.[rid]?.playoff ?? 0.4;
+  };
+  const weeksFor = (rid = M.me.id) => {
+    if (weeksCache[rid]) return weeksCache[rid];
+    const pw = PLAYOFF_WEEK_WEIGHT * playoffChance(rid);
+    const out = [];
+    for (let wk = W; wk <= finalWeek; wk++) out.push({ wk, w: wk <= regEnd ? 1 : pw });
+    return (weeksCache[rid] = out);
+  };
+  const weeks = weeksFor(M.me.id);
 
   const gamesCache = {};
-  const games = (team) => {
+  const games = (team, rid = M.me.id) => {
     if (!team) return 0;
-    return (gamesCache[team] ??= sum(weeks.map((x) => (M.isBye(team, x.wk) ? 0 : x.w))));
+    return (gamesCache[team + '|' + rid] ??= sum(weeksFor(rid).map((x) => (M.isBye(team, x.wk) ? 0 : x.w))));
   };
-  const avail = (pid) => AVAIL[M.P(pid).eff] ?? 1;
+  // Team games missed in a row up to now (from the last six weeks of results in the snapshot).
+  const missedGames = (pid) => {
+    const p = M.P(pid);
+    const res = snap.results || {};
+    const played = new Set((p.hist || []).map((h) => h.w));
+    let k = 0;
+    for (let wk = W - 1; wk >= 1 && res[wk]; wk--) {
+      if (!res[wk][p.team]) continue; // bye
+      if (played.has(wk)) break;
+      k++;
+    }
+    return k;
+  };
+  // Share of the remaining games he is likely to play, times how he scores when back (backtest E11).
+  const avail = (pid) => {
+    const p = M.P(pid);
+    return p.eff ? rosHealth(p.eff, missedGames(pid)) : 1;
+  };
+  // Points his volume normally produces, per game: targets, air yards on catches, carries and
+  // red-zone work, without touchdown and after-the-catch luck (null without that detail).
+  const usagePpg = (pid, n = 99) => {
+    const p = M.P(pid);
+    const h = (p.hist || []).slice(-n);
+    if (!h.length || !h.some((x) => x.air !== undefined || x.passAtt !== undefined)) return null;
+    const v = h.map((x) => xpGame(p.pos, x)).filter((x) => x != null);
+    return v.length ? avg(v) : null;
+  };
 
   // Position peaks from the ff-ml-projections methodology; RBs decline faster after theirs.
   const PEAK = { QB: 30.5, RB: 24.5, WR: 27, TE: 27.5, K: 30, DEF: 99 };
@@ -48,6 +97,9 @@ export function buildValues(M) {
     } else if (hist != null) {
       est = (g * hist + 3 * (prior[p.pos] || 8)) / (g + 3);
     } else est = proj;
+    // Half results, half usage: this beat the results-only blend at every position on 2025 (E11).
+    const xp = g >= 3 ? usagePpg(pid) : null;
+    if (xp != null && est) est = (1 - VALUE_USAGE_WEIGHT) * est + VALUE_USAGE_WEIGHT * xp;
     return est || 0;
   }
   // hard sanity bound: nobody projects past 110% of the best established player at his position
@@ -61,6 +113,15 @@ export function buildValues(M) {
     const p = M.P(pid);
     let v = ppgRaw(pid);
     if (cap[p.pos]) v = Math.min(v, cap[p.pos] * 1.1);
+    // Blend with the experts' rest-of-season rank where that beat the site alone (E19). Healthy
+    // players only: an injured player's health is priced separately, and the experts' rank
+    // already reflects the injury.
+    const w = ROS_CONSENSUS.weight[p.pos];
+    const sp = snap.players[pid];
+    if (w != null && sp?.ros && !p.eff && v > 0) {
+      const r = rosPoints(p.pos, sp.ros.ecr);
+      if (r != null) v = w * v + (1 - w) * r;
+    }
     return (rawPpg[pid] = v);
   }
 
@@ -101,8 +162,48 @@ export function buildValues(M) {
   const posCount = {};
   rows.forEach((r) => ((posCount[r.pos] = (posCount[r.pos] || 0) + 1), (r.posRank = posCount[r.pos])));
 
+  // Buy / hold / sell: is he scoring above or below what his volume supports? (backtest E12)
+  function signal(pid) {
+    const p = M.P(pid);
+    const m = NEXT4[p.pos];
+    const last = (p.hist || []).slice(-4);
+    if (!m || last.length < 4 || !last.some((x) => x.air !== undefined || x.passAtt !== undefined)) return null;
+    const T = avg(last.map((h) => h.pts));
+    const X = avg(last.map((h) => xpGame(p.pos, h)));
+    if (T < 6 && X < 6) return null;
+    const next = m.a + m.t * T + m.x * X;
+    const gap = T - X;
+    const tag = gap >= BUY_SELL_GAP ? 'Sell' : gap <= -BUY_SELL_GAP ? 'Buy' : 'Hold';
+    // X is what his targets, air yards on catches, carries and red-zone work normally produce.
+    // What it leaves out is the noisy part: touchdowns and yards after the catch.
+    const basis = `his targets, air yards and red-zone work normally produce ${X.toFixed(1)}`;
+    const why = tag === 'Sell'
+      ? `Scoring ${T.toFixed(1)} a game where ${basis}; the difference is mostly touchdowns and long gains. Players this far above gave back about 4 a game over the next month; expect about ${next.toFixed(1)}.`
+      : tag === 'Buy'
+        ? `Scoring ${T.toFixed(1)} a game where ${basis}. Players this far below gained 1-4 a game over the next month; expect about ${next.toFixed(1)}.`
+        : `Scoring ${T.toFixed(1)} a game, in line with his volume (${X.toFixed(1)}). Expect about ${next.toFixed(1)} over the next month.`;
+    return { tag, last4: T, usage: X, next, gap, why };
+  }
+  // Draft picks and keepers, in the same 0-100 units as player values. A pick is next season's
+  // points above replacement from this league's own drafts (E15), discounted a fifth for the wait.
+  const PICK_DISCOUNT = 0.8;
+  const seasonWeeks = regEnd; // regular-season weeks a pick or keeper helps in next year
+  const toValue = (pointsAboveRep) => Math.round((pointsAboveRep / maxV) * 1000) / 10;
+  const pickValue = (round) => (PICK_POINTS[round] ? toValue(PICK_POINTS[round] * PICK_DISCOUNT) : 0);
+  // A keeper is worth what he should score above replacement next year (age-adjusted), less the
+  // first-round pick he takes the place of.
+  function keeperValue(pid) {
+    const p = M.P(pid);
+    const r = by[pid];
+    if (!r || !PICK_POINTS[1]) return null;
+    const next = Math.max(0, r.ppg * keepShare(p.pos, p.age) - (rep[p.pos] || 0)) * seasonWeeks;
+    return { points: Math.round(next), share: keepShare(p.pos, p.age), net: Math.round(next - PICK_POINTS[1]), value: toValue(Math.max(0, next - PICK_POINTS[1]) * PICK_DISCOUNT) };
+  }
+
   const V = {
-    rows, by, rep, games, finalWeek,
+    rows, by, rep, games, finalWeek, weeksFor,
+    rosRank: (pid) => snap.players[pid]?.ros?.ecr ?? null,
+    rosExperts: (pid) => (snap.players[pid]?.ros ? rosPoints(M.P(pid).pos, snap.players[pid].ros.ecr) : null), missedGames, usagePpg, signal, pickValue, keeperValue, playoffChance,
     ppg: (pid) => by[pid]?.ppg ?? ppg(pid),
     avail,
     value: (pid) => by[pid]?.value ?? 0,
@@ -116,15 +217,18 @@ export function buildValues(M) {
       const l = M.lineup(t);
       const rm = new Set(remove);
       const ids = l.active.filter((id) => !rm.has(id)).concat(extra);
-      return M.solve(ids, { v: (id) => ppg(id) * Math.min(1, avail(id) + 0.1), can: (id) => !M.P(id).missing }).total;
+      return M.solve(ids, { v: (id) => ppg(id) * avail(id), can: (id) => !M.P(id).missing }).total;
     },
     weeks,
     ageFactor: (pid) => ageFactor(M.P(pid).pos, M.P(pid).age),
-    // trade value under a horizon: win-now / balanced / future (age-weighted)
+    // trade value under a horizon: win-now / balanced / future. "Future" weights a player by the
+    // share of his value players of his position and age kept the next season (E15); K and DEF
+    // fall back to the age curve.
     tvH(pid, h = 'now') {
       const base = (by[pid]?.value ?? 0) + 0.4 * (by[pid]?.ppg ?? 0);
-      const f = ageFactor(M.P(pid).pos, M.P(pid).age);
-      return h === 'future' ? base * f ** 3 : h === 'balanced' ? base * f : base;
+      const p = M.P(pid);
+      const k = ['QB', 'RB', 'WR', 'TE'].includes(p.pos) ? keepShare(p.pos, p.age) : ageFactor(p.pos, p.age);
+      return h === 'future' ? base * k : h === 'balanced' ? base * (1 + k) / 2 : base;
     },
     tsumH: (ids, h = 'now') => sum(ids.map((id) => V.tvH(id, h))),
     // best lineup (slots) from the typical healthy roster, with players added/removed
@@ -132,7 +236,27 @@ export function buildValues(M) {
       const l = M.lineup(t);
       const rm = new Set(remove);
       const ids = l.active.filter((id) => !rm.has(id)).concat(extra);
-      return M.solve(ids, { v: (id) => ppg(id) * Math.min(1, avail(id) + 0.1), can: (id) => !M.P(id).missing });
+      return M.solve(ids, { v: (id) => ppg(id) * avail(id), can: (id) => !M.P(id).missing });
+    },
+    // Points for one future week. Skill players use points per game x health (the rest-of-season
+    // estimate the backtest measured, E11); the backtest found no matchup signal beyond it for them.
+    // Kickers and defenses are matchup-driven, so they use Sleeper's projection for that week when
+    // there is one. This week is this week's projection.
+    weekPts(pid, wk) {
+      const p = M.P(pid);
+      if (p.missing || M.isBye(p.team, wk)) return 0;
+      if (wk === W) return M.val(pid);
+      if (p.effSev >= 4 && p.eff === 'IR') return 0;
+      const wkProj = wk === W + 1 ? p.projNext : p.ahead?.[wk];
+      if ((p.pos === 'K' || p.pos === 'DEF') && wkProj != null) return wkProj * avail(pid);
+      return ppg(pid) * avail(pid);
+    },
+    // best legal lineup for one future week from a team's active roster (plus/minus players)
+    weekPlan(t, wk, extra = [], remove = []) {
+      const l = M.lineup(t);
+      const rm = new Set(remove);
+      const ids = l.active.filter((id) => !rm.has(id)).concat(extra);
+      return M.solve(ids, { v: (id) => V.weekPts(id, wk), can: (id) => V.weekPts(id, wk) > 0 });
     },
     // points over the rest of the season: best lineup each remaining week, byes removed, playoff weeks discounted
     rosLineup(t, extra = [], remove = []) {
@@ -140,11 +264,26 @@ export function buildValues(M) {
       const rm = new Set(remove);
       const ids = l.active.filter((id) => !rm.has(id)).concat(extra);
       let tot = 0;
-      for (const { wk, w } of weeks) {
+      for (const { wk, w } of weeksFor(t.id)) {
         const ok = ids.filter((id) => !M.isBye(M.P(id).team, wk));
-        tot += w * M.solve(ok, { v: (id) => ppg(id) * Math.min(1, avail(id) + 0.1), can: (id) => !M.P(id).missing }).total;
+        tot += w * M.solve(ok, { v: (id) => ppg(id) * avail(id), can: (id) => !M.P(id).missing }).total;
       }
       return tot;
+    },
+    // best lineup each remaining week: this week from this week's projections, later weeks from
+    // points per game x health, byes removed. { week: points }
+    weekly(t, extra = [], remove = []) {
+      const l = M.lineup(t);
+      const rm = new Set(remove);
+      const ids = l.active.filter((id) => !rm.has(id)).concat(extra);
+      const out = {};
+      for (const { wk } of weeksFor(t.id)) {
+        const ok = ids.filter((id) => !M.isBye(M.P(id).team, wk));
+        out[wk] = wk === W
+          ? M.solve(ok, { v: (id) => M.val(id), can: (id) => M.canStartNow(id) }).total
+          : M.solve(ok, { v: (id) => ppg(id) * avail(id), can: (id) => !M.P(id).missing }).total;
+      }
+      return out;
     },
     sum: (ids) => sum(ids.map((id) => by[id]?.value ?? 0)),
     tsum: (ids) => sum(ids.map((id) => (by[id]?.value ?? 0) + 0.4 * (by[id]?.ppg ?? 0))),

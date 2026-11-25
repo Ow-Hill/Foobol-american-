@@ -7,6 +7,10 @@ const S = require('./lib/sources');
 const { buildSnapshot } = require('./lib/snapshot');
 const { buildHistory } = require('./lib/history');
 const { playerNews: fetchPlayerNews } = require('./lib/playernews');
+const { checkAlerts } = require('./lib/alerts');
+const { recordCalls } = require('./lib/calls');
+const { makeAuth } = require('./lib/auth');
+const auth = makeAuth();
 
 const PUBLIC = path.join(__dirname, 'public');
 const MIME = {
@@ -17,6 +21,30 @@ const MIME = {
   '.json': 'application/json',
   '.ico': 'image/x-icon',
 };
+
+// Last good snapshot on disk: if Sleeper or ESPN is down at start-up, serve it with a
+// staleness banner instead of a blank site.
+const LAST_FILE = path.join(__dirname, 'data', 'snapshot-last.json');
+const LAST_EVERY = 5 * 60 * 1000;
+let lastSaved = 0;
+function saveLast(s) {
+  if (Date.now() - lastSaved < LAST_EVERY) return;
+  lastSaved = Date.now();
+  fs.promises
+    .mkdir(path.dirname(LAST_FILE), { recursive: true })
+    .then(() => fs.promises.writeFile(LAST_FILE + '.tmp', JSON.stringify(s)))
+    .then(() => fs.promises.rename(LAST_FILE + '.tmp', LAST_FILE))
+    .catch((e) => console.warn('Could not save last snapshot:', e.message));
+}
+async function loadLast(reason) {
+  try {
+    const s = JSON.parse(await fs.promises.readFile(LAST_FILE, 'utf8'));
+    s.meta = { ...s.meta, staleSince: s.meta.builtAt, staleReason: reason };
+    return s;
+  } catch {
+    return null;
+  }
+}
 
 let lastForce = 0;
 let snap = null;
@@ -37,10 +65,32 @@ async function getSnapshot(force) {
   if (snap && Date.now() - snapAt < 45000) return snap;
   if (inflight) return inflight;
   inflight = buildSnapshot()
-    .then((s) => {
+    .then(async (s) => {
+      // the site's own lineup calls, logged and scored (never allowed to break the build)
+      s.callsRecord = await recordCalls(s, cfg.defaultRosterId).catch(() => null);
       snap = s;
       snapAt = Date.now();
+      saveLast(s);
+      // Fire and forget: alerting must never slow or break the page.
+      checkAlerts(s, cfg.alerts).then((r) => r.sent && console.log(`Sent ${r.sent} alert(s)`)).catch(() => {});
       return s;
+    })
+    .catch(async (err) => {
+      const reason = /fetch failed|ENOTFOUND|ECONNRE|ETIMEDOUT|abort/i.test(String(err.message || err))
+        ? 'Sleeper or ESPN did not answer'
+        : String(err.message || err);
+      if (snap) {
+        // Keep serving what we have; mark it stale so the page says so.
+        snap.meta = { ...snap.meta, staleSince: snap.meta.staleSince || snap.meta.builtAt, staleReason: reason };
+        snapAt = Date.now(); // retry the live build after the normal 45s
+        return snap;
+      }
+      const last = await loadLast(reason);
+      if (!last) throw err;
+      console.warn('Live build failed, serving last saved snapshot:', err.message);
+      snap = last;
+      snapAt = Date.now();
+      return last;
     })
     .finally(() => (inflight = null));
   if (snap) return snap; // serve stale while rebuilding
@@ -61,6 +111,11 @@ function send(req, res, status, body, type) {
 }
 
 const server = http.createServer(async (req, res) => {
+  const denied = auth.check(req);
+  if (denied) {
+    res.writeHead(denied.status, { ...denied.headers, 'Cache-Control': 'no-store' });
+    return res.end(denied.body);
+  }
   const url = new URL(req.url, 'http://localhost');
   try {
     if (url.pathname === '/api/snapshot') {
@@ -77,7 +132,9 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/api/news') {
       const pid = url.searchParams.get('pid');
       const s = snap || (await getSnapshot());
-      const p = s?.players?.[pid];
+      // Any NFL player can be looked up, not only the snapshot's set: a backup who just got
+      // the job is exactly who you search for.
+      const p = s?.players?.[pid] || (pid ? (await S.slimPlayers().catch(() => ({})))[pid] : null);
       if (!p) return send(req, res, 404, JSON.stringify({ error: 'Unknown player' }), MIME['.json']);
       const now = Date.now();
       const last = newsHits.get(pid) || 0;
@@ -90,6 +147,17 @@ const server = http.createServer(async (req, res) => {
       const r = await fetchPlayerNews([{ id: pid, n: p.n, pos: p.pos, team: p.team, hot: true }], { force: true });
       const items = (r.items || []).filter((x) => x.pid === pid);
       return send(req, res, 200, JSON.stringify({ pid, items, diag: r.diag, perPlayer: r.perPlayer }), MIME['.json']);
+    }
+    if (url.pathname === '/api/players') {
+      const q = String(url.searchParams.get('q') || '').trim().toLowerCase();
+      if (q.length < 3) return send(req, res, 400, JSON.stringify({ error: 'Type at least 3 letters' }), MIME['.json']);
+      const slim = await S.slimPlayers();
+      const players = Object.values(slim)
+        .filter((p) => p.n && p.n.toLowerCase().includes(q))
+        .sort((a, b) => (a.team ? 0 : 1) - (b.team ? 0 : 1) || (a.rank ?? 1e9) - (b.rank ?? 1e9))
+        .slice(0, 8)
+        .map((p) => ({ id: p.id, n: p.n, pos: p.pos, team: p.team }));
+      return send(req, res, 200, JSON.stringify({ players }), MIME['.json']);
     }
     if (url.pathname === '/api/health') return send(req, res, 200, JSON.stringify({ ok: true, snapshotAgeMs: snap ? Date.now() - snapAt : null }), MIME['.json']);
 
@@ -108,7 +176,7 @@ const server = http.createServer(async (req, res) => {
 
 const port = process.env.PORT || cfg.port;
 server.listen(port, () => {
-  console.log(`Roster monitor running at http://localhost:${port}`);
+  console.log(`Roster monitor running at http://localhost:${port}${auth.enabled ? " (password on)" : ""}`);
   getSnapshot().then((s) => console.log(`Warm snapshot ready in ${s.meta.buildMs}ms`)).catch((e) => console.error('Warm-up failed:', e.message));
   buildHistory().then((h) => ((hist = h), (histAt = Date.now()), console.log(`History ready: ${h.seasons.map((s) => s.season).join(', ')}`))).catch((e) => console.error('History failed:', e.message));
 });

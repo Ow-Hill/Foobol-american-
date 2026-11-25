@@ -37,23 +37,80 @@ function effChart(M) {
   return `<div class="eff-chart">${cols.join('')}</div><p class="note"><b>${n0(lost)}</b> points left on the bench across ${rows.length} weeks (<span style="color:var(--green)">green</span> = scored, <span style="color:#6f8fb0">blue</span> = missed). Biggest miss: Week ${rows.slice().sort((a, b) => b.opt - b.pts - (a.opt - a.pts))[0].wk}.</p>`;
 }
 
+// How much better a free-agent kicker or defense must project over Weeks 15-17 combined before
+// it is worth a roster spot now. A judgment, not a fitted number.
+const STASH_GAIN = 4;
+
 function playoffSlate(M) {
-  const weeks = M.snap.meta.playoffWeeks;
+  const weeks = (M.snap.meta.playoffWeeks || []).filter((wk) => wk >= M.W);
+  if (!weeks.length) return '<p class="empty">The fantasy playoffs have started — use the Lineup tab week by week.</p>';
+  const V = M.V;
+  const plans = Object.fromEntries(weeks.map((wk) => [wk, V.weekPlan(M.me, wk)]));
+  const startsIn = (id) => weeks.filter((wk) => plans[wk].slots.some((s) => s.pid === id));
   const l = M.lineup(M.me);
-  const core = [...new Set([...l.opt.slots.map((s) => s.pid).filter(Boolean), ...l.bench.filter((id) => (M.P(id).ppg || 0) >= 8)])];
-  const rows = core.map((id) => {
+  const core = [...new Set([...weeks.flatMap((wk) => plans[wk].slots.map((s) => s.pid)), ...l.opt.slots.map((s) => s.pid)].filter(Boolean))];
+  const cell = (id, wk) => {
     const p = M.P(id);
-    return [playerName(M, id, { status: false }), ...weeks.map((wk) => (M.isBye(p.team, wk) ? '<span class="chip chip-red">BYE</span>' : M.gameFor(p.team, wk) ? `${M.gameFor(p.team, wk).home ? 'vs' : '@'} ${esc(M.gameFor(p.team, wk).opp)}` : '–'))];
-  });
-  const anyBye = rows.some((r) => r.slice(1).some((c) => c.includes('BYE')));
-  return `${table(['Player', ...weeks.map((w) => 'Wk ' + w)], rows)}<p class="note">${anyBye ? '<b style="color:var(--red)">A key player has a bye in the fantasy playoffs — a near deal-breaker for a buy.</b>' : '<b>No key player has a bye in Weeks ' + weeks.join('–') + '.</b>'} Betting lines for these weeks aren't posted yet, so matchup strength can't be graded — re-check closer to the date.</p>`;
+    if (M.isBye(p.team, wk)) return '<span class="chip chip-red">BYE</span>';
+    const g = M.gameFor(p.team, wk);
+    const opp = g ? `${g.home ? 'vs' : '@'} ${esc(g.opp)}` : '–';
+    const starts = plans[wk].slots.some((s) => s.pid === id);
+    return `<span class="num ${starts ? '' : 'dim'}">${n1(V.weekPts(id, wk))}</span>${starts ? '' : ' <span class="dim">bench</span>'}<br /><span class="dim" style="white-space:nowrap">${opp}</span>`;
+  };
+  const rows = core
+    .sort((a, b) => startsIn(b).length - startsIn(a).length || V.ppg(b) - V.ppg(a))
+    .map((id) => [playerName(M, id, { status: true }), ...weeks.map((wk) => cell(id, wk))]);
+  rows.push(['<b>Best lineup</b>', ...weeks.map((wk) => {
+    const empty = plans[wk].slots.filter((s) => !s.pid).map((s) => s.slot);
+    return `<b class="num">${n1(plans[wk].total)}</b>${empty.length ? ` <span class="chip chip-red">empty ${esc(empty.join(', '))}</span>` : ''}`;
+  })]);
+  const benchHelp = l.bench.filter((id) => startsIn(id).length);
+  const anyBye = core.some((id) => weeks.some((wk) => M.isBye(M.P(id).team, wk)));
+  const notes = [
+    anyBye ? '<b style="color:var(--red)">A key player has a bye in the fantasy playoffs — plan his replacement now.</b>' : `<b>No key player has a bye in Weeks ${weeks[0]}–${weeks[weeks.length - 1]}.</b>`,
+    benchHelp.length ? `Bench players who start a playoff week: ${benchHelp.map((id) => `<b>${esc(M.P(id).n)}</b> (Week ${startsIn(id).join(', ')})`).join(', ')}. Don't drop them for a one-week stream.` : '',
+    'Skill players use points per game and health (the measured rest-of-season estimate); kickers and defenses use Sleeper\'s projection for that week, since their matchup matters most.',
+  ].filter(Boolean);
+  return `${table(['Player', ...weeks.map((w) => 'Wk ' + w)], rows)}<p class="note">${notes.join(' ')}</p>`;
+}
+
+function stashPlan(M) {
+  const weeks = (M.snap.meta.playoffWeeks || []).filter((wk) => wk >= M.W);
+  if (!weeks.length) return '';
+  const V = M.V;
+  const tot = (id) => weeks.reduce((s, wk) => s + V.weekPts(id, wk), 0);
+  const l = M.lineup(M.me);
+  const out = [];
+  for (const pos of ['DEF', 'K']) {
+    const mineIds = l.active.filter((id) => M.P(id).pos === pos);
+    // best of mine each week (you can rotate your own)
+    const mineWk = weeks.map((wk) => Math.max(0, ...mineIds.map((id) => V.weekPts(id, wk))));
+    const mineSum = mineWk.reduce((a, b) => a + b, 0);
+    const fa = Object.values(M.snap.players).filter((p) => p.own == null && p.pos === pos && p.team).map((p) => p.id);
+    const best = fa.map((id) => ({ id, sum: tot(id) })).sort((a, b) => b.sum - a.sum).slice(0, 3);
+    const rows = [[`<b>Yours</b> <span class="dim">${mineIds.map((id) => esc(M.P(id).n)).join(', ') || 'none'}</span>`, ...mineWk.map((v) => `<span class="num">${n1(v)}</span>`), `<b class="num">${n1(mineSum)}</b>`]];
+    for (const b of best) {
+      const p = M.P(b.id);
+      rows.push([`${esc(p.n)} <span class="tm">${esc(p.team || '')}</span>`, ...weeks.map((wk) => {
+        const g = M.gameFor(p.team, wk);
+        return M.isBye(p.team, wk) ? '<span class="chip chip-red">BYE</span>' : `<span class="num">${n1(V.weekPts(b.id, wk))}</span> <span class="dim">${g ? (g.home ? 'vs ' : '@ ') + esc(g.opp) : ''}</span>`;
+      }), `<b class="num">${n1(b.sum)}</b> <span class="${b.sum - mineSum >= 0 ? 'pos-num' : 'neg-num'}">${signed(b.sum - mineSum)}</span>`]);
+    }
+    const top = best[0];
+    const advice = top && top.sum - mineSum >= STASH_GAIN
+      ? `<div class="callout good"><b>Stash ${esc(M.P(top.id).n)} for the playoffs</b>Projects ${n1(top.sum - mineSum)} more over Weeks ${weeks[0]}–${weeks[weeks.length - 1]} than your ${pos === 'DEF' ? 'defense' : 'kicker'}. ${(() => { const d = M.dropFor({ id: top.id, p: M.P(top.id) }); return d.none && /open roster spot/.test(d.text) ? 'You have an open spot, so add him now.' : d.pid ? `Add him before rivals do (${esc(d.text)}).` : esc(d.text) + '.'; })()}</div>`
+      : `<div class="callout"><b>No ${pos === 'DEF' ? 'defense' : 'kicker'} stash needed</b>No free agent projects ${STASH_GAIN}+ more than yours over Weeks ${weeks[0]}–${weeks[weeks.length - 1]}. Check again after next week's games.</div>`;
+    out.push(`<h3 style="margin:10px 0 6px">${pos === 'DEF' ? 'Defense' : 'Kicker'}</h3>${advice}${table(['', ...weeks.map((w) => 'Wk ' + w), `Wk ${weeks[0]}–${weeks[weeks.length - 1]}`], rows)}`);
+  }
+  return out.join('') + `<p class="note">Sleeper's week-by-week projections. Lines for those weeks aren't posted yet, so they move; the ${STASH_GAIN}-point bar is a judgment, not a fitted number.</p>`;
 }
 
 function icsFor(M) {
   const base = new Date(M.now);
   const dayIdx = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  const wDay = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][M.L.settings.waiver_day_of_week ?? 2];
   const items = [
-    ['Roster Monitor: waiver preview', 'Tue', 19, 0, 'Open the Waivers tab — what to claim before waivers process.'],
+    ['Roster Monitor: waiver preview', wDay, 19, 0, 'Open the Waivers tab — what to claim before waivers process.'],
     ['Roster Monitor: weekly recap', 'Tue', 9, 0, 'Open the Season tab — weekly review and lineup-efficiency audit.'],
     ['Roster Monitor: trade ideas', 'Wed', 19, 0, 'Open the Trades tab — ideas for your weakest starting spot.', true],
     ['Roster Monitor: Thursday lineup check', 'Thu', 17, 0, 'Open the Lineup tab before Thursday night football — only change what needs changing.'],
@@ -97,7 +154,7 @@ export function render(M, ctx) {
     `<b>Odds check:</b> ${esc(v[1].toLowerCase())}. ${esc(v[2])}`,
     `<b>Schedule check:</b> see the playoff slate below — sell bad Weeks 15–17 slates, buy good ones.`,
     `<b>Consolidate:</b> run the Trade lab on each 2-for-1 that turns bench depth into a starter, and move the spare QB.`,
-    M.deadlineAt && !M.deadlinePassed ? `<b>Timing:</b> offers need to be accepted by ${esc(fmtDayTime(M.acceptBy))} (1-day review).` : '<b>Timing:</b> the deadline has passed.',
+    M.deadlineAt && !M.deadlinePassed ? `<b>Timing:</b> offers need to be accepted by about ${esc(fmtDayTime(M.acceptBy))}, the end of the deadline week's last game (confirm in Sleeper).` : '<b>Timing:</b> the deadline has passed.',
   ];
 
   const l = M.lineup(me);
@@ -106,13 +163,13 @@ export function render(M, ctx) {
     `<b>Weeks 12–14:</b> trim depth that can't help in the playoffs; keep handcuffs for your starting backs${gibbsCuff.length ? ` (${gibbsCuff.map((g) => `${esc(M.P(g.id).n)}: ${g.cuffs[0] ? esc(g.cuffs[0].n) + ' — ' + esc(g.cuffs[0].ownerLabel) : 'no clear backup'}`).join('; ')})` : ''}.`,
     `<b>Defense:</b> pre-add DSTs with soft Week 15–17 slates before rivals do. This league pays +10 for a shutout and −4 at 35+ points allowed, so opponent scoring matters more than sacks.`,
     `<b>Kicker:</b> distance bonuses (4/5/6 for 40+/50+/60+) favor long-range kickers in domes or calm weather.`,
-    `<b>Weeks 15–17:</b> run the Lineup tab every week; set the risk posture from the matchup (favorite → floor, underdog → ceiling).`,
+    `<b>Weeks 15–17:</b> run the Lineup tab every week; start the best projections (picking by floor or ceiling did no better in the backtest).`,
   ];
 
   const checkins = table(
     ['Check-in', 'When (your time zone)', 'What to do'],
     [
-      ['Waiver preview', 'Tuesday evening', 'Open Waivers — decide what to claim before waivers process'],
+      ['Waiver preview', `${M.waiverDayName()} evening`, 'Open Waivers — decide what to claim before waivers process'],
       ['Lineup check', 'Thursday before TNF · Sunday ~11:00', 'Open Lineup — only change what needs changing'],
       ['Injury watch', 'Sunday ~11:45', 'Open Injuries — check starters before the 1 PM games'],
       ['Weekly recap', 'Tuesday morning', 'Open Season — weekly review + lineup-efficiency audit'],
@@ -127,7 +184,7 @@ export function render(M, ctx) {
       <div class="callout"><b>${me.w}-${me.l}, ${ord([...M.teams].sort((a, b) => b.w - a.w || b.pf - a.pf).findIndex((t) => t.id === me.id) + 1)} of ${M.teams.length} — ${ord([...M.teams].sort((a, b) => b.pf - a.pf).findIndex((t) => t.id === me.id) + 1)} in points scored</b>${n0(me.pp - me.pf)} points were left on the bench (${n1((me.pf / me.pp) * 100)}% lineup efficiency). ${me.pf > me.pa ? 'You have scored more than your opponents have — the record is running behind the points.' : ''}</div>
     </div>
     <div class="stack">
-      ${card('Playoff odds', table(['Team', 'Record', 'Points', 'Make playoffs', 'Bye', 'Title', 'Avg wins'], oddsRows, { cls: '' }) + `<details class="how"><summary>How these odds work — and where they're wrong</summary><ul><li>This site's own simulation: ${sim.n.toLocaleString()} seasons of the real remaining schedule. Each team's weekly score is drawn from its own season scoring (recent weeks weighted a bit more) with a spread shrunk toward the league's.</li><li>It ignores the league's 2 divisions in seeding, assumes nobody makes a roster move or trade, and doesn't know about injuries beyond what already shows in past scores. Ties break on wins, then points.</li><li>Title odds assume a 6-team bracket with the top 2 seeds on a bye. They are not Down Field's numbers and won't match them.</li><li>Treat anything within a few points of percentage as noise.</li></ul></details>`, { cls: 'flush', sub: `Top ${M.L.settings.playoff_teams} make the playoffs; top 2 get byes` })}
+      ${card('Playoff odds', table(['Team', 'Record', 'Points', 'Make playoffs', 'Bye', 'Title', 'Avg wins'], oddsRows, { cls: '' }) + `<details class="how"><summary>How these odds work — and where they're wrong</summary><ul><li>This site's own simulation: ${sim.n.toLocaleString()} seasons of the real remaining schedule. This week uses each team's projected best lineup. Later weeks blend each team's season scoring (recent weeks weighted a bit more, pulled toward the league average) half and half with its current roster's best lineup for that week, so injuries, byes, pickups and trades count.</li><li>Every division winner makes the playoffs, even behind a wild card on record (Sleeper's rule); seeds then follow wins, then points. Your commissioner can override seeding in Sleeper.</li><li>Title odds assume a 6-team bracket with the top 2 seeds on a bye. They are not Down Field's numbers and won't match them.</li><li>Treat anything within a few points of percentage as noise.</li></ul></details>`, { cls: 'flush', sub: `Top ${M.L.settings.playoff_teams} make the playoffs; top 2 get byes` })}
       <div class="grid g2">
         ${card(`Week ${M.W - 1} review`, reviewBlock(M), { cls: 'flush', sub: 'Final scores and points left on each bench' })}
         ${card('Your lineup efficiency, week by week', effChart(M), { sub: 'Best possible lineup vs what you started — uses actual points, so it grades decisions only by results; a worse outcome alone isn\u2019t a bad decision' })}
@@ -136,7 +193,8 @@ export function render(M, ctx) {
         ${card(`Trade-deadline push (through Week ${M.deadlineWeek})`, `<ol style="margin:0 0 0 18px;padding:0;display:flex;flex-direction:column;gap:8px">${deadlineList.map((x) => `<li>${x}</li>`).join('')}</ol>`)}
         ${card('Playoff prep (Weeks 12–17)', `<ol style="margin:0 0 0 18px;padding:0;display:flex;flex-direction:column;gap:8px">${prepList.map((x) => `<li>${x}</li>`).join('')}</ol>`)}
       </div>
-      ${card('Playoff slate for your key players', playoffSlate(M), { cls: 'flush', sub: `Weeks ${M.snap.meta.playoffWeeks.join(', ')} opponents and byes` })}
+      ${card('Your playoff lineup', playoffSlate(M), { cls: 'flush', sub: `Weeks ${M.snap.meta.playoffWeeks.join(', ')}: best lineup each week, projected points, opponents and byes` })}
+      ${card('Kicker and defense for the playoffs', stashPlan(M), { sub: 'Your best each week vs the top free agents, by Sleeper projection for that week' })}
       ${card('Standings & lineup efficiency', table(['#', 'Team', 'Record', 'Points for', 'Points against', 'Potential', 'Efficiency', 'Left on bench'], stand), { cls: 'flush', sub: 'Records come from Sleeper matchups. Potential = the best legal lineup every week.' })}
       ${card('Regular check-ins', checkins + `<div class="btn-row" style="margin-top:12px"><button class="btn" id="dlIcs">Download calendar reminders (.ics)</button></div><p class="note">This site can't send notifications. The download adds recurring reminders to your calendar app at the times above — nothing is created unless you open the file. Reminder times are fixed in your device's time zone (${esc(M.snap.meta.tz)} for you).</p>`)}
     </div>`;

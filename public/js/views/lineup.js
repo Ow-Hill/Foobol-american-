@@ -1,17 +1,42 @@
 import { esc, n1, signed, fmtKick, avg } from '../util.js';
 import { card, table, playerName, callBadge, problemList, statusChip, spark, secondOpinionBtn } from '../ui.js';
+import { matchupFor } from '../matchup.js';
+import { WIND } from '../fitted.js';
 
-export function oppCell(p) {
+export function oppCell(p, M = null) {
   if (p.avail === 'bye') return `<span class="chip chip-bye">BYE</span>`;
   if (!p.game) return '<span class="dim">–</span>';
   const g = p.game;
   const imp = g.imp != null ? `<div class="dim" style="font-size:11.5px">team total ${g.imp.toFixed(1)}${g.spread ? ` · ${g.spread.fav === p.team ? 'fav' : 'dog'} ${g.spread.pts}` : ''}</div>` : '';
-  return `<span>${g.home ? 'vs' : '@'} ${esc(g.opp)}</span>${imp}`;
+  const mu = M ? matchupFor(M, p.id) : null;
+  // Shown for quarterbacks only: in the 2022-2026 backtest the opponent's points allowed said
+  // something about QBs (and little beyond the projection) and nothing reliable about RB/WR/TE.
+  const muTxt = mu && mu.tier !== 'neutral' && p.pos === 'QB'
+    ? `<div class="dim" style="font-size:11.5px" title="Average ${mu.avg.toFixed(1)} pts/g allowed to ${esc(p.pos)} over the last ${mu.games} games. Information only: the projection already accounts for most of it.">${esc(mu.label)}</div>`
+    : '';
+  return `<span>${g.home ? 'vs' : '@'} ${esc(g.opp)}</span>${imp}${muTxt}${windTxt(p)}`;
+}
+// Wind flag: outdoor games forecast at 15+ mph (backtest E10). Information only; projections
+// are not changed.
+export function windTxt(p) {
+  const w = p.game?.wind;
+  if (!w || w.mph < WIND.mph || WIND[p.pos] == null) return '';
+  const eff = WIND[p.pos];
+  return `<div style="font-size:11.5px;color:var(--amber)" title="Forecast at kickoff. In 2022-2026, outdoor games at ${WIND.mph}+ mph cost ${esc(p.pos)}s about ${Math.abs(eff)} points against their projection. The projection does not include it.">wind ${w.mph} mph${w.gust > w.mph + 5 ? ` (gusts ${w.gust})` : ''} · ${eff} pts typical</div>`;
+}
+// Where the projection averages Sleeper with the expert consensus (QB, WR, K), show both, and
+// flag a big disagreement: on WRs the experts were right 55% of the time when they disagreed.
+export function sourcesTxt(p) {
+  if (p.projExperts == null || !(p.projSleeper > 0)) return '';
+  const d = p.projExperts - p.projSleeper;
+  const big = Math.abs(d) >= 3;
+  return `<div class="dim" style="font-size:11px${big ? ';color:var(--amber)' : ''}" title="${p.blended ? 'Projection used = average of the two (beat Sleeper alone in the 2022-2026 backtest at QB, WR and K).' : 'Shown for reference; at this position Sleeper alone did as well in the backtest.'}">Sleeper ${n1(p.projSleeper)} · experts ${n1(p.projExperts)}</div>`;
 }
 export function kickCell(p) {
   if (!p.game) return '<span class="dim">–</span>';
   if (p.game.state === 'in') return `<span class="chip chip-red">LIVE</span>`;
   if (p.game.state === 'post' || p.game.completed) return `<span class="chip">FINAL</span>`;
+  if (p.game.tbd) return '<span class="dim">Time TBD</span>';
   return fmtKick(p.game.date);
 }
 export function rangeCell(p) {
@@ -29,15 +54,15 @@ export function render(M, ctx) {
   const swaps = M.swaps();
   const probs = M.problems().filter((p) => p.sev !== 'info' && (p.tab === 'lineup' || p.tab === 'injuries'));
   const postureTxt = {
-    floor: ['Protect the floor', `You project ${n1(M.margin)} ahead of ${esc(M.opp?.owner || 'your opponent')} — favorites should take safer players when a call is close.`],
-    ceiling: ['Chase upside', `You project ${n1(-M.margin)} behind ${esc(M.opp?.owner || 'your opponent')} — underdogs need ceiling when a call is close.`],
+    floor: ['Favored', `You project ${n1(M.margin)} ahead of ${esc(M.opp?.owner || 'your opponent')}. Start the best projections: in the 2022-2026 backtest, picking "safer" players by recent floor did not avoid busts any better.`],
+    ceiling: ['Underdog', `You project ${n1(-M.margin)} behind ${esc(M.opp?.owner || 'your opponent')}. Start the best projections: picking by recent ceiling did not produce big weeks any more often.`],
     expected: ['Best expected points', `Your matchup with ${esc(M.opp?.owner || 'your opponent')} projects within ${n1(Math.abs(M.margin))} points — no need to skew the risk.`],
   }[M.posture];
 
   const curRows = l.cur.map((s) => {
     if (!s.pid) return `<tr class="empty-slot"><td><span class="slot">${s.slot}</span></td><td colspan="6"><b style="color:var(--red)">EMPTY — you are leaving points on the table</b></td></tr>`;
     const p = M.P(s.pid);
-    return `<tr><td><span class="slot">${s.slot}</span></td><td>${playerName(M, s.pid)}</td><td>${oppCell(p)}</td><td>${kickCell(p)}</td><td class="num"><b>${n1(M.val(s.pid))}</b>${p.avail === 'out' ? '<div class="dim" style="font-size:11px">counts 0 — out</div>' : p.avail === 'q' ? '<div class="dim" style="font-size:11px">if he plays</div>' : ''}</td><td class="num">${rangeCell(p)}</td><td>${usageCell(p)}</td></tr>`;
+    return `<tr><td><span class="slot">${s.slot}</span></td><td>${playerName(M, s.pid)}</td><td>${oppCell(p, M)}</td><td>${kickCell(p)}</td><td class="num"><b>${n1(M.val(s.pid))}</b>${sourcesTxt(p)}${p.avail === 'out' ? '<div class="dim" style="font-size:11px">counts 0 — out</div>' : p.avail === 'q' ? '<div class="dim" style="font-size:11px">if he plays</div>' : ''}</td><td class="num">${rangeCell(p)}</td><td>${usageCell(p)}</td></tr>`;
   });
   const curTable = `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Slot</th><th>Player</th><th>Opponent</th><th>Kickoff</th><th class="r">Proj</th><th class="r">Usual range</th><th>Last 6 · usage</th></tr></thead><tbody>${curRows.join('')}</tbody><tfoot><tr><td colspan="4" class="muted" style="padding:9px 12px">Lineup as set in Sleeper</td><td class="num" style="padding:9px 12px"><b>${n1(l.curTotal)}</b></td><td colspan="2"></td></tr></tfoot></table></div>`;
 
@@ -45,7 +70,7 @@ export function render(M, ctx) {
     const st = M.P(s.start);
     const b = s.bench ? M.P(s.bench) : null;
     const keep = s.keep;
-    const tb = s.tb ? `<details class="how"><summary>Tiebreak steps</summary><ul>${['Health certainty: prefer the player with no injury tag', 'Matchup posture: favorite → floor, underdog → ceiling', 'Game environment: higher implied team total', 'Kickoff: later game keeps swap flexibility'].map((x, i) => `<li ${s.tb.reasons[0] && x.startsWith(s.tb.reasons[0].step.split(' ')[0]) ? 'style="color:var(--green)"' : ''}>${x}</li>`).join('')}</ul></details>` : '';
+    const tb = s.tb ? `<details class="how"><summary>Tiebreak steps</summary><ul>${['Health certainty: prefer the player with no injury tag', 'Game environment: implied team totals 4+ points apart', 'Kickoff: later game keeps swap flexibility', 'No tiebreak: keep the higher projection (wins 54% of toss-ups)'].map((x, i) => `<li ${s.tb.reasons[0] && x.startsWith(s.tb.reasons[0].step.split(' ')[0]) ? 'style="color:var(--green)"' : ''}>${x}</li>`).join('')}</ul></details>` : '';
     return [
       `<span class="slot">${s.slot}</span>`,
       keep ? `<span class="muted">Keep ${playerName(M, s.bench, { status: true })}</span>` : playerName(M, s.start),
@@ -74,7 +99,7 @@ export function render(M, ctx) {
 
   const benchRows = l.bench.map((id) => {
     const p = M.P(id);
-    return [playerName(M, id), oppCell(p), kickCell(p), `<span class="num">${n1(M.val(id))}</span>`, rangeCell(p), usageCell(p)];
+    return [playerName(M, id), oppCell(p, M), kickCell(p), `<span class="num">${n1(M.val(id))}</span>${sourcesTxt(p)}`, rangeCell(p), usageCell(p)];
   });
 
   const delta = l.opt.total - l.curTotal;
@@ -94,8 +119,8 @@ export function render(M, ctx) {
       ${card('Bench', table(['Player', 'Opponent', 'Kickoff', 'Proj', 'Usual range', 'Last 6 · usage'], benchRows), { cls: 'flush' })}
     </div>
     <div class="callout warn" style="margin-top:14px"><b>What this page can't verify</b>
-      These calls use a single projection source. The consensus method in your command-center skill wants Down Field, StatsDeck and Scout-Squad side by side — those connectors aren't reachable from a website, so use the button above to run them, and treat anything short of a Clear call as provisional. Official inactives (about 90 minutes before kickoff) and weather aren't checked.
-      <details class="how"><summary>Tiebreak order when a call is close</summary><ul><li>Health certainty — prefer the player with no injury tag.</li><li>Matchup posture — favored: higher floor; underdog: higher ceiling (from each player's last 6 games).</li><li>Game environment — higher implied team total from the betting line.</li><li>Kickoff — the later game keeps late-swap flexibility.</li></ul></details>
+      Projections are Sleeper's, averaged with the experts' consensus at QB, WR and K (the average beat Sleeper alone in the 2022-2026 backtest); RB, TE and DEF use Sleeper alone. The consensus method in your command-center skill wants Down Field, StatsDeck and Scout-Squad side by side — those connectors aren't reachable from a website, so use the button above to run them, and treat anything short of a Clear call as provisional. Official inactives (about 90 minutes before kickoff) aren't checked. Wind of 15+ mph is flagged next to the opponent when the forecast is available; it is not built into projections.
+      <details class="how"><summary>Tiebreak order when a call is close</summary><ul><li>Health certainty — prefer the player with no injury tag.</li><li>Game environment — the higher implied team total, only when the two are 4+ points apart (won 54.5% in the backtest).</li><li>Kickoff — the later game keeps late-swap flexibility.</li><li>Otherwise keep the higher projection: it wins 54% of toss-ups.</li><li class="dim">Dropped after the 2022-2026 backtest: position matchup (won 50%) and floor/ceiling by recent games (no better than the projection). See Track record.</li></ul></details>
     </div>`;
 }
 

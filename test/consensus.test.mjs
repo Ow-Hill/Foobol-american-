@@ -1,0 +1,161 @@
+// Expert consensus: parsing, joining, the 50/50 blend in the projection, and the constants
+// against the saved backtest results.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
+import { CONSENSUS, consensusPoints } from '../public/js/fitted.js';
+import { buildModel } from '../public/js/model.js';
+
+const require = createRequire(import.meta.url);
+const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+test('consensus constants match the saved backtest (E17)', (t) => {
+  const f = path.join(root, 'docs', 'backtest', 'results-current.json');
+  const E = JSON.parse(fs.readFileSync(f, 'utf8')).experiments.E17;
+  if (!E) return t.skip('backtest not run yet');
+  for (const [pos, c] of Object.entries(CONSENSUS.curve)) {
+    assert.ok(Math.abs(c[0] - E.fit.curve[pos][0]) < 0.01 && Math.abs(c[1] - E.fit.curve[pos][1]) < 0.01, pos);
+  }
+  // shipped only where the rule chosen on 2022-24 also held on 2025-26
+  for (const pos of CONSENSUS.positions) assert.ok(E.fit.adopt[pos] && E.fit.confirmed[pos], pos);
+  for (const pos of ['RB', 'TE', 'DEF']) assert.ok(!CONSENSUS.positions.includes(pos));
+});
+
+test('rank becomes points: lower rank, more points; never negative', () => {
+  assert.ok(consensusPoints('WR', 1) > consensusPoints('WR', 12));
+  assert.ok(Math.abs(consensusPoints('WR', 1) - 24.092) < 1e-9);
+  assert.equal(consensusPoints('WR', 0), null);
+  assert.ok(consensusPoints('TE', 500) >= 0);
+});
+
+test('projection: QB/WR/K average Sleeper with the experts; RB keeps Sleeper; both are exposed', () => {
+  const pl = (id, pos, team, proj, ecr) => ({ id, n: id, pos, team, depth: 1, inj: null, hist: [], proj: { pts: proj }, own: 1, ...(ecr ? { ecr: { ecr, sd: 1, pos } } : {}) });
+  const players = { w: pl('w', 'WR', 'CIN', 14, 5), r: pl('r', 'RB', 'DET', 15, 3), k: pl('k', 'K', 'DAL', 8, null) };
+  const snap = {
+    meta: { week: 6, tz: 'America/Toronto', builtAt: Date.now(), playoffWeeks: [15, 16, 17] },
+    league: { name: 'T', rosterPositions: ['RB', 'WR', 'K', 'BN'], settings: { reserve_slots: 0, playoff_week_start: 15, playoff_teams: 2, trade_deadline: 11, num_teams: 2 }, scoring: {} },
+    teams: [{ id: 1, owner: 'me', isMe: true, w: 0, l: 0, players: ['w', 'r', 'k'], starters: ['r', 'w', 'k'], reserve: [], taxi: [] }, { id: 2, owner: 'x', w: 0, l: 0, players: [], starters: [], reserve: [], taxi: [] }],
+    players, schedule: { 6: { games: [], byes: [] } }, matchups: {}, transactions: [], picks: [], notes: [], articles: [], playerNews: { items: [] },
+  };
+  const M = buildModel(snap, 1, Date.now());
+  const ew = consensusPoints('WR', 5);
+  assert.ok(Math.abs(M.P('w').proj - (0.5 * 14 + 0.5 * ew)) < 1e-9);
+  assert.equal(M.P('w').projSleeper, 14);
+  assert.equal(M.P('w').blended, true);
+  assert.equal(M.P('r').proj, 15, 'RB stays on Sleeper');
+  assert.ok(M.P('r').projExperts > 0, 'but the experts are still shown');
+  assert.equal(M.P('k').proj, 8, 'no consensus rank: Sleeper alone');
+});
+
+test('live consensus: rows joined to Sleeper ids, stale weeks and position mismatches dropped', async () => {
+  const { attach } = require('../lib/consensus.js');
+  const players = { 1: { id: '1', pos: 'WR' }, 2: { id: '2', pos: 'RB' }, BUF: { id: 'BUF', pos: 'DEF' } };
+  const n = attach(players, { 1: { ecr: 4, sd: 1, pos: 'WR' }, 2: { ecr: 9, sd: 2, pos: 'WR' }, BUF: { ecr: 2, sd: 1, pos: 'DEF' } });
+  assert.equal(n, 2);
+  assert.equal(players[1].ecr.ecr, 4);
+  assert.ok(!players[2].ecr, 'a WR rank is not attached to an RB');
+});
+
+test('rest-of-season consensus: constants match E19; blended into healthy RB/WR/TE values only', async () => {
+  const { ROS_CONSENSUS, rosPoints } = await import('../public/js/fitted.js');
+  const f = path.join(root, 'docs', 'backtest', 'results-current.json');
+  const E = JSON.parse(fs.readFileSync(f, 'utf8')).experiments.E19;
+  if (E) {
+    for (const [pos, w] of Object.entries(ROS_CONSENSUS.weight)) {
+      assert.equal(w, E.fit.weight[pos], pos);
+      assert.ok(E.fit.adopt[pos] && E.fit.confirmed[pos], pos);
+    }
+    assert.ok(!('QB' in ROS_CONSENSUS.weight) && !E.fit.confirmed.QB);
+  }
+  assert.ok(rosPoints('WR', 1) > rosPoints('WR', 20));
+  const { attachRos } = require('../lib/consensus.js');
+  const pl = (id, pos, team, proj, extra = {}) => ({ id, n: id, pos, team, depth: 1, inj: null, hist: [1, 2, 3, 4, 5].map((w) => ({ w, pts: proj })), proj: { pts: proj }, own: 1, ...extra });
+  const players = { w: pl('w', 'WR', 'CIN', 12), h: pl('h', 'WR', 'DAL', 12, { inj: 'Questionable' }), q: pl('q', 'QB', 'BUF', 18) };
+  attachRos(players, { w: { ecr: 2, pos: 'WR' }, h: { ecr: 2, pos: 'WR' }, q: { ecr: 1, pos: 'QB' } });
+  const snap = {
+    meta: { week: 6, tz: 'America/Toronto', builtAt: Date.now(), playoffWeeks: [15, 16, 17] },
+    league: { name: 'T', rosterPositions: ['QB', 'WR', 'BN'], settings: { reserve_slots: 0, playoff_week_start: 15, playoff_teams: 2, trade_deadline: 11, num_teams: 2 }, scoring: {} },
+    teams: [{ id: 1, owner: 'me', isMe: true, w: 0, l: 0, players: ['w', 'h', 'q'], starters: ['q', 'w'], reserve: [], taxi: [] }, { id: 2, owner: 'x', w: 0, l: 0, players: [], starters: [], reserve: [], taxi: [] }],
+    players, schedule: { 6: { games: [], byes: [] } }, results: {}, matchups: {}, transactions: [], picks: [], notes: [], articles: [], playerNews: { items: [] },
+  };
+  const M = buildModel(snap, 1, Date.now());
+  // same history and projection; the healthy WR with a top-2 ROS rank is pulled toward the experts
+  assert.ok(M.V.ppg('w') > M.V.ppg('h') + 1, `${M.V.ppg('w')} vs ${M.V.ppg('h')}`);
+  assert.equal(M.V.rosRank('q'), 1);
+  assert.ok(Math.abs(M.V.rosExperts('w') - rosPoints('WR', 2)) < 1e-9);
+});
+
+test('waivers: the best-projected free agents lead the risers; injured stashes are not a claim', () => {
+  const pl = (id, pos, team, proj, extra = {}) => ({ id, n: id, pos, team, depth: 2, inj: null, hist: [1, 2, 3, 4].map((w) => ({ w, pts: proj, att: 5, tgt: 3 })), proj: { pts: proj }, own: null, exp: 4, ...extra });
+  const mine = ['m1', 'm2', 'm3'];
+  const players = {
+    m1: pl('m1', 'WR', 'CIN', 14, { own: 1 }), m2: pl('m2', 'WR', 'DAL', 6, { own: 1 }), m3: pl('m3', 'RB', 'DET', 12, { own: 1 }),
+    fa1: pl('fa1', 'WR', 'NYJ', 11), fa2: pl('fa2', 'RB', 'MIA', 9), rook: pl('rook', 'WR', 'CHI', 4, { exp: 0 }),
+    hurt: pl('hurt', 'RB', 'SEA', 0, { inj: 'IR', hist: [1, 2, 3].map((w) => ({ w, pts: 15, att: 15, tgt: 2 })) }),
+  };
+  const snap = {
+    meta: { week: 6, tz: 'America/Toronto', builtAt: Date.now(), playoffWeeks: [15, 16, 17] },
+    league: { name: 'T', rosterPositions: ['RB', 'WR', 'BN', 'BN'], settings: { reserve_slots: 1, playoff_week_start: 15, playoff_teams: 2, trade_deadline: 11, num_teams: 2, waiver_day_of_week: 2 }, scoring: {} },
+    teams: [{ id: 1, owner: 'me', isMe: true, w: 0, l: 0, players: mine, starters: ['m3', 'm1'], reserve: [], taxi: [] }, { id: 2, owner: 'x', w: 0, l: 0, players: [], starters: [], reserve: [], taxi: [] }],
+    players, schedule: { 6: { games: [], byes: [] } }, results: {}, matchups: {}, transactions: [], picks: [], notes: [], articles: [], playerNews: { items: [] },
+  };
+  const w = buildModel(snap, 1, Date.now()).waiverPlan();
+  assert.equal(w.groups.risers[0].id, 'fa1', 'highest projection first');
+  assert.ok(w.groups.risers[0].why.includes('top projected free agent'));
+  const stash = w.groups.lottery.find((c) => c.id === 'hurt');
+  if (stash) assert.equal(stash.tier, 4);
+  const rook = w.groups.lottery.find((c) => c.id === 'rook');
+  if (rook) assert.ok(rook.tier >= 3, 'a young player alone is not a tier 2 claim');
+});
+
+test('waivers: a started game keeps its starters in their slots; an unset kickoff time is not a started game', () => {
+  const pl = (id, pos, team, proj, extra = {}) => ({ id, n: id, pos, team, depth: 2, inj: null, hist: [1, 2, 3, 4].map((w) => ({ w, pts: proj, att: 5, tgt: 3 })), proj: { pts: proj }, own: null, exp: 4, ...extra });
+  const players = { m1: pl('m1', 'WR', 'CIN', 14, { own: 1 }), m3: pl('m3', 'RB', 'DET', 12, { own: 1 }), fa1: pl('fa1', 'WR', 'NYJ', 11) };
+  const g = (home, away, date, extra = {}) => ({ id: home, date, state: 'pre', completed: false, detail: null, home: { t: home, imp: 22 }, away: { t: away, imp: 22 }, ...extra });
+  const mk = (cinGame) => ({
+    meta: { week: 6, tz: 'America/Toronto', builtAt: Date.now(), playoffWeeks: [15, 16, 17] },
+    league: { name: 'T', rosterPositions: ['RB', 'WR', 'BN'], settings: { reserve_slots: 0, playoff_week_start: 15, playoff_teams: 2, trade_deadline: 11, num_teams: 2, waiver_day_of_week: 2 }, scoring: {} },
+    teams: [{ id: 1, owner: 'me', isMe: true, w: 0, l: 0, players: ['m1', 'm3'], starters: ['m3', 'm1'], reserve: [], taxi: [] }, { id: 2, owner: 'x', w: 0, l: 0, players: [], starters: [], reserve: [], taxi: [] }],
+    players, schedule: { 6: { games: [cinGame, g('DET', 'GB', '2030-01-01T18:00Z'), g('NYJ', 'MIA', '2030-01-01T18:00Z')], byes: [] } }, results: {}, matchups: {}, transactions: [], picks: [], notes: [], articles: [], playerNews: { items: [] },
+  });
+  // CIN kicked off: m1 is locked in the WR slot, so a free-agent WR adds nothing this week
+  let M = buildModel(mk(g('CIN', 'PIT', '2020-01-01T18:00Z', { state: 'in' })), 1, Date.now());
+  assert.equal(M.P('m1').locked, true);
+  assert.ok(M.waiverPlan().groups.risers.find((c) => c.id === 'fa1').impact < 0.01, 'locked starter keeps his slot');
+  // ESPN's 1993 placeholder for an unset kickoff time does not lock anyone
+  M = buildModel(mk(g('CIN', 'PIT', '1993-01-31T23:30Z')), 1, Date.now());
+  assert.equal(M.P('m1').locked, false);
+  // the parser replaces the placeholder with the week's Sunday slot and flags it
+  const { parseScoreboard } = require('../lib/sources.js');
+  const ev = (id, date) => ({ id, date, status: { type: { state: 'pre' } }, competitions: [{ competitors: [{ homeAway: 'home', team: { abbreviation: 'CIN' } }, { homeAway: 'away', team: { abbreviation: 'PIT' } }] }] });
+  const games = parseScoreboard({ events: [ev('a', '2026-11-22T18:00Z'), ev('b', '1993-01-31T23:30Z')] });
+  assert.equal(games[1].date, '2026-11-22T18:00Z');
+  assert.equal(games[1].tbd, true);
+});
+
+test('trade deadline: open through the deadline week\'s last game, closed after the week', () => {
+  const g = (home, away, date) => ({ id: home, date, state: 'pre', completed: false, detail: null, home: { t: home, imp: 22 }, away: { t: away, imp: 22 } });
+  const mk = (week) => ({
+    meta: { week, tz: 'America/Toronto', builtAt: Date.now(), playoffWeeks: [15, 16, 17] },
+    league: { name: 'T', rosterPositions: ['RB', 'BN'], settings: { reserve_slots: 0, playoff_week_start: 15, playoff_teams: 2, trade_deadline: 11, num_teams: 2, waiver_day_of_week: 2 }, scoring: {} },
+    teams: [{ id: 1, owner: 'me', isMe: true, w: 0, l: 0, players: [], starters: [null], reserve: [], taxi: [] }, { id: 2, owner: 'x', w: 0, l: 0, players: [], starters: [null], reserve: [], taxi: [] }],
+    players: {},
+    schedule: { 11: { games: [g('HOU', 'IND', '2026-11-20T01:15Z'), g('WAS', 'CIN', '2026-11-24T01:15Z'), g('DET', 'TB', '1993-01-31T23:30Z')], byes: [] }, 12: { games: [], byes: [] } },
+    results: {}, matchups: {}, transactions: [], picks: [], notes: [], articles: [], playerNews: { items: [] },
+  });
+  // Monday evening of the deadline week, after Thursday's game: still open
+  let M = buildModel(mk(11), 1, Date.parse('2026-11-24T00:30Z'));
+  assert.equal(M.deadlinePassed, false);
+  assert.equal(M.deadlineAt, Date.parse('2026-11-24T01:15Z') + 3.5 * 3600000, 'after the last game, ignoring placeholder dates');
+  assert.equal(M.acceptBy, M.deadlineAt);
+  // after Monday night's game: closed
+  M = buildModel(mk(11), 1, Date.parse('2026-11-24T06:00Z'));
+  assert.equal(M.deadlinePassed, true);
+  // the week after the deadline: closed even with no schedule for the deadline week
+  const s = mk(12);
+  delete s.schedule[11];
+  assert.equal(buildModel(s, 1, Date.parse('2026-11-26T00:00Z')).deadlinePassed, true);
+});

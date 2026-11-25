@@ -1,0 +1,62 @@
+{
+  "full_roster_injury_deep_dive": {
+    "topic": "Full-roster injury recovery outlook",
+    "context": "Multiple rostered players are coming off surgeries with genuinely disputed recovery timelines across outlets -- a quick web_search per player misses the synthesis a full comparison needs.",
+    "questions": [
+      "For each ACL/meniscus recovery on the roster, what do multiple current sources say about expected weeks-to-full-effectiveness, and where do sources disagree?",
+      "Which of these players have a documented history of setbacks or revision surgeries that should lower confidence in an optimistic timeline?",
+      "Are there any recent (last 7 days) practice-report changes that would update these outlooks?"
+    ],
+    "suggested_sources": [
+      "Official team injury reports for each player's team",
+      "Beat-writer camp coverage from the last 2 weeks",
+      "Any available clinical/recovery-timeline articles for the specific injury type"
+    ],
+    "feed_into": "player-injury-check's data/injury_context.csv"
+  },
+  "rookie_draft_scouting": {
+    "topic": "Rookie scouting for the upcoming 3-round rookie draft",
+    "context": "The league's actual draft this year is rookie-only (3 rounds), which the original startup-draft strategy doc doesn't cover at all.",
+    "questions": [
+      "Which rookies at each roster-need position have the clearest early-season path to playing time based on current depth charts?",
+      "For rookies without a clear role yet, what has camp/preseason coverage said about their opportunity trajectory?",
+      "Which Round 1-3 rookie-draft-caliber prospects are being flagged as sleepers by multiple independent sources (not just one outlet's hype)?"
+    ],
+    "suggested_sources": [
+      "Recent rookie scouting reports and draft-slot rankings",
+      "Depth chart projections for each rookie's team",
+      "Beat-writer camp/preseason coverage"
+    ],
+    "feed_into": "a rookie draft board discussion with Claude directly"
+  },
+  "trade_target_due_diligence": {
+    "topic": "Due diligence on a specific trade target",
+    "context": "Before finalizing a trade, a deeper look than a quick opportunity-signal check is worth it given the season-long commitment.",
+    "questions": [
+      "What is this player's target/touch share trend over the last month, and is it tied to a matchup fluke or a real role change?",
+      "Is there any injury history or current soft-tissue concern that a quick search might miss?",
+      "How do this player's remaining-season and playoff-week (specify weeks) matchups look?"
+    ],
+    "suggested_sources": [
+      "Recent game logs / usage trend articles",
+      "Team beat-writer coverage from the last month",
+      "Injury history summaries if available"
+    ],
+    "feed_into": "a trade decision discussion with Claude directly"
+  },
+  "playoff_schedule_deep_dive": {
+    "topic": "Playoff-week (specify weeks) schedule and defensive strength deep dive",
+    "context": "playoff-schedule-strength needs real opponent/defensive-rank data for the confirmed playoff weeks; a broader one-time research pass covering the whole roster is more efficient than searching team by team.",
+    "questions": [
+      "For each NFL team on the roster, who do they play in the confirmed playoff weeks, and does any of them have a bye?",
+      "What are current pass-defense and run-defense rankings for each of those opponents?",
+      "Have there been any recent defensive-personnel changes (injuries, trades) that would change those rankings soon?"
+    ],
+    "suggested_sources": [
+      "Full-season NFL schedule reference",
+      "Current defensive DVOA/points-allowed-by-position rankings",
+      "Recent defensive injury reports"
+    ],
+    "feed_into": "playoff-schedule-strength's data/schedule_matrix.csv"
+  }
+}

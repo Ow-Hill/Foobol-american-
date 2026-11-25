@@ -10,8 +10,10 @@ names you need into one ToolSearch call.
   `league_id: 1312204198166691840`, `season_year: 2026`; `team_id: 4` for Owen.
 - Best calls: `get_roster`, `get_free_agents` (position, count ≤ 100), `get_players`,
   `get_matchups` (week), `get_transactions` (type: add / drop / trade / waiver), `get_draft`.
-- Quirks: `get_standings` and `get_league_info` return stale placeholders (0-0-0,
-  "playoffs_in_progress") — never use them for records. Use Down Field or `get_matchups`.
+- Quirks (re-checked 2026-11-12): `get_standings` now returns real records, points for and
+  live `waiverPriority` — fine for those. Its playoff fields are still wrong mid-season
+  (`seasonPhase: playoffs_in_progress`, `madePlayoffs`, `playoffOutcome: in_progress` for
+  teams that have clinched nothing) — never use them; playoff odds come from Down Field.
   No ownership %. Free-agent order is not a ranking. Read-only.
 - Injury tags here can lag the other connectors by a day.
 
@@ -32,6 +34,8 @@ names you need into one ToolSearch call.
   - `simulate_league` (view odds or rankings), `get_weekly_review`, `get_matchup`,
     `get_roster` scope "league", `scan_all_teams`, `get_projections`, `get_nfl_schedule` (byes).
 - Objective arg: expected-points (default), protect-floor, chase-upside.
+- `get_team_context` reports `coverage.playoffOdds: false`; that refers to its own packet.
+  `simulate_league` still returns odds (verified 2026-11-12).
 - Sim caveats: ignores the league's 2 divisions in seeding, draws random future opponents,
   leaves K/DEF out, and assumes no future roster moves.
 - Ships its own skills as MCP resources (skill://downfield/...): downfield, fantasy-data,

@@ -64,8 +64,8 @@ export function render(M, ctx) {
   const fixed = l.opt.total - l.curTotal;
 
   const postureText = {
-    floor: `You're the projected favorite by ${n1(M.margin)} — lean on safer, higher-floor players this week.`,
-    ceiling: `You're the projected underdog by ${n1(-M.margin)} — lean toward higher-ceiling players.`,
+    floor: `You're the projected favorite by ${n1(M.margin)}. Start the best projections; "safe" players picked by recent floor did not avoid busts any better in the backtest.`,
+    ceiling: `You're the projected underdog by ${n1(-M.margin)}. Start the best projections; players picked by recent ceiling did not boom any more often in the backtest.`,
     expected: `Close matchup (${signed(M.margin)} for you) — start the best expected points and let the tiebreakers decide.`,
   }[M.posture];
 
@@ -92,8 +92,9 @@ export function render(M, ctx) {
   const dates = [];
   const next = l.active.map((id) => M.P(id)).filter((p) => p.game && p.game.state === 'pre').sort((a, b) => new Date(a.game.date) - new Date(b.game.date))[0];
   if (next) dates.push([`Next kickoff for your players`, `${fmtKick(next.game.date)} · ${esc(next.team)} ${next.game.home ? 'vs' : '@'} ${esc(next.game.opp)}`]);
-  dates.push(['Waivers process', `Tuesday, ${fmtDay(M.nextWaiverRun())} (2-day clear, rolling priority)`]);
-  if (M.deadlineAt) dates.push([`Trade deadline (Week ${M.deadlineWeek})`, M.deadlinePassed ? 'Passed — offseason / keeper planning only' : `Locks around ${fmtDayTime(M.deadlineAt)} — get deals accepted by ${fmtDayTime(M.acceptBy)} (1-day review)`]);
+  const clear = M.L.settings.waiver_clear_days ?? 2;
+  dates.push(['Waivers process', `${fmtDay(M.nextWaiverRun())} (${clear}-day clear, ${M.L.settings.waiver_type === 2 ? 'FAAB' : 'rolling priority'})`]);
+  if (M.deadlineAt) dates.push([`Trade deadline (Week ${M.deadlineWeek})`, M.deadlinePassed ? 'Passed — offseason / keeper planning only' : `Locks around ${fmtDayTime(M.deadlineAt)}, after the week's last game — accepted deals process within minutes`]);
   dates.push([`Regular season ends`, `Week ${snap.league.settings.playoff_week_start - 1}; playoffs start Week ${snap.league.settings.playoff_week_start} (top ${snap.league.settings.playoff_teams}, top 2 get byes)`]);
 
   return `

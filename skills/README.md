@@ -24,9 +24,21 @@ skill is corrected.
 | [`ff-ml-projections`](ff-ml-projections/SKILL.md) | Age curves, opportunity share, projection methodology and validation scripts. |
 | [`playoff-schedule-strength`](playoff-schedule-strength/SKILL.md) | Opponent strength across Weeks 15–17, bye risk, schedule matrix scripts. |
 
+## Helper skills (called by the workflow skills)
+
+| Skill | Use it for |
+| --- | --- |
+| [`player-injury-news-check`](player-injury-news-check/SKILL.md) | Web background check per player; called by lineup, injury, waiver and trade workflows. |
+| [`waiver-wire-scanner`](waiver-wire-scanner/SKILL.md) | Triage-then-check free-agent scan; wrapped by `ff-waiver-plan`. |
+| [`notebooklm-research-handoff`](notebooklm-research-handoff/SKILL.md) | Short copy-paste brief when sources disagree on a timeline. |
+
 ## Notes
 
 - `ff-decision-engine` and `ff-news-search` are repo-local; the others came from the source skill
-  zips supplied for this project.
+  zips supplied for this project and match the copies installed in Claude.
+- `ff-ml-projections` is installed in Claude as `fantasy-football-ml-projections` (same files).
+- Claude's installed skills do not update from git. After changing a skill here, re-upload it.
+  The last check of every skill against the live connectors is in
+  [`docs/skills-audit.md`](../docs/skills-audit.md).
 - `ff-news-search/references/next-iteration.md` is the working backlog for search.
 - Skills are documentation, not runtime dependencies. The app has no build step and calls no LLM.

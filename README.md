@@ -7,12 +7,13 @@ A live roster-management dashboard for the Sleeper league **James Cook Lovers**.
 ## Run it
 
 ```bash
-cd ff-roster-monitor
+cd Foobol-american-
 node server.js        # Node 18+, no dependencies
+npm test              # 148 tests
 # open http://localhost:4321
 ```
 
-Change the league, your Sleeper username or the port in `config.json`.
+Change the league, your Sleeper username or the port in `config.json` (a `PORT` environment variable wins over it).
 
 ## Where it runs
 
@@ -22,11 +23,28 @@ Nothing is deployed. The app only runs on the machine that starts it:
 | --- | --- |
 | Local | `http://localhost:4321` |
 | Same Wi-Fi | `http://<your-lan-ip>:4321` — the server binds all interfaces |
-| Public internet | **No** — no domain, no tunnel, no cloud host |
+| Your phone, anywhere | `scripts/public.sh` (macOS/Linux) or `scripts/public.ps1` (Windows): a free Cloudflare tunnel behind a password, while your computer is on |
 
-* There is no database and no persisted state: every page is rebuilt from live Sleeper/ESPN calls with short in-memory caching. `data/` holds only a player-list cache and is git-ignored.
+* There is no database. Every page is rebuilt from live Sleeper/ESPN calls with short in-memory caching. `data/` (git-ignored) holds the player-list cache, the headline cache, a 7-day status-change log (`status-log.json`), each team's opening Vegas total, and the last good snapshot (`snapshot-last.json`). If Sleeper or ESPN is down, the site serves that snapshot with a "Showing saved data from …" banner instead of going blank.
 * If the `node server.js` process stops, the site is down. Nothing restarts it on boot.
-* To expose it: either run a tunnel (`cloudflared tunnel --url http://localhost:4321` or `ngrok http 4321`) for a temporary shareable URL, or deploy to any Node host and start it with `node server.js`. `config.json` currently holds the port, so a host that assigns `PORT` needs that read from `process.env.PORT` first.
+* The server uses `PORT` when it is set, otherwise the port in `config.json`.
+
+### Open it on your phone (free)
+
+1. Install `cloudflared`: `brew install cloudflared` (macOS) or `winget install --id Cloudflare.cloudflared` (Windows).
+2. Start the site and the tunnel together, with a password of 10+ characters:
+   ```bash
+   SITE_PASSWORD='pick-something-long' ./scripts/public.sh          # macOS / Linux
+   $env:SITE_PASSWORD = 'pick-something-long'; .\scripts\public.ps1  # Windows PowerShell
+   ```
+3. Open the `https://….trycloudflare.com` address it prints. Any username works, the password is
+   `SITE_PASSWORD`, and the browser remembers it.
+
+Things to know: the computer has to stay on and awake (set it not to sleep while plugged in). The
+address changes every time you start the script; a fixed address needs a domain on Cloudflare and a
+named tunnel. The scripts refuse to start without a password, because `/api/news` makes outside
+requests for whoever calls it. Ten wrong passwords lock that visitor out for 10 minutes.
+`SITE_PASSWORD` also works without the tunnel, for example on your Wi-Fi.
 
 ## What's on each page
 
@@ -37,8 +55,8 @@ Nothing is deployed. The app only runs on the machine that starts it:
 | Injuries | injury-triage | Sleeper vs ESPN labels with times, most-severe-wins rule, league IR rules, IR lock, next man up |
 | Waivers | waiver-plan | Needs in priority order, bye look-ahead, tiered candidates with a named drop, K/DEF streams |
 | Trades | trade-lab | Deadline window, sell/buy market, two-team lineup math, three pitches + walk-away line |
-| Season | season-planner | Playoff odds, weekly review, lineup efficiency, deadline + playoff prep, `.ics` check-ins |
-| News | command-center | Player search + "Your players" ranks every report by lineup impact; League, Wire and Rumours apply the same scoring to rivals, free agents and the last 5 days of speculation |
+| Season | season-planner | Playoff odds, weekly review, lineup efficiency, deadline + playoff prep, your best lineup for each playoff week, kicker and defense stashes for Weeks 15–17, `.ics` check-ins |
+| News | command-center | Player search + "Your players" ranks every report by lineup impact; League ranks rivals by whether they start against you this week; Wire ranks free agents by lineup gain and opened-up playing time; Rumours holds the last 5 days of speculation; **Teammate** rows estimate how injuries, returns and trades move other players' targets and carries |
 
 ## Compete, share & plan
 
@@ -58,6 +76,55 @@ Nothing is deployed. The app only runs on the machine that starts it:
 | Draft plan | Slot explorer, keeper candidates, draft steals and misses, round-by-round value, undervalued players |
 
 History comes from walking the league's `previous_league_id` chain (currently 2025 and 2026).
+
+## Alerts
+
+Status changes on your roster (Sleeper or ESPN injury tag, a starter's depth-chart move, a trade)
+can be pushed to your phone. Off by default; add an `alerts` block to `config.json`:
+
+```json
+"alerts": { "ntfy": "https://ntfy.sh/<your-private-topic>", "quietHours": [23, 7] }
+```
+
+or a webhook: `{ "webhook": "<url>", "format": "discord" }` (`slack` and `json` also work). One
+batched message per refresh, each change sent once, nothing older than 12 hours, nothing while the
+site is serving saved data. `"scope": "starters"` limits it to your starters. Headlines,
+speculation and teammate estimates are never sent.
+
+## How good is the advice? (Track record)
+
+The **Track record** page shows how the site's calls have done: this season's own lineup calls,
+logged the first time they appear (`data/calls-log.json`) and marked right or wrong after the
+games, next to a backtest over 2022–2026. Every threshold the engine uses was sized from that
+backtest and lives in `public/js/fitted.js`, with the experiment it came from.
+Full write-up: [`docs/backtest-report.md`](docs/backtest-report.md).
+
+```bash
+npm run backtest      # downloads history to data/bt/ and re-runs all 15 experiments
+```
+
+What it found, in short: the lineup the site recommends beat the one managers set by about 2
+points a week; Clear / Lean / Toss-up calls win 68% / 60% / 54%; a Questionable player plays 70%
+of the time (90% after a full practice, 55% after none); only running-back injuries move
+teammates' workload predictably; and points allowed to a position does not help choose between
+two players once you know their projections, so that tiebreak was removed.
+Floor and ceiling now come from the projection and how far players like him usually miss it
+(the old last-six-games range held the actual score 35% of the time instead of 50%). The news
+classifier is checked against hand-labelled headlines (`node backtest/news-eval.mjs`); on fresh
+live headlines it read 89% correctly on the latest batch, before the fixes it prompted. Expert
+consensus averaged into QB, WR and K projections added about half a point a week to replayed
+lineups. Waiver claims are ranked by projection: in a replay of this league's 2025-26 seasons the
+top claim added about 9 lineup points over three weeks (the old ranking, led by injured stashes and
+rookies, added 2; the best-projected free agent, 5). Tier 1 needs 3+ lineup points this week; on
+synthetic leagues for 2022-25 the tiers held in order (25.6 / 15.0 / 8.9 points on held-out 2025). The backtest's consensus history is built with `node backtest/fetch-ecr.mjs <clone>`
+(see the script header).
+
+## Matchup strength
+
+Lineup shows, for **quarterbacks**, when the opponent has been in the softest or toughest third of
+the league for points allowed to the position over the last six weeks. It is information only.
+For RB, WR and TE the backtest found no signal beyond the projection, so nothing is shown and it
+is no longer a tiebreak.
 
 ## Decision engine
 
@@ -80,22 +147,58 @@ nickname queries for team defenses. It normalises apostrophes, hyphens, initials
 `Ja'Marr Chase`, `A.J. Brown`, `Amon-Ra St. Brown` and `Chicago Bears` all match their own
 headlines. Cached per player with a 3/10/30-minute TTL, stale-on-failure, one HTTP retry on
 429/5xx, and per-player failure backoff. Cross-player story ids stop one headline appearing under
-three different players in League, Wire or Rumours. The full contract is in
+three different players in League, Wire or Rumours. Refresh timing follows the football clock:
+every 2 minutes in the 2 hours before kickoff (inactives), 5 minutes during games, on game eve and
+in the Wed–Fri practice-report window, 15 minutes after games, 30 minutes on quiet days.
+
+Each snapshot is diffed against the last one: changes to a player's Sleeper tag, ESPN status, depth
+order (top two only) and team are logged with the time they were first seen and shown as **Status
+change** rows ("Sleeper status: Questionable → Out"). Health checks use the latest dated status, so
+a player cleared on Friday is no longer treated as out because of Wednesday's report. The full contract is in
 `skills/ff-news-search/SKILL.md`.
+
+The scan covers your roster, this week's opponent's starters, your starters' NFL teammates (QB,
+backfield, WR room, TE1) and trending free agents in this league, capped at 65 names. Same-name
+players (`Josh Allen` the QB vs the edge rusher) are rejected when the headline ties the name to
+another team or to the defense. **Search all NFL players** finds anyone in Sleeper's player list
+when the snapshot has no match.
+
+## Teammate ripple
+
+`public/js/ripple.js` estimates who gains or loses when a teammate is out, returns or is traded.
+The sizes are measured (backtest E5): when a running back is out the remaining backs gain about a
+third of their share of his carries (right 69% of the time, 43% by chance); a missing receiver's
+targets mostly do not land on any one teammate, so those estimates are small toss-ups; with a
+backup quarterback the top target holds up and the others lose about a tenth; a returning back
+takes back about 40% of what his fill-in gained. Games already played without him this season are
+weighted in by how many there are. A team whose implied total moves 2.5+ points since the week
+opened is flagged. Rows are labelled **Estimate**, capped below "Act now", never flip a start/sit
+on their own, and say how often that kind of estimate has been right. Each week's estimates are
+recorded (`data/ripple-log.json`) and scored after the games. Rules:
+`skills/ff-news-search/references/ripple.md`.
 
 ## Data
 
 * **Sleeper** (public API): league settings, rosters, matchups, transactions, picks, players, projections, weekly stats.
 * **ESPN** (public API): injury report with RotoWire notes, news, NFL schedule and betting lines.
+* **FantasyPros expert consensus** (weekly rankings via dynastyprocess/data, refreshed daily): averaged 50/50 with Sleeper's projection at QB, WR and K, where that beat Sleeper alone in the backtest; shown next to Sleeper's number everywhere.
+  The rest-of-season rankings are blended into RB, WR and TE trade values (they cut the rest-of-season miss by about a tenth).
+* **Open-Meteo** (free, no key): wind at kickoff for outdoor games, shown as a flag with its measured effect.
+* **nflverse** (public release files): the NFL's official injury report with practice status, used directly for chance-to-play; the backtest also uses its closing lines, wind and depth charts.
 * Projections are scored with the league's exact scoring settings (checked against Sleeper's own points: 145/145 match).
 * The lineup solver reproduces Sleeper's "potential points" for all 10 teams.
 
 ## How the trade finder decides
 
-* **Trade value** = league-adjusted value (points above replacement for this league) + a small credit for useful starters; age-weighted when you pick the Balanced/Future horizon (age curves from `ff-ml-projections`).
-* **Points per game** shrinks small samples toward the projection and clips to a sane bound (also from `ff-ml-projections`).
-* **Two-stage search:** a fast pass over every balanced combination, then a bye-aware weekly lineup replay and a simulation of both teams' odds on the best 24.
-* **Acceptance** is a heuristic (value fairness, their lineup change, their odds change, seller status, how often they trade) — not a prediction. No trade is a valid answer.
+* **Points per game** is half results (projection and recent scoring, small samples shrunk) and half what the player's volume normally produces (targets, air yards on catches, carries, red-zone work). That mix predicted the rest of the season better than results alone at every position.
+* **Experts' rest-of-season rank** is blended in for healthy RBs, WRs and TEs (50% / 55% / 70% weight on the experts). On 2025 it cut the miss to 2.73 / 2.67 / 2.11 points a game from 3.00 / 2.87 / 2.21.
+* **Health** uses measured odds: a Questionable player delivers about 83% of a healthy player's rest-of-season points, an officially Out player 62%, a player on injured reserve 8–27% depending on how long he has been out.
+* **Playoff weeks** count by each team's own chance of reaching them, so a contender values Weeks 15–17 more than a team that is out, and the same player is worth different amounts to the two sides.
+* **Buy / Hold / Sell** flags players scoring 4+ a game above or below what their volume supports, with what happened next to players like them.
+* **Picks and keepers** are valued from this league's own drafts (round 1 ≈ 141 season points above replacement, round 2 ≈ 82, round 3 ≈ 60; two drafts, so treat as rough).
+* **A 2-for-1** credits the side that opens a roster spot with the best free agent, and charges the other side its forced drop.
+* **Search:** a fast pass over every combination, then a bye-aware rest-of-season replay and a simulation of both teams' odds on the best 24, ranked by the title and playoff odds you gain without costing the partner theirs. "Doing nothing" is always shown.
+* **Acceptance** is a heuristic, anchored to what this league has actually accepted (the median accepted deal had one side worth less than half the other on these values). A deal lopsided enough to draw five veto votes is flagged. No trade is a valid answer.
 
 ## Rules built in
 
@@ -108,7 +211,10 @@ nothing here can set a lineup, claim a player or send a trade.
 The Flaim / Down Field / StatsDeck / Scout-Squad connectors in the skills aren't reachable from a website.
 The Lineup, Injuries, Waivers and Trades pages each have a **Copy second-opinion prompt** button that
 hands the findings to those connectors. Playoff odds are this site's own simulation (not Down Field's).
-Official inactives and weather are not checked.
+Official inactives are not checked. Wind is flagged but not built into projections (15+ mph costs
+quarterbacks about 2 points and kickers about 1.3). There is one projection source. The news classifier
+has no backtest because no archive of old headlines exists. The full list of what is still
+unsolved is at the end of `docs/backtest-report.md`.
 
 ## How this was built — agentic coding
 
