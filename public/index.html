@@ -4,9 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Roster Monitor · James Cook Lovers</title>
-  <meta name="theme-color" content="#0a0e13" />
+  <meta name="theme-color" content="#000080" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230a0e13'/%3E%3Cellipse cx='16' cy='16' rx='11' ry='6.5' transform='rotate(-35 16 16)' fill='%233ddc84'/%3E%3Cpath d='M10 22 22 10' stroke='%230a0e13' stroke-width='1.6'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/retro.css" />
 </head>
 <body>
   <a class="skip" href="#view">Skip to content</a>
@@ -25,10 +26,18 @@
         <span class="fresh" id="fresh"></span>
       </div>
     </header>
+    <div class="retro-marquee" aria-hidden="true"><span>★ Welcome to the ROSTER MONITOR ★ Home of the James Cook Lovers ★ Live from Sleeper and ESPN ★ Advice only, you make the call ★ Best viewed at 800x600 ★ Thanks for stopping by! ★</span></div>
     <nav class="nav" id="nav"></nav>
     <main id="view" class="view" tabindex="-1"><div class="loading"><div class="spinner"></div><p>Pulling your roster from Sleeper…</p></div></main>
+    <footer class="retro-foot">
+      <hr />
+      <div class="uc"><b>🚧 UNDER CONSTRUCTION 🚧</b></div>
+      <p>Your visits to this page: <span class="counter" id="hitCounter" aria-label="visit count"></span></p>
+      <div class="badges" aria-hidden="true"><span class="b1">MADE WITH NOTEPAD</span><span class="b2">BEST VIEWED IN ANY BROWSER</span><span class="b3">100% FOOTBALL</span></div>
+    </footer>
   </div>
   <div class="backdrop" id="navBackdrop" hidden></div>
   <script type="module" src="/js/app.js"></script>
+  <script src="/js/retro.js" defer></script>
 </body>
 </html>

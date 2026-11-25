@@ -65,6 +65,7 @@ requests for whoever calls it. Ten wrong passwords lock that visitor out for 10 
 | --- | --- |
 | Values & start/sit | League-adjusted player values (your scoring, slots and replacement level), rankings, side-by-side compare, head-to-head start/sit |
 | Trade finder | Searches deals of **up to 3 players per side** (goals: win-win, upgrade a position, consolidate depth, sell one for more). Target or shop a player, protect untouchables, pick a value horizon (win now / balanced / future). Ranks by value balance, typical-lineup gain, bye-aware rest-of-season points, and **playoff/title odds change for both teams**; handles roster-limit drops and gives an acceptance estimate. Analyzer for any 3-for-3 deal |
+| Offseason trades | For after the deadline: every deal valued for **next season only** (keeper slots and draft picks in the next three drafts), for both teams. In a 1-keeper league a player is worth something only to a team he would become the keeper for, so a team's second keeper-quality player is its best trade chip. Searches every team for deals that work for both, prices each with a fair pick package and an opening ask, checks any offer you build or receive and suggests a counter, and lists who needs a keeper (buyers) and who has a spare (sellers) |
 | Playoff path | Seed odds, bracket odds, likely opponents per round, win chance in every game left, what-if scenarios. **Who to root for**: every other team's game left, by how much each result moves your playoff odds, plus how often points for decides your spot. **Scout your playoff opponent**: the teams you most likely meet first, their weak spots, and free agents that would help them most (grab one with a spare spot) |
 | Weekly report | Matchup previews, personalised recap, awards, power rankings — copy, share or print |
 | League historian | Ask questions across every season; rule-based, answers only from recorded games, lineups, drafts and trades |
@@ -218,6 +219,53 @@ them off). Trade value's curve (`TRADE_CURVE`) is calibrated by E21: `node backt
 collects trades from Sleeper leagues shaped like this one (free API, non-commercial use, about 300
 calls a minute), then `npm run backtest` fits the curve and only suggests it if it picks winners in
 this league's own trades better than today's 47%.
+
+## Live draft guide
+
+Open `/draft.html` (or **Live draft guide** on the Draft plan page) and paste a Sleeper draft link,
+draft ID, league ID or username. It works for any Sleeper draft, including other leagues and mock
+drafts, and finds your own league's draft with no typing. Pick your team once and it follows the
+draft live, checking Sleeper every 3 seconds.
+
+* **Take now / Plan for pick #N:** the top six players for your next pick, each with reasons: value,
+  which starting spot he fills, the chance he is still there at your next pick, how much you lose by
+  waiting at his position (value over the best one likely left), last in his tier, falling past ADP,
+  camp news, injury, new team, and last season's volume against his scoring.
+* **Alerts:** position runs, how many teams picking before you still need each position, tiers about
+  to run dry, and players you can safely wait on.
+* **Best available:** every player on the site's 0-100 value in this draft's own scoring, lineup and
+  team count, with tier, ADP, points per game and "there at your pick" odds. Auctions get $ values.
+* **Camp and preseason research:** Google News headlines from the last three weeks for the top ~70
+  players, read with the news engine's classifier: first-team reps, named starter, standout, holdout,
+  demotion, surgery, PUP. Each moves points per game by at most −15% to +8%.
+* **On the clock:** the tab title changes, and with alerts on you get a tone and a notification.
+* **Finished drafts:** results by value drafted, steals, and a replay slider showing what the guide
+  would have said before any pick.
+
+Value per player: Sleeper's season projection (60%), last season's volume through the waiver
+scanner's volume model (25%) and last season's results (15%); a player on a new team leans more on
+the projection. That × games × preseason health, above replacement for this draft. Before Sleeper
+posts next season's projections, values fall back to last season and ADP. Logic is in
+`public/js/draftguide.js`, Sleeper calls in `lib/draftlive.js`, camp news in `lib/draftnews.js`.
+The blend weights, camp nudges, ADP spread and need weights are judgment, not backtested.
+
+* **Next season and practice drafts:** the draft list finds next year's league draft on its own
+  (Sleeper gives the renewed league a new ID; the guide follows `previous_league_id` back to the
+  league in `config.json`), your Sleeper mock drafts, and other leagues. Before Sleeper sets the
+  draft order you can plan from the slot you expect; it switches to your real team once the order
+  is set. **Practice draft** runs a draft on the site against bots (ADP with noise, filling their
+  lineups, kickers and defenses last), in any format or as a copy of the draft you're following.
+* **Player detail:** click any name for how his points per game were built, last season's usage
+  (targets, shares, air yards, red zone, routes, expected points), camp and preseason headlines with
+  links, Sleeper's injury note, depth chart, adds across Sleeper in the last 24 hours, and the odds
+  he lasts to each of your next picks.
+* **Live with Sleeper:** checks every 3 seconds (1.5 when you're up within two picks), shows the pick
+  clock, links to the draft room, and researches news for the best players still on the board as
+  the draft moves. Sleeper's API is read-only, so you still make the pick in Sleeper.
+
+Check it against real Sleeper data on your computer: `npm run check-draft` (or
+`npm run check-draft -- <draft link>`) writes `docs/draft-check.md` with the fields Sleeper sent
+and a replay of your picks. A mock draft on Sleeper is the quickest live test.
 
 ## How the trade finder decides
 
