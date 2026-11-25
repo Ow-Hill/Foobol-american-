@@ -62,7 +62,7 @@ export function render(M, ctx) {
   if (aTeam && bTeam) {
     for (const wk of Object.keys(mus).map(Number).filter((w) => w >= M.W)) {
       const ma = mus[wk].find((m) => m.rid === aTeam.rid);
-      if (ma && mus[wk].find((m) => m.mid === ma.mid && m.rid === bTeam.rid)) {
+      if (ma && ma.mid != null && mus[wk].find((m) => m.mid === ma.mid && m.rid === bTeam.rid)) {
         const mu = wk === M.W ? [M.lineup(M.teamBy[aTeam.rid]).opt.total, M.lineup(M.teamBy[bTeam.rid]).opt.total] : null;
         up.push({ wk, p: M.winProb(aTeam.rid, bTeam.rid, mu), mu });
       }
