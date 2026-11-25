@@ -122,11 +122,11 @@ test('bad news on the candidate himself overrides good stats: the tier-1 riser b
   assert.ok(!I.claims.some((x) => x.id === '5001'));
 });
 
-test('role news lifts a player and a rumour-only story is flagged unconfirmed', () => {
-  const plain = scan();
-  const up = scan(null, [headline('5003', 'Tom Tango named the starter, expected to see expanded role')]);
-  assert.ok(row(up.I, '5003').score > row(plain.I, '5003').score);
+test('role news is a reason and a news lens, and a rumour-only story is flagged unconfirmed', () => {
+  // E22 fitted the score's news weight to 0, so a headline moves the reasons, lenses and verdict, not the score
+  const up = scan(null, [headline('5003', 'Tom Tango named the starter and takes over the slot role')]);
   assert.ok(row(up.I, '5003').reasons.some((x) => x.kind === 'role'));
+  assert.equal(row(up.I, '5003').lenses.news, true);
   const rumour = scan(null, [headline('5003', 'Tom Tango linked to trade talks, per a source', 6, 'Some Blog')]);
   const r = row(rumour.I, '5003');
   assert.ok(r.risks.some((x) => x.kind === 'speculative'));

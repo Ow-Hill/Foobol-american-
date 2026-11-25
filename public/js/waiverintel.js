@@ -13,9 +13,13 @@ const SKILL_POS = new Set(['QB', 'RB', 'WR', 'TE']);
 const SRC_W = { 1: 1, 2: 0.85, 3: 0.7 };
 const HALF_LIFE = 3 * DAY; // a 3-day-old headline counts half
 
-// Score weights (sum to 1). Hand-set on 2026-11-25; backtest E22 (backtest/experiments-b.mjs) fits
-// them on 2022-24 synthetic leagues and checks them on 2025. Change them only from an E22 result.
-export const SCAN_WEIGHTS = { gain: 0.3, usage: 0.2, trend: 0.15, news: 0.25, market: 0.1 };
+// Score weights (sum to 1), fitted by backtest E22 (backtest/experiments-b.mjs) on 2022-24 synthetic
+// leagues and checked on 2025, run 2026-11-25: top pick gained 17.3 lineup points over three weeks
+// against 16.4 for the old hand-set 0.3 / 0.2 / 0.15 / 0.25 / 0.1, helped 90% vs 83%. News fits to 0:
+// in the archive it is only injury-tag openings, which gained little (4.6 over three weeks).
+// Headline news still drives the verdict (Avoid, Watch), the tier and the reasons, just not the
+// score. Market is pinned at 0.1 because Sleeper adds are not archived. Change only from an E22 run.
+export const SCAN_WEIGHTS = { gain: 0.45, usage: 0.15, trend: 0.3, news: 0, market: 0.1 };
 
 // 0-100 score from a candidate's parts. trend is -1..1 and is mapped to 0..1; health scales the total.
 export function scoreFrom(parts, W = SCAN_WEIGHTS) {

@@ -2,6 +2,9 @@
 // week 2022-now: an early-week version (last scrape before Wednesday night) and a final version
 // (last scrape before Sunday's first kickoff). Reads a partial clone of the repository's history:
 //   git clone --filter=blob:none --no-checkout https://github.com/dynastyprocess/data <dir>
+// It also reads files/db_playerids.csv from a checked-out copy at ../dynastyprocess/data; with only
+// the partial clone, copy it out first:
+//   mkdir -p ../dynastyprocess/data/files && git -C ../dynastyprocess/hist show HEAD:files/db_playerids.csv > ../dynastyprocess/data/files/db_playerids.csv
 // Usage: node backtest/fetch-ecr.mjs <dir>   (default ../dynastyprocess/hist)
 import fs from 'node:fs';
 import path from 'node:path';

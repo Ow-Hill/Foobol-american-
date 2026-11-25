@@ -10,9 +10,10 @@ test('scan weights sum to 1 and scoreFrom matches the hand formula', () => {
   const total = Object.values(SCAN_WEIGHTS).reduce((a, b) => a + b, 0);
   assert.ok(Math.abs(total - 1) < 1e-9);
   const parts = { gain: 0.5, usageEff: 0.4, trend: 0.2, newsPart: 0.35, market: 0.3, health: 1 };
-  const hand = Math.round(100 * (0.3 * 0.5 + 0.2 * 0.4 + 0.15 * 0.6 + 0.25 * 0.35 + 0.1 * 0.3));
-  assert.equal(scoreFrom(parts), hand);
-  assert.equal(scoreFrom({ ...parts, health: 0.35 }), Math.round(0.35 * hand));
+  const W = SCAN_WEIGHTS;
+  const t = W.gain * 0.5 + W.usage * 0.4 + W.trend * 0.6 + W.news * 0.35 + W.market * 0.3;
+  assert.equal(scoreFrom(parts), Math.round(100 * t));
+  assert.equal(scoreFrom({ ...parts, health: 0.35 }), Math.round(35 * t));
 });
 
 test('backtest team shares and routes match the live snapshot rules', () => {
