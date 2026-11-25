@@ -733,7 +733,9 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       const [s1, s2, s3, s4, s5, s6] = order;
       const game = (a, b, round) => {
         const wk = lastReg + round;
-        const wa = sampleWk(a, wk) > sampleWk(b, wk) ? a : b;
+        // A playoff week already finished is decided by its real scores, not a fresh sample.
+        const done = wk < W ? playedWinner(wk, a, b) : null;
+        const wa = done ?? (sampleWk(a, wk) > sampleWk(b, wk) ? a : b);
         if (path && (a === track || b === track)) {
           const opp = a === track ? b : a;
           path.opp[round][opp] = (path.opp[round][opp] || 0) + 1;
@@ -763,6 +765,14 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       res[id].seed = res[id].seedSum / n;
     }
     return { res, prof, n, path };
+  }
+  // Winner of a finished week's game from the real scores (null when either score is missing).
+  function playedWinner(wk, a, b) {
+    const pts = (id) => (snap.matchups[wk] || []).find((m) => m.rid === id)?.pts;
+    const pa = pts(a);
+    const pb = pts(b);
+    if (!(pa > 0) || !(pb > 0)) return null;
+    return pa >= pb ? a : b;
   }
   function sim() {
     return (simCache ||= runSim({}));
