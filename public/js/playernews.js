@@ -25,6 +25,7 @@ const RX = {
   roleDown: /reduced|decreased|demoted|benched|loses? (snaps|work|role|touches)|smaller role|fewer (snaps|touches|targets)|backup role|phased out|healthy scratch/i,
   suspension: /suspend|suspended|suspension/i,
   performance: /touchdown|throws|yards|recap|scores|leads|beats|rushes/i,
+  camp: /training camp|\bcamp\b|\bOTAs?\b|minicamp|preseason|organized team activities/i,
   body: /\b(ankle|knee|hamstring|concussion|shoulder|quad|calf|wrist|foot|hip|neck|chest|ligament|oblique|ribs?|toe|groin|elbow|illness|head)\b|back injury|hip pointer/i,
 };
 // Phrases that are health news even when worded as an expectation ("expected to play"),
@@ -103,6 +104,7 @@ export function classify(title, text, kind, statusHint, who = null, others = nul
   if (RX.trade.test(blob)) cats.push('trade');
   if (RX.depth.test(blob)) cats.push('depth');
   if (RX.suspension.test(blob)) cats.push('suspension');
+  if (RX.camp.test(blob)) cats.push('camp');
   if (!cats.length && RX.performance.test(blob)) cats.push('performance');
 
   const speculative = kind !== 'note' && RX.rumour.test(blob.replace(NOT_RUMOUR, ' ')) && !/official|announc|confirm|activated|cleared to/i.test(blob);
@@ -115,7 +117,7 @@ export function classify(title, text, kind, statusHint, who = null, others = nul
   return { cats: [...new Set(cats)], practice, status, posture, better, roleDir };
 }
 
-function tierOf(src) {
+export function tierOf(src) {
   if (!src) return 3;
   if (TIER1.test(src)) return 1;
   if (TIER2.test(src)) return 2;

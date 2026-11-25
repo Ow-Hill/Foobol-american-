@@ -81,3 +81,33 @@ Group as **proven risers / handcuff stashes / lottery tickets**. For each: add, 
 which slot it fills and when, Down Field this-week gain + season band, and the trigger to
 revisit (next practice report, two more games of usage). End with priority advice:
 spend or hold, and why. Never say a claim was placed.
+
+## On the dashboard: the Scanner board
+
+`public/js/waiverintel.js` runs this method locally on the Waivers page and in the Decision brief
+(tests: `test/waiverintel.test.mjs`). Per free agent (QB/RB/WR/TE) it blends:
+
+| Lens | Weight | Source |
+| --- | --- | --- |
+| Lineup gain this week / next | 30 | `waiverPlan().pool` (`addImpact`) |
+| News | 25 | typed headlines/notes from `playernews.js`: injury, practice, role up/down, trade, camp, suspension; plus **openings** when a teammate ahead of him is on IR/Out or reported so |
+| Usage | 20 | snap %, touches/g (RB) or targets/g (WR/TE), last 3 games |
+| Trend | 15 | last 3 vs the 5 before: snaps, volume, points |
+| Market | 10 | Sleeper trending-add rank |
+
+Health tags scale the score down. News is weighted by source tier, a 3-day half-life and halved
+for rumours. A multi-week opening (IR/PUP/Sus) ahead of a next-man-up RB with a 10+ ppg starter is a
+Tier 1 takeover; a one-week Out is a short-term opening, a rumour is Watch. Bad news on the player
+himself (Out/IR, demoted) makes him Avoid. Confidence counts agreeing lenses (stats, news, market,
+lineup, opening). Verdicts: Claim (spend priority) · Claim only for the need · Watch · Free agency ·
+Avoid. Free agents' own news exists only if they were scanned (roster + trending names).
+
+### Advanced position stats (`public/js/advstats.js`)
+
+Usage is scored per position against named benchmark players (per game, checked against StatsDeck
+on 2026-11-25): QB Burrow / Love / Allen (dropbacks, rush attempts, red-zone attempts), RB Gibbs
+(carries, targets, rush share, red-zone touches), WR Smith-Njigba (targets, target share, WOPR),
+TE McBride (targets, target share, est. routes, red-zone targets). Expected points from volume vs
+actual flags players running hot (likely to cool) or cold (due to catch up). Routes, YPRR, TPRR and
+WOPR are estimates (≈); inside-10 touches, slot/wide splits and completed QB air yards are not in
+Sleeper's feed. The Waivers page lists each metric's source in "Stats behind the scanner".
