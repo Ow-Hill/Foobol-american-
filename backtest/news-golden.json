@@ -961,5 +961,9 @@
    "status": null,
    "injury": false
   }
+ ],
+ "others_note": "Other players named in these headlines. Used only when no local player list (data/) exists, e.g. a fresh clone or CI.",
+ "others": [
+  "Malik Willis"
  ]
 }

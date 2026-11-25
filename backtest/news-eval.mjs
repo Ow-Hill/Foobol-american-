@@ -17,7 +17,10 @@ const slim = path.join(here, '..', 'data', 'players-slim-v2.json');
 const src = fs.existsSync(db) ? JSON.parse(fs.readFileSync(db, 'utf8')) : fs.existsSync(slim) ? JSON.parse(fs.readFileSync(slim, 'utf8')) : {};
 const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[’'.]/g, '').replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
 const SUF = new Set(['jr', 'sr', 'ii', 'iii', 'iv', 'v']);
-const OTHERS = [...new Set(Object.values(src).filter((p) => p.pos !== 'DEF').map((p) => norm(p.n).split(' ').filter((w) => !SUF.has(w)).join(' ')))];
+// A fresh clone (and CI) has no data/ folder: fall back to the names in the golden set itself.
+const goldenNames = [...(G.others || []), ...Object.values(G).filter(Array.isArray).flat().map((c) => (typeof c.p === 'string' ? c.p : c.p?.n)).filter(Boolean)];
+const names = Object.keys(src).length ? Object.values(src).filter((p) => p.pos !== 'DEF').map((p) => p.n) : goldenNames;
+const OTHERS = [...new Set(names.map((n) => norm(n).split(' ').filter((w) => !SUF.has(w)).join(' ')))];
 const SEVERE = new Set(['Out', 'IR', 'Sus', 'PUP', 'NA']);
 const group = (s) => (!s ? 'none' : SEVERE.has(s) ? 'Out' : s);
 const pct = (v) => (Number.isFinite(v) ? Math.round(v * 1000) / 10 : null);
