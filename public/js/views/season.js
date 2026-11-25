@@ -37,16 +37,72 @@ function effChart(M) {
   return `<div class="eff-chart">${cols.join('')}</div><p class="note"><b>${n0(lost)}</b> points left on the bench across ${rows.length} weeks (<span style="color:var(--green)">green</span> = scored, <span style="color:#6f8fb0">blue</span> = missed). Biggest miss: Week ${rows.slice().sort((a, b) => b.opt - b.pts - (a.opt - a.pts))[0].wk}.</p>`;
 }
 
+// How much better a free-agent kicker or defense must project over Weeks 15-17 combined before
+// it is worth a roster spot now. A judgment, not a fitted number.
+const STASH_GAIN = 4;
+
 function playoffSlate(M) {
-  const weeks = M.snap.meta.playoffWeeks;
+  const weeks = M.snap.meta.playoffWeeks.filter((wk) => wk >= M.W);
+  if (!weeks.length) return '<p class="empty">The fantasy playoffs have started — use the Lineup tab week by week.</p>';
+  const V = M.V;
+  const plans = Object.fromEntries(weeks.map((wk) => [wk, V.weekPlan(M.me, wk)]));
+  const startsIn = (id) => weeks.filter((wk) => plans[wk].slots.some((s) => s.pid === id));
   const l = M.lineup(M.me);
-  const core = [...new Set([...l.opt.slots.map((s) => s.pid).filter(Boolean), ...l.bench.filter((id) => (M.P(id).ppg || 0) >= 8)])];
-  const rows = core.map((id) => {
+  const core = [...new Set([...weeks.flatMap((wk) => plans[wk].slots.map((s) => s.pid)), ...l.opt.slots.map((s) => s.pid)].filter(Boolean))];
+  const cell = (id, wk) => {
     const p = M.P(id);
-    return [playerName(M, id, { status: false }), ...weeks.map((wk) => (M.isBye(p.team, wk) ? '<span class="chip chip-red">BYE</span>' : M.gameFor(p.team, wk) ? `${M.gameFor(p.team, wk).home ? 'vs' : '@'} ${esc(M.gameFor(p.team, wk).opp)}` : '–'))];
-  });
-  const anyBye = rows.some((r) => r.slice(1).some((c) => c.includes('BYE')));
-  return `${table(['Player', ...weeks.map((w) => 'Wk ' + w)], rows)}<p class="note">${anyBye ? '<b style="color:var(--red)">A key player has a bye in the fantasy playoffs — a near deal-breaker for a buy.</b>' : '<b>No key player has a bye in Weeks ' + weeks.join('–') + '.</b>'} Betting lines for these weeks aren't posted yet, so matchup strength can't be graded — re-check closer to the date.</p>`;
+    if (M.isBye(p.team, wk)) return '<span class="chip chip-red">BYE</span>';
+    const g = M.gameFor(p.team, wk);
+    const opp = g ? `${g.home ? 'vs' : '@'} ${esc(g.opp)}` : '–';
+    const starts = plans[wk].slots.some((s) => s.pid === id);
+    return `<span class="num ${starts ? '' : 'dim'}">${n1(V.weekPts(id, wk))}</span>${starts ? '' : ' <span class="dim">bench</span>'}<br /><span class="dim" style="white-space:nowrap">${opp}</span>`;
+  };
+  const rows = core
+    .sort((a, b) => startsIn(b).length - startsIn(a).length || V.ppg(b) - V.ppg(a))
+    .map((id) => [playerName(M, id, { status: true }), ...weeks.map((wk) => cell(id, wk))]);
+  rows.push(['<b>Best lineup</b>', ...weeks.map((wk) => {
+    const empty = plans[wk].slots.filter((s) => !s.pid).map((s) => s.slot);
+    return `<b class="num">${n1(plans[wk].total)}</b>${empty.length ? ` <span class="chip chip-red">empty ${esc(empty.join(', '))}</span>` : ''}`;
+  })]);
+  const benchHelp = l.bench.filter((id) => startsIn(id).length);
+  const anyBye = core.some((id) => weeks.some((wk) => M.isBye(M.P(id).team, wk)));
+  const notes = [
+    anyBye ? '<b style="color:var(--red)">A key player has a bye in the fantasy playoffs — plan his replacement now.</b>' : `<b>No key player has a bye in Weeks ${weeks[0]}–${weeks[weeks.length - 1]}.</b>`,
+    benchHelp.length ? `Bench players who start a playoff week: ${benchHelp.map((id) => `<b>${esc(M.P(id).n)}</b> (Week ${startsIn(id).join(', ')})`).join(', ')}. Don't drop them for a one-week stream.` : '',
+    'Skill players use points per game and health (the measured rest-of-season estimate); kickers and defenses use Sleeper\'s projection for that week, since their matchup matters most.',
+  ].filter(Boolean);
+  return `${table(['Player', ...weeks.map((w) => 'Wk ' + w)], rows)}<p class="note">${notes.join(' ')}</p>`;
+}
+
+function stashPlan(M) {
+  const weeks = M.snap.meta.playoffWeeks.filter((wk) => wk >= M.W);
+  if (!weeks.length) return '';
+  const V = M.V;
+  const tot = (id) => weeks.reduce((s, wk) => s + V.weekPts(id, wk), 0);
+  const l = M.lineup(M.me);
+  const out = [];
+  for (const pos of ['DEF', 'K']) {
+    const mineIds = l.active.filter((id) => M.P(id).pos === pos);
+    // best of mine each week (you can rotate your own)
+    const mineWk = weeks.map((wk) => Math.max(0, ...mineIds.map((id) => V.weekPts(id, wk))));
+    const mineSum = mineWk.reduce((a, b) => a + b, 0);
+    const fa = Object.values(M.snap.players).filter((p) => p.own == null && p.pos === pos && p.team).map((p) => p.id);
+    const best = fa.map((id) => ({ id, sum: tot(id) })).sort((a, b) => b.sum - a.sum).slice(0, 3);
+    const rows = [[`<b>Yours</b> <span class="dim">${mineIds.map((id) => esc(M.P(id).n)).join(', ') || 'none'}</span>`, ...mineWk.map((v) => `<span class="num">${n1(v)}</span>`), `<b class="num">${n1(mineSum)}</b>`]];
+    for (const b of best) {
+      const p = M.P(b.id);
+      rows.push([`${esc(p.n)} <span class="tm">${esc(p.team || '')}</span>`, ...weeks.map((wk) => {
+        const g = M.gameFor(p.team, wk);
+        return M.isBye(p.team, wk) ? '<span class="chip chip-red">BYE</span>' : `<span class="num">${n1(V.weekPts(b.id, wk))}</span> <span class="dim">${g ? (g.home ? 'vs ' : '@ ') + esc(g.opp) : ''}</span>`;
+      }), `<b class="num">${n1(b.sum)}</b> <span class="${b.sum - mineSum >= 0 ? 'pos-num' : 'neg-num'}">${signed(b.sum - mineSum)}</span>`]);
+    }
+    const top = best[0];
+    const advice = top && top.sum - mineSum >= STASH_GAIN
+      ? `<div class="callout good"><b>Stash ${esc(M.P(top.id).n)} for the playoffs</b>Projects ${n1(top.sum - mineSum)} more over Weeks ${weeks[0]}–${weeks[weeks.length - 1]} than your ${pos === 'DEF' ? 'defense' : 'kicker'}. ${(() => { const d = M.dropFor({ id: top.id, p: M.P(top.id) }); return d.none && /open roster spot/.test(d.text) ? 'You have an open spot, so add him now.' : d.pid ? `Add him before rivals do (${esc(d.text)}).` : esc(d.text) + '.'; })()}</div>`
+      : `<div class="callout"><b>No ${pos === 'DEF' ? 'defense' : 'kicker'} stash needed</b>No free agent projects ${STASH_GAIN}+ more than yours over Weeks ${weeks[0]}–${weeks[weeks.length - 1]}. Check again after next week's games.</div>`;
+    out.push(`<h3 style="margin:10px 0 6px">${pos === 'DEF' ? 'Defense' : 'Kicker'}</h3>${advice}${table(['', ...weeks.map((w) => 'Wk ' + w), `Wk ${weeks[0]}–${weeks[weeks.length - 1]}`], rows)}`);
+  }
+  return out.join('') + `<p class="note">Sleeper's week-by-week projections. Lines for those weeks aren't posted yet, so they move; the ${STASH_GAIN}-point bar is a judgment, not a fitted number.</p>`;
 }
 
 function icsFor(M) {
@@ -137,7 +193,8 @@ export function render(M, ctx) {
         ${card(`Trade-deadline push (through Week ${M.deadlineWeek})`, `<ol style="margin:0 0 0 18px;padding:0;display:flex;flex-direction:column;gap:8px">${deadlineList.map((x) => `<li>${x}</li>`).join('')}</ol>`)}
         ${card('Playoff prep (Weeks 12–17)', `<ol style="margin:0 0 0 18px;padding:0;display:flex;flex-direction:column;gap:8px">${prepList.map((x) => `<li>${x}</li>`).join('')}</ol>`)}
       </div>
-      ${card('Playoff slate for your key players', playoffSlate(M), { cls: 'flush', sub: `Weeks ${M.snap.meta.playoffWeeks.join(', ')} opponents and byes` })}
+      ${card('Your playoff lineup', playoffSlate(M), { cls: 'flush', sub: `Weeks ${M.snap.meta.playoffWeeks.join(', ')}: best lineup each week, projected points, opponents and byes` })}
+      ${card('Kicker and defense for the playoffs', stashPlan(M), { sub: 'Your best each week vs the top free agents, by Sleeper projection for that week' })}
       ${card('Standings & lineup efficiency', table(['#', 'Team', 'Record', 'Points for', 'Points against', 'Potential', 'Efficiency', 'Left on bench'], stand), { cls: 'flush', sub: 'Records come from Sleeper matchups. Potential = the best legal lineup every week.' })}
       ${card('Regular check-ins', checkins + `<div class="btn-row" style="margin-top:12px"><button class="btn" id="dlIcs">Download calendar reminders (.ics)</button></div><p class="note">This site can't send notifications. The download adds recurring reminders to your calendar app at the times above — nothing is created unless you open the file. Reminder times are fixed in your device's time zone (${esc(M.snap.meta.tz)} for you).</p>`)}
     </div>`;

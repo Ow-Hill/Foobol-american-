@@ -180,8 +180,11 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     }
     if (p.effSev >= 4 && p.eff === 'IR') return 0;
     if (wk === W + 1) return p.projNext ?? 0;
-    return 0;
+    // later weeks: Sleeper's projection for that week (snapshot `ahead`), 0 when it has none
+    return p.ahead?.[wk] ?? 0;
   }
+  // Does the snapshot carry projections for weeks after next? (older snapshots do not)
+  const hasAhead = Object.values(snap.players).some((p) => p.ahead);
 
   // ---------- lineup solver ----------
   const slotEligible = (slot, pos) => (FLEX_ELIG[slot] ? FLEX_ELIG[slot].includes(pos) : slot === pos);
@@ -731,7 +734,7 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       const starters = l.opt.slots.map((s) => s.pid).filter(Boolean);
       const hitStarters = starters.filter((id) => isBye(P(id).team, wk));
       const left = l.active.filter((id) => !isBye(P(id).team, wk));
-      const o = solve(left, { v: (id) => val(id, wk === W ? W : wk === W + 1 ? W + 1 : W + 1), can: (id) => (wk === W ? canStartNow(id) : P(id).effSev < 4) });
+      const o = solve(left, { v: (id) => val(id, wk > W + 1 && !hasAhead ? W + 1 : wk), can: (id) => (wk === W ? canStartNow(id) : P(id).effSev < 4) });
       rows.push({ wk, hit: hitStarters, bye, total: o.total, empty: o.slots.filter((s) => !s.pid).map((s) => s.slot) });
     }
     return rows;
@@ -745,6 +748,20 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     const base = solve(l.active, opts);
     const withIt = solve([...l.active, pid], opts);
     return withIt.total - base.total;
+  }
+
+  // Players in my best lineup for any fantasy-playoff week still ahead (values.js weekPlan).
+  let _pStarters = null;
+  function playoffStarters() {
+    if (_pStarters) return _pStarters;
+    const weeks = (snap.meta.playoffWeeks || []).filter((wk) => wk > W);
+    _pStarters = new Set();
+    try {
+      for (const wk of weeks) for (const sl of M.V.weekPlan(me, wk).slots) if (sl.pid) _pStarters.add(sl.pid);
+    } catch {
+      // values unavailable (partial snapshot): fall back to this week's rules only
+    }
+    return _pStarters;
   }
 
   function dropFor(cand) {
@@ -763,7 +780,9 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       .filter((id) => !(['K', 'DEF'].includes(P(id).pos) && count(P(id).pos) <= WAIVER.keepKDef))
       .filter((id) => id !== cand.id)
       .sort((a, b) => Math.max(val(a), P(a).ppg || 0) - Math.max(val(b), P(b).ppg || 0));
-    const d = pool[0];
+    // Keep anyone who starts in a fantasy-playoff week's best lineup, unless nobody else can go.
+    const pStarters = playoffStarters();
+    const d = pool.find((id) => !pStarters.has(id)) || pool[0];
     return d ? { pid: d, text: `Drop ${P(d).n}` } : { none: true, text: 'No safe drop — roster is full of needed pieces' };
   }
 

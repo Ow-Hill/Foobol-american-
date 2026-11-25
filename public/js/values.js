@@ -238,6 +238,26 @@ export function buildValues(M) {
       const ids = l.active.filter((id) => !rm.has(id)).concat(extra);
       return M.solve(ids, { v: (id) => ppg(id) * avail(id), can: (id) => !M.P(id).missing });
     },
+    // Points for one future week. Skill players use points per game x health (the rest-of-season
+    // estimate the backtest measured, E11); the backtest found no matchup signal beyond it for them.
+    // Kickers and defenses are matchup-driven, so they use Sleeper's projection for that week when
+    // there is one. This week is this week's projection.
+    weekPts(pid, wk) {
+      const p = M.P(pid);
+      if (p.missing || M.isBye(p.team, wk)) return 0;
+      if (wk === W) return M.val(pid);
+      if (p.effSev >= 4 && p.eff === 'IR') return 0;
+      const wkProj = wk === W + 1 ? p.projNext : p.ahead?.[wk];
+      if ((p.pos === 'K' || p.pos === 'DEF') && wkProj != null) return wkProj * avail(pid);
+      return ppg(pid) * avail(pid);
+    },
+    // best legal lineup for one future week from a team's active roster (plus/minus players)
+    weekPlan(t, wk, extra = [], remove = []) {
+      const l = M.lineup(t);
+      const rm = new Set(remove);
+      const ids = l.active.filter((id) => !rm.has(id)).concat(extra);
+      return M.solve(ids, { v: (id) => V.weekPts(id, wk), can: (id) => V.weekPts(id, wk) > 0 });
+    },
     // points over the rest of the season: best lineup each remaining week, byes removed, playoff weeks discounted
     rosLineup(t, extra = [], remove = []) {
       const l = M.lineup(t);

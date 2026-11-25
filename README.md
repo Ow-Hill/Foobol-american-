@@ -38,7 +38,7 @@ Nothing is deployed. The app only runs on the machine that starts it:
 | Injuries | injury-triage | Sleeper vs ESPN labels with times, most-severe-wins rule, league IR rules, IR lock, next man up |
 | Waivers | waiver-plan | Needs in priority order, bye look-ahead, tiered candidates with a named drop, K/DEF streams |
 | Trades | trade-lab | Deadline window, sell/buy market, two-team lineup math, three pitches + walk-away line |
-| Season | season-planner | Playoff odds, weekly review, lineup efficiency, deadline + playoff prep, `.ics` check-ins |
+| Season | season-planner | Playoff odds, weekly review, lineup efficiency, deadline + playoff prep, your best lineup for each playoff week, kicker and defense stashes for Weeks 15–17, `.ics` check-ins |
 | News | command-center | Player search + "Your players" ranks every report by lineup impact; League ranks rivals by whether they start against you this week; Wire ranks free agents by lineup gain and opened-up playing time; Rumours holds the last 5 days of speculation; **Teammate** rows estimate how injuries, returns and trades move other players' targets and carries |
 
 ## Compete, share & plan
