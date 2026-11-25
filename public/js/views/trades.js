@@ -1,5 +1,5 @@
 import { esc, n1, signed, fmtDay, fmtDayTime, pct, countdown, ago } from '../util.js';
-import { card, table, playerName, statusChip, ownerChip, secondOpinionBtn, callBadge } from '../ui.js';
+import { card, table, playerName, statusChip, ownerChip, secondOpinionBtn, callBadge, marketCredit } from '../ui.js';
 
 import { evaluateDeal, search } from './finder.js';
 
@@ -39,6 +39,8 @@ export function diligence(M, id) {
   }
   const rr = M.V.rosRank(id);
   if (rr) bits.push(`<span class="chip" title="FantasyPros consensus, rest of season. Blended into trade value at RB/WR/TE, where that made values more accurate in the 2022-2025 backtest.">experts ROS: ${esc(M.P(id).pos)}${Math.round(rr)}</span>`);
+  const mk = M.V.market(id);
+  if (mk != null) bits.push(`<span class="chip" title="What managers pay for him in real Sleeper trades (Dynasty Dealer, redraft PPR), 0-100 like the site's value. A second opinion; it does not change the site's call.">market ${n1(mk)}</span>`);
   const sig = M.V.signal(id);
   if (sig && sig.tag === 'Sell') bits.push(`<span class="chip chip-amber" title="${esc(sig.why)}">running hot: ${n1(sig.last4)}/g, volume supports ${n1(sig.usage)}</span>`);
   if (sig && sig.tag === 'Buy') bits.push(`<span class="chip chip-fa" title="${esc(sig.why)}">buy low: ${n1(sig.last4)}/g, volume supports ${n1(sig.usage)}</span>`);
@@ -174,7 +176,7 @@ export function render(M, ctx) {
         <div class="kpi"><small>${esc(partner.owner)}'s best lineup</small><b>${n1(ev.theirs.before)} → ${n1(ev.theirs.after)}</b><span class="${ev.theirs.delta >= 0 ? 'pos-num' : 'neg-num'}">${signed(ev.theirs.delta)} pts · playoff odds ${pct(theirOdds.playoff)}</span></div>
       </div>
       <div class="callout ${expect[0]}" style="margin-top:10px"><b>${expect[1]}</b>${expect[2]} <span class="dim">(Lean based on lineup math, not a prediction of what they'll say.)</span></div>
-      <div class="two" style="margin-top:12px"><div><h3 class="dimh">You send — diligence</h3>${both(give)}</div><div><h3 class="dimh">You get — diligence</h3>${both(get)}</div></div>
+      <div class="two" style="margin-top:12px"><div><h3 class="dimh">You send — diligence</h3>${both(give)}</div><div><h3 class="dimh">You get — diligence</h3>${both(get)}</div></div>${M.V.marketSource() ? `<p style="margin-top:6px">${marketCredit(M)}</p>` : ''}
       ${pitches ? `<h3 class="dimh" style="margin-top:18px">Pitch · three versions</h3>
       <div class="stack">
         ${[['Anchor — the deal you want', pitches.anchor], ['Sweetened — adds depth or a pick', pitches.sweetened, pitches.sweetNote], ['Needs-based — framed around their hole', pitches.needs]].map(([h, t, note]) => `<div class="pitch"><h4>${h}</h4>${esc(t)}${note ? `<div class="dim" style="font-size:12px;margin-top:4px">${note}</div>` : ''}<div style="margin-top:8px"><button class="btn btn-ghost" data-copy="${esc(t)}">Copy</button></div></div>`).join('')}

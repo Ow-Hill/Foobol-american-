@@ -59,11 +59,11 @@ function playoffSlate(M) {
   };
   const rows = core
     .sort((a, b) => startsIn(b).length - startsIn(a).length || V.ppg(b) - V.ppg(a))
-    .map((id) => [playerName(M, id, { status: true }), ...weeks.map((wk) => cell(id, wk))]);
+    .map((id) => [playerName(M, id, { status: true }), ...weeks.map((wk) => cell(id, wk)), `<span class="num"><b>${n1(weeks.reduce((t, wk) => t + V.weekPts(id, wk), 0))}</b></span>`, `<span class="num">${n1(V.value(id))}</span>`]);
   rows.push(['<b>Best lineup</b>', ...weeks.map((wk) => {
     const empty = plans[wk].slots.filter((s) => !s.pid).map((s) => s.slot);
     return `<b class="num">${n1(plans[wk].total)}</b>${empty.length ? ` <span class="chip chip-red">empty ${esc(empty.join(', '))}</span>` : ''}`;
-  })]);
+  }), `<b class="num">${n1(weeks.reduce((t, wk) => t + plans[wk].total, 0))}</b>`, '']);
   const benchHelp = l.bench.filter((id) => startsIn(id).length);
   const anyBye = core.some((id) => weeks.some((wk) => M.isBye(M.P(id).team, wk)));
   const notes = [
@@ -71,7 +71,8 @@ function playoffSlate(M) {
     benchHelp.length ? `Bench players who start a playoff week: ${benchHelp.map((id) => `<b>${esc(M.P(id).n)}</b> (Week ${startsIn(id).join(', ')})`).join(', ')}. Don't drop them for a one-week stream.` : '',
     'Skill players use points per game and health (the measured rest-of-season estimate); kickers and defenses use Sleeper\'s projection for that week, since their matchup matters most.',
   ].filter(Boolean);
-  return `${table(['Player', ...weeks.map((w) => 'Wk ' + w)], rows)}<p class="note">${notes.join(' ')}</p>`;
+  notes.push('<b>Playoff pts</b> adds his weeks above; <b>Value</b> is the rest-of-season player value used on every page (Values, Waivers, drops, trades).');
+  return `${table(['Player', ...weeks.map((w) => 'Wk ' + w), 'Playoff pts', 'Value'], rows)}<p class="note">${notes.join(' ')}</p>`;
 }
 
 function stashPlan(M) {

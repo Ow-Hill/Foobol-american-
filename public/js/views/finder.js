@@ -1,5 +1,5 @@
 import { esc, n1, n0, signed, pct, clamp } from '../util.js';
-import { card, table, playerName, secondOpinionBtn, statusChip } from '../ui.js';
+import { card, table, playerName, secondOpinionBtn, statusChip, marketCredit } from '../ui.js';
 import { diligence, pickList } from './trades.js';
 import { TRADE_BALANCE } from '../fitted.js';
 
@@ -266,13 +266,22 @@ function analyzer(M, ui) {
     const list = (ids) => ids.map((id) => `<div style="margin-bottom:6px">${playerName(M, id, { status: false })} <span class="chip">trade value ${n1(M.V.tv(id))}</span><div>${diligence(M, id)}</div></div>`).join('') || '<span class="dim">nothing</span>';
     res = `<div class="callout ${v[0]}" style="margin-top:12px"><b>${v[1]}</b>${v[2]} <span class="chip ${ac}" style="margin-left:6px">${al} · ${acc}</span></div>
     <div class="grid g2" style="margin-top:12px"><div class="kpi"><small>Value balance</small>${balanceMeter(d.gv, d.rv)}</div>
+    ${(() => {
+      const ms = M.V.marketSum(give);
+      const mr = M.V.marketSum(get);
+      if (ms == null && mr == null) return '';
+      const g = ms || 0;
+      const r = mr || 0;
+      const lean = Math.abs(r - g) < 0.1 * Math.max(r, g, 1) ? 'about even' : r > g ? 'you get more' : 'you give more';
+      return `<div class="kpi"><small>Trade market check</small><b>${n1(g)} → ${n1(r)}</b><span>${lean} on real-trade prices · ${marketCredit(M)}</span></div>`;
+    })()}
     <div class="kpi"><small>Roster after trade</small><b>${d.rosterAfter}/${M.maxRoster}</b><span>${d.dropsMe.length ? `drops ${d.dropsMe.map((id) => esc(M.P(id).n)).join(', ')} to fit` : 'fits'}${d.dropsThem.length ? ` · they drop ${d.dropsThem.map((id) => esc(M.P(id).n)).join(', ')}` : ''}</span></div>
     <div class="kpi"><small>Your typical lineup</small><b class="${d.dMe >= 0 ? 'pos-num' : 'neg-num'}">${signed(d.dMe)}</b><span>a week · rest of season ${signed(d.rosMe)} pts · this week ${signed(wk.mine.delta)}</span></div>
     <div class="kpi"><small>${esc(partner.owner)}'s typical lineup</small><b class="${d.dThem >= -0.05 ? 'pos-num' : 'neg-num'}">${signed(d.dThem)}</b><span>a week · rest of season ${signed(d.rosThem)} pts · this week ${signed(wk.theirs.delta)}</span></div>
     <div class="kpi"><small>Your odds change</small><b>${signed(odds.me.playoff * 100)}</b><span>playoff pts · title ${signed(odds.me.title * 100)} · now ${pct(odds.me.after)}</span></div>
     <div class="kpi"><small>${esc(partner.owner)}'s odds change</small><b>${signed(odds.them.playoff * 100)}</b><span>playoff pts · title ${signed(odds.them.title * 100)} — ${odds.them.playoff < -0.02 ? 'their odds fall, expect a no' : 'their odds hold or rise'}</span></div></div>
     <p class="note"><b>Why:</b> ${why(M, d)}</p>
-    <div class="two" style="margin-top:12px"><div><h3 class="dimh">You send</h3>${list(give)}</div><div><h3 class="dimh">You get</h3>${list(get)}</div></div>
+    <div class="two" style="margin-top:12px"><div><h3 class="dimh">You send</h3>${list(give)}</div><div><h3 class="dimh">You get</h3>${list(get)}</div></div>${M.V.marketSource() ? `<p style="margin-top:6px">${marketCredit(M)}</p>` : ''}
     <div class="btn-row" style="margin-top:12px"><button class="btn" data-to-lab>Write the pitch in Trade lab →</button></div>
     <p class="note"><b>Doing nothing</b> keeps you at ${pct(M.odds()[M.me.id].playoff)} to make the playoffs and ${pct(M.odds()[M.me.id].title)} for the title; the odds change above is measured against that. Draft picks, in the same units as trade value: round 1 ≈ ${n1(M.V.pickValue(1))}, round 2 ≈ ${n1(M.V.pickValue(2))}, round 3 ≈ ${n1(M.V.pickValue(3))} (what those rounds returned in this league's 2025 and 2026 drafts, less a fifth for the wait). Playoff weeks count by each team's own chance of reaching them, so the same player is worth more to a contender. The odds change comes from this site's simulation with each team's weekly scoring shifted by the lineup change.</p>`;
   }
@@ -324,7 +333,7 @@ export function render(M, ctx) {
     <details class="how" ${ui.protectOpen ? 'open' : ''}><summary>Hands-off players (${ui.protect.length}) — never offered</summary><div class="btn-row" style="margin-top:8px">${myPlayers.slice(0, 14).map((id) => chipBtn(ui.protect.includes(id), `data-prot="${id}"`, esc(M.P(id).n))).join('')}</div></details>`;
 
   const resHtml = !f ? '<p class="empty">Pick a goal and press <b>Find trades</b>. The search covers up to 3 players on each side, checks both rosters, and ranks by value balance, lineup gain, bye weeks and your odds.</p>'
-    : f.results.length ? `<div>${f.results.map((d, i) => resultCard(M, d, i)).join('')}</div><p class="source">Searched ${f.scanned.toLocaleString()} balanced combinations in ${f.ms} ms${f.stopped ? ' (time limit hit — narrow the search for a fuller scan)' : ''}; ${f.kept} met the goal. Acceptance = a heuristic from value fairness, their lineup change, their odds change, whether they're a seller and how often they trade — not a prediction.</p>`
+    : f.results.length ? `<div>${f.results.map((d, i) => resultCard(M, d, i)).join('')}</div><p class="source">Searched ${f.scanned.toLocaleString()} balanced combinations in ${f.ms} ms${f.stopped ? ' (time limit hit — narrow the search for a fuller scan)' : ''}; ${f.kept} met the goal. Acceptance = a heuristic from value fairness, their lineup change, their odds change, whether they're a seller and how often they trade — not a prediction.${M.V.marketSource() ? ' ' + marketCredit(M) : ''}</p>`
       : `<p class="empty">No trade meets this goal. ${f.diag?.target ? `<b>${esc(f.diag.target)}</b> carries about ${n0(f.diag.targetTv)} trade value, and the best 3 pieces you're offering add up to ${n0(f.diag.offer)}${f.diag.targetTv > f.diag.offer * 1.2 ? ' — not enough to land him without touching a hands-off player' : ''}. Try a wider value gap, release a hands-off player, or target someone cheaper.` : 'Try a wider value gap, more player counts, or a different goal.'} "No trade" is a valid answer.</p>`;
 
   const prompt = `Use the ff-command-center skill. Run ff-trade-lab for roster ${M.me.id}. Score these candidate trades with Down Field evaluate_moves for both teams: ${f ? f.results.slice(0, 3).map((r) => `${r.give.map((id) => M.P(id).n).join(' + ')} for ${r.get.map((id) => M.P(id).n).join(' + ')} (${r.partner.owner})`).join('; ') : 'none yet'}.`;

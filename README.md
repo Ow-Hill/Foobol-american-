@@ -183,10 +183,33 @@ recorded (`data/ripple-log.json`) and scored after the games. Rules:
 * **ESPN** (public API): injury report with RotoWire notes, news, NFL schedule and betting lines.
 * **FantasyPros expert consensus** (weekly rankings via dynastyprocess/data, refreshed daily): averaged 50/50 with Sleeper's projection at QB, WR and K, where that beat Sleeper alone in the backtest; shown next to Sleeper's number everywhere.
   The rest-of-season rankings are blended into RB, WR and TE trade values (they cut the rest-of-season miss by about a tenth).
+* **Dynasty Dealer** (free, no key, [dynastydealer.com](https://www.dynastydealer.com)): redraft PPR trade-market values built from real Sleeper trades, loaded once a day and shown as a second opinion (Market column on Values, market chips and a market check in the trade pages). Their terms ask for a visible credit link, which every page that shows them carries. They change no recommendation. Turn off with `MARKET_VALUES=0`.
 * **Open-Meteo** (free, no key): wind at kickoff for outdoor games, shown as a flag with its measured effect.
 * **nflverse** (public release files): the NFL's official injury report with practice status, used directly for chance-to-play; the backtest also uses its closing lines, wind and depth charts.
 * Projections are scored with the league's exact scoring settings (checked against Sleeper's own points: 145/145 match).
 * The lineup solver reproduces Sleeper's "potential points" for all 10 teams.
+
+## One player value
+
+Every page reads the same rest-of-season player value (`public/js/values.js`, 0–100, points above
+replacement for this league's scoring and lineup, byes and health in, playoff weeks weighted by
+playoff odds). This week's start/sit still uses this week's projection; anything that lasts longer uses
+the value:
+
+* **Drops** go to the lowest-value bench player (last K/DEF, 2nd QB/TE and playoff-week starters stay protected).
+* **Waivers** show each add's value and its net value after the drop. A Tier 2 add worth less than the
+  player it drops falls to Tier 3: rolling priority should buy rest-of-season value, not one week.
+  The scanner's 0–100 is a *scanner score* (news, usage, trend, market and the larger of lineup or value gain), not the player value.
+* **Injuries:** a bench player who is out, with IR full, is a cut candidate when a free agent is worth more.
+* **Start/sit:** value is the last tiebreak, after health, game environment and kickoff.
+* **Season:** the playoff slate shows each player's Weeks 15–17 points and value.
+* **Keepers & picks** (a tab on Values): keeper value against a first-round pick, your picks priced on the same scale, and each rival's best keeper.
+
+The drop and Tier 2 rules are new and not yet backtested (`VALUE_RULES` in `public/js/fitted.js` turns
+them off). Trade value's curve (`TRADE_CURVE`) is calibrated by E21: `node backtest/fetch-market.mjs`
+collects trades from Sleeper leagues shaped like this one (free API, non-commercial use, about 300
+calls a minute), then `npm run backtest` fits the curve and only suggests it if it picks winners in
+this league's own trades better than today's 47%.
 
 ## How the trade finder decides
 

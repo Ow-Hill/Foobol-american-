@@ -79,3 +79,10 @@ export function histLoading(ctx) {
 export function shareBar(text, { title = '', print = true } = {}) {
   return `<div class="btn-row no-print"><button class="btn" data-copy="${esc(text)}">Copy as text</button><button class="btn" data-share="${esc(text)}" data-share-title="${esc(title)}">Share…</button>${print ? '<button class="btn btn-ghost" data-print>Print / save as PDF</button>' : ''}</div>`;
 }
+
+// Required credit wherever Dynasty Dealer market values appear (their terms: a visible link).
+export function marketCredit(M) {
+  const m = M.snap.meta?.market;
+  if (!m) return '';
+  return `<span class="dim" style="font-size:12px">Market values by <a href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.source)}</a>, from real Sleeper trades (redraft, PPR)</span>`;
+}

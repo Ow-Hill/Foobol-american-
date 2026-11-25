@@ -964,3 +964,120 @@ export function e20b() {
     fit: { n: rows.length, current: { t1: r2(held.t1), t2: r2(held.t2), t3: r2(held.t3), top: r2(held.top) }, best: { t1: best.t1, t2: best.t2 } },
   };
 }
+
+// ================= E21 =================
+// Calibrate trade value on real trades from Sleeper leagues shaped like this one
+// (backtest/fetch-market.mjs), then check the fit on this league's own trades (E13's set, never
+// used for fitting). Values are rebuilt as of each trade's week with this league's settings; the
+// other leagues were filtered to the same shape (10-12 teams, one QB, full PPR).
+const CURVE_K = [0.8, 1, 1.2, 1.4, 1.6, 1.8, 2, 2.5];
+const CURVE_C = [0, 0.2, 0.4, 0.8];
+export function e21() {
+  const file = path.join(DIR, 'market-trades.json');
+  const empty = (why) => ({ id: 'E21', title: 'Trade value calibrated on real trades from similar leagues', tables: [], findings: [why], fit: null });
+  if (!fs.existsSync(file)) return empty('No market trades cached yet: run `NODE_USE_ENV_PROXY=1 node backtest/fetch-market.mjs` on a machine that can reach Sleeper, then the backtest again.');
+  const market = JSON.parse(fs.readFileSync(file, 'utf8'));
+
+  // one model per season-week of this league, as of that week
+  const lwBy = {};
+  for (const lw of leagueWeeks()) lwBy[`${lw.L.season}|${lw.wk}`] = lw;
+  const models = {};
+  const modelAt = (season, leg) => {
+    const S = D.loadSeason(season);
+    const W = Math.max(4, Math.min(leg, S.lastWeek));
+    const key = `${season}|${W}`;
+    if (models[key] !== undefined) return models[key];
+    const lw = lwBy[key];
+    try {
+      models[key] = lw ? { M: modelFor(lw), S, W } : null;
+    } catch {
+      models[key] = null;
+    }
+    return models[key];
+  };
+  // points above replacement each side's players scored from the trade to Week 17
+  const delivered = (M, S, leg, ids) => sum(ids.map((id) => {
+    let tot = 0;
+    const pos = M.P(id).pos;
+    for (let wk = leg; wk <= Math.min(17, S.lastWeek); wk++) {
+      const r = S.weeks[wk]?.get(id);
+      if (r?.played) tot += Math.max(0, r.pts - (M.V.rep[pos] || 0));
+    }
+    return tot;
+  }));
+  const rowsFor = (list) => {
+    const rows = [];
+    for (const t of list) {
+      if (!D.SEASONS.includes(t.season) || (t.rids || []).length !== 2 || t.leg < 4 || t.leg > 15) continue;
+      const m = modelAt(t.season, t.leg);
+      if (!m) continue;
+      const [a, b] = t.rids;
+      const recv = (rid) => Object.entries(t.adds || {}).filter(([pid, r]) => r === rid && m.M.snap.players[pid]).map(([pid]) => pid);
+      const ra = recv(a);
+      const rb = recv(b);
+      if (!ra.length || !rb.length) continue;
+      rows.push({ M: m.M, ra, rb, picks: (t.picks || []).length, xa: delivered(m.M, m.S, t.leg, ra), xb: delivered(m.M, m.S, t.leg, rb) });
+    }
+    return rows;
+  };
+  const mkt = rowsFor(market.trades);
+  // this league's trades, in the same shape
+  const own = [];
+  for (const L of D.leagueChain()) for (const [wkS, w] of Object.entries(L.weeks)) for (const t of w.tx.filter((x) => x.type === 'trade' && x.adds)) own.push({ season: L.season, leg: Number(wkS), rids: t.rids, adds: t.adds, picks: t.picks });
+  const mine = rowsFor(own);
+
+  const sideSum = (r, ids, curve) => sum(ids.map((id) => r.M.V.tvCurve(id, curve)));
+  const judge = (rows, curve) => {
+    const players = rows.filter((r) => !r.picks);
+    const logGap = mean(players.map((r) => Math.abs(Math.log(Math.max(sideSum(r, r.ra, curve), 0.5) / Math.max(sideSum(r, r.rb, curve), 0.5)))));
+    const decided = rows.filter((r) => Math.abs(r.xa - r.xb) >= 10);
+    const agree = mean(decided.map((r) => (Math.sign(sideSum(r, r.ra, curve) - sideSum(r, r.rb, curve)) === Math.sign(r.xa - r.xb) ? 1 : 0)));
+    const bal = players.map((r) => { const x = sideSum(r, r.ra, curve); const y = sideSum(r, r.rb, curve); return Math.min(x, y) / Math.max(x, y, 0.01); }).sort((x, y) => x - y);
+    const q = (p) => bal[Math.floor(p * (bal.length - 1))];
+    return { logGap, agree, decided: decided.length, balance: bal.length ? { p25: r2(q(0.25)), median: r2(q(0.5)), p75: r2(q(0.75)) } : null };
+  };
+  if (mkt.length < 30) return empty(`Only ${mkt.length} usable market trades (need 30+): fetch more leagues with --max.`);
+
+  const grid = [];
+  for (const k of CURVE_K) for (const c of CURVE_C) grid.push({ k, c, m: judge(mkt, { k, ppgCredit: c }) });
+  // The curve that best explains what managers accept (smallest value gap on accepted trades)...
+  const byPrice = [...grid].sort((x, y) => x.m.logGap - y.m.logGap)[0];
+  // ...and the one that best picks the side that scored more afterwards.
+  const byOutcome = [...grid].sort((x, y) => y.m.agree - x.m.agree || x.m.logGap - y.m.logGap)[0];
+  const cur = { k: 1, ppgCredit: 0.4 };
+  const curMkt = judge(mkt, cur);
+  const curOwn = judge(mine, cur);
+  const ownPrice = judge(mine, { k: byPrice.k, ppgCredit: byPrice.c });
+  const ownOutcome = judge(mine, { k: byOutcome.k, ppgCredit: byOutcome.c });
+  // Adopt a curve only where it beats the current one on this league's own trades.
+  const pick = [
+    { name: 'price', k: byPrice.k, c: byPrice.c, own: ownPrice },
+    { name: 'outcome', k: byOutcome.k, c: byOutcome.c, own: ownOutcome },
+  ].filter((x) => x.own.agree > curOwn.agree).sort((x, y) => y.own.agree - x.own.agree)[0] || null;
+  const fit = {
+    trades: mkt.length, leagues: market.leagues.length, ownTrades: mine.length,
+    current: { k: 1, ppgCredit: 0.4, market: { agree: r3(curMkt.agree), logGap: r3(curMkt.logGap) }, own: { agree: r3(curOwn.agree), decided: curOwn.decided } },
+    byPrice: { k: byPrice.k, ppgCredit: byPrice.c, market: { agree: r3(byPrice.m.agree), logGap: r3(byPrice.m.logGap) }, own: { agree: r3(ownPrice.agree) }, balance: byPrice.m.balance },
+    byOutcome: { k: byOutcome.k, ppgCredit: byOutcome.c, market: { agree: r3(byOutcome.m.agree), logGap: r3(byOutcome.m.logGap) }, own: { agree: r3(ownOutcome.agree) } },
+    suggest: pick ? { TRADE_CURVE: { k: pick.k, ppgCredit: pick.c }, TRADE_BALANCE: judge(mkt, { k: pick.k, ppgCredit: pick.c }).balance } : null,
+  };
+  return {
+    id: 'E21', title: 'Trade value calibrated on real trades from similar leagues',
+    tables: [{
+      caption: 'Trade value curves on real trades. "Price gap" = average size of the value difference between the two sides of accepted player-only trades (lower = the curve explains what managers accept). "Picked the winner" = share of trades where one side delivered 10+ more points above replacement and the curve favoured that side.',
+      head: ['Curve', 'k', 'ppg credit', 'Market price gap', 'Market: picked the winner', 'This league: picked the winner'],
+      rows: [
+        ['Current (hand-set)', 1, 0.4, r3(curMkt.logGap), pct(curMkt.agree), pct(curOwn.agree)],
+        ['Best on market prices', byPrice.k, byPrice.c, r3(byPrice.m.logGap), pct(byPrice.m.agree), pct(ownPrice.agree)],
+        ['Best on outcomes', byOutcome.k, byOutcome.c, r3(byOutcome.m.logGap), pct(byOutcome.m.agree), pct(ownOutcome.agree)],
+      ],
+    }],
+    findings: [
+      `${mkt.length} usable two-team trades from ${market.leagues.length} similar Sleeper leagues (Weeks 4-15), checked on ${mine.length} of this league's own.`,
+      pick
+        ? `Suggested: TRADE_CURVE { k: ${pick.k}, ppgCredit: ${pick.c} } and TRADE_BALANCE ${JSON.stringify(fit.suggest.TRADE_BALANCE)} in public/js/fitted.js. It picked the winner in this league's trades ${pct(pick.own.agree)}% of the time against ${pct(curOwn.agree)}% now.`
+        : `No curve beat the current one on this league's own trades (${pct(curOwn.agree)}%): keep TRADE_CURVE as it is.`,
+    ],
+    fit,
+  };
+}

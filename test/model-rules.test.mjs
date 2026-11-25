@@ -291,7 +291,12 @@ test('an IR-eligible bench player is flagged only while an IR slot is open', () 
   });
   assert.equal(full.irSlots, 2);
   assert.equal(byTitle(full.problems(), /Fox can move to IR/).length, 0);
-  assert.equal(full.injuryRows().find((r) => r.pid === '1006').action.t, 'Hold, monitor');
+  // IR full, so he holds a bench spot: a free agent worth more for the rest of the season makes
+  // him a cut candidate (one value for hold-or-cut).
+  const fox = full.injuryRows().find((r) => r.pid === '1006');
+  assert.equal(fox.action.t, 'Cut candidate');
+  assert.match(fox.action.d, /Ray Romeo/);
+  assert.ok(fox.value < full.bestFreeAgent().value);
 });
 
 test('nextManUp lists the healthy backups behind a player and who owns them', () => {
@@ -356,7 +361,10 @@ test('with a full roster the drop is the weakest bench piece, protecting the 2nd
   });
   assert.equal(M.me.players.length, 12);
   const r = M.waiverPlan().groups.risers.find((c) => c.id === '5001');
-  assert.equal(r.drop.pid, '1011', 'TE 1013 projects less but is only the 2nd TE');
+  // Ranked by rest-of-season value (VALUE_RULES.dropByValue): the third QB is worth nothing in a
+  // one-QB league, so he goes before the bench WR; the 2nd TE is still protected.
+  assert.equal(r.drop.pid, '1010', 'third QB has no value above replacement');
+  assert.notEqual(r.drop.pid, '1013', 'TE 1013 projects less but is only the 2nd TE');
 });
 
 test('a starter on bye creates a claim need; an empty slot a bench player can fill does not', () => {
