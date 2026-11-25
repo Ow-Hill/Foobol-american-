@@ -10,6 +10,7 @@ import * as season from './views/season.js';
 import * as news from './views/news.js';
 import * as values from './views/values.js';
 import * as finder from './views/finder.js';
+import * as offseason from './views/offseason.js';
 import * as path from './views/path.js';
 import * as report from './views/report.js';
 import * as historian from './views/historian.js';
@@ -34,6 +35,7 @@ const ROUTES = [
   { section: 'Make moves' },
   { id: 'trades', label: 'Trade lab', ico: '⇋', mod: trades },
   { id: 'finder', label: 'Trade finder', ico: '⌕', mod: finder },
+  { id: 'offseason', label: 'Offseason trades', ico: '⇆', mod: offseason },
   { id: 'values', label: 'Values & start/sit', ico: '⚖', mod: values },
   { section: 'Season' },
   { id: 'season', label: 'Season', ico: '◔', mod: season },

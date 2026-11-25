@@ -126,7 +126,7 @@ export function render(M, ctx) {
 
   const dlCard = open
     ? `<div class="callout ${M.acceptBy - M.now < 4 * 86400000 ? 'warn' : 'good'}"><b>Window open — ${countdown(M.acceptBy - M.now)} left to get a deal accepted</b>The deadline is Week ${M.deadlineWeek}${dl ? ` (locks around ${esc(fmtDayTime(dl))} — confirm the exact time in Sleeper)` : ''}. Accepted trades processed within minutes in this league last season (the review window did not delay them), and ${M.L.settings.veto_votes_needed} veto votes block a deal. The other manager has to accept by about <b>${esc(fmtDayTime(M.acceptBy))}</b>. A player whose game has not kicked off leaves your lineup the moment a deal is accepted.</div>`
-    : `<div class="callout bad"><b>The trade deadline has passed</b>Treat everything here as offseason or keeper planning.</div>`;
+    : `<div class="callout bad"><b>The trade deadline has passed</b>This page measures this season's lineups, which no trade can change now. For deals that open again once the league renews (keepers and draft picks, both teams, fair counters), use <a href="#/offseason">Offseason trades</a>.</div>`;
 
   const sellRows = mk.rows.map((r) => [
     playerName(M, r.give),
