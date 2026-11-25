@@ -394,7 +394,7 @@ function reasons(c, { V, avail, nextExp, after, target, now, fill, board }) {
   const xp = r.adv?.m?.xpGap;
   if (xp && xp.v >= XP_GAP) out.push(`Scored ${xp.v.toFixed(1)} a game above what his volume supports last year: touchdown luck may fade`);
   else if (xp && xp.v <= -XP_GAP) out.push(`Scored ${(-xp.v).toFixed(1)} a game below his volume last year: room to bounce back`);
-  if (r.exp === 0) out.push('Rookie: projection only, no NFL history');
+  if (r.exp === 0 && !r.adv) out.push('Rookie: projection only, no NFL history');
   if (board.dynasty && r.dyn !== 1) out.push(`Dynasty age curve: ${r.dyn > 1 ? '+' : ''}${Math.round((r.dyn - 1) * 100)}% at age ${r.age}`);
   return out;
 }
@@ -454,4 +454,56 @@ export function grades(board, V, live) {
     if (r.adp && !pk.keeper && pk.no - r.adp >= 12) g.steals.push({ pid: pk.pid, by: Math.round(pk.no - r.adp) });
   }
   return Object.values(by).sort((a, b) => b.value - a.value);
+}
+
+// ---------- practice drafts against bots ----------
+// A bot drafts like a typical league-mate: best ADP left with some noise, skipping positions its
+// lineup no longer needs, kickers and defenses only in its last picks. Deterministic for a seed.
+export function rng(seed = 1) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const BOT_CAP = { QB: 2, RB: 7, WR: 7, TE: 2, K: 1, DEF: 1 }; // most a bot holds at these positions
+export function botPick(board, V, picks, rid, rand = Math.random) {
+  const order = board.order;
+  const now = currentPick(picks, order);
+  const taken = new Set(picks.map((p) => String(p.pid)));
+  const mine = picks.filter((p) => ridOfPick(p, board.slotToRoster) === rid).map((p) => String(p.pid));
+  const fill = rosterFill(board.slots, mine, V);
+  const left = picksOf(rid, order, board.slotToRoster, [], now).length;
+  const kdOpen = fill.open.filter((s) => s === 'K' || s === 'DEF').length;
+  const count = {};
+  for (const pid of mine) {
+    const pos = V.by[pid]?.pos;
+    if (pos) count[pos] = (count[pos] || 0) + 1;
+  }
+  let best = null;
+  for (const r of V.rows) {
+    if (taken.has(String(r.pid))) continue;
+    if ((r.pos === 'K' || r.pos === 'DEF') && (left > kdOpen || !fill.open.includes(r.pos))) continue;
+    if (BOT_CAP[r.pos] && (count[r.pos] || 0) >= BOT_CAP[r.pos]) continue;
+    const need = needWeight(r.pos, fill, { picksLeft: left });
+    if (need <= 0) continue;
+    // with no more picks than open starting spots, fill a starting spot
+    if (left <= fill.open.length && need < 0.9) continue;
+    // noise grows with ADP, like the real spread; a position the bot does not need slides later
+    const sd = SPREAD.a + SPREAD.b * r.adpOrRank;
+    const z = (rand() + rand() + rand() - 1.5) * 2; // roughly normal, sd 1
+    const key = r.adpOrRank + z * sd * 0.6 + (need < 0.5 ? 6 + r.adpOrRank * 0.15 : 0);
+    if (!best || key < best.key) best = { key, r };
+  }
+  return best ? best.r.pid : null;
+}
+// One practice pick record in the same shape as /api/draft/live picks.
+export function practicePick(board, V, picks, pid) {
+  const no = currentPick(picks, board.order);
+  const o = ownerAt(no, board.order, board.slotToRoster, []);
+  const r = V.by[pid];
+  return { no, round: o.round, slot: o.slot, rid: o.rid, pid: String(pid), n: r?.n || null, pos: r?.pos || null, team: r?.team || null };
 }

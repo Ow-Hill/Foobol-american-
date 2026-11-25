@@ -248,6 +248,20 @@ posts next season's projections, values fall back to last season and ADP. Logic 
 `public/js/draftguide.js`, Sleeper calls in `lib/draftlive.js`, camp news in `lib/draftnews.js`.
 The blend weights, camp nudges, ADP spread and need weights are judgment, not backtested.
 
+* **Next season and practice drafts:** the draft list finds next year's league draft on its own
+  (Sleeper gives the renewed league a new ID; the guide follows `previous_league_id` back to the
+  league in `config.json`), your Sleeper mock drafts, and other leagues. Before Sleeper sets the
+  draft order you can plan from the slot you expect; it switches to your real team once the order
+  is set. **Practice draft** runs a draft on the site against bots (ADP with noise, filling their
+  lineups, kickers and defenses last), in any format or as a copy of the draft you're following.
+* **Player detail:** click any name for how his points per game were built, last season's usage
+  (targets, shares, air yards, red zone, routes, expected points), camp and preseason headlines with
+  links, Sleeper's injury note, depth chart, adds across Sleeper in the last 24 hours, and the odds
+  he lasts to each of your next picks.
+* **Live with Sleeper:** checks every 3 seconds (1.5 when you're up within two picks), shows the pick
+  clock, links to the draft room, and researches news for the best players still on the board as
+  the draft moves. Sleeper's API is read-only, so you still make the pick in Sleeper.
+
 Check it against real Sleeper data on your computer: `npm run check-draft` (or
 `npm run check-draft -- <draft link>`) writes `docs/draft-check.md` with the fields Sleeper sent
 and a replay of your picks. A mock draft on Sleeper is the quickest live test.

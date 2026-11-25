@@ -228,3 +228,64 @@ test('mock drafts: slots from draft settings, scoring from scoring_type, superfl
   assert.equal(DL.adpKeys(draft, null)[0], 'adp_2qb');
   assert.equal(DL.scoringFor({ metadata: { scoring_type: 'std' } }, null).rec, 0);
 });
+
+// ---------- practice drafts, next season's league ----------
+import { botPick, practicePick, rng } from '../public/js/draftguide.js';
+
+test('practice: bots fill a sensible roster, kickers and defenses last, one each', () => {
+  const b = fixture();
+  const V = buildDraftValues(b);
+  const rand = rng(7);
+  const picks = [];
+  while (picks.length < b.order.teams * b.order.rounds) {
+    const no = currentPick(picks, b.order);
+    const rid = ownerAt(no, b.order, b.slotToRoster).rid;
+    picks.push(practicePick(b, V, picks, botPick(b, V, picks, rid, rand)));
+  }
+  assert.equal(new Set(picks.map((p) => p.pid)).size, picks.length);
+  for (let rid = 1; rid <= 10; rid++) {
+    const mine = picks.filter((p) => p.rid === rid);
+    const c = (pos) => mine.filter((p) => p.pos === pos).length;
+    assert.equal(c('K'), 1, `team ${rid} kickers`);
+    assert.equal(c('DEF'), 1, `team ${rid} defenses`);
+    assert.ok(c('QB') >= 1 && c('QB') <= 2, `team ${rid} QBs ${c('QB')}`);
+    assert.ok(c('TE') >= 1 && c('TE') <= 2);
+    assert.ok(mine.slice(0, 10).every((p) => p.pos !== 'K' && p.pos !== 'DEF'), `team ${rid} took K/DEF early`);
+  }
+  // early picks follow ADP closely
+  const first10 = picks.slice(0, 10).map((p) => V.by[p.pid].adp);
+  assert.ok(Math.max(...first10) <= 20, String(first10));
+});
+
+test('practice: the same seed gives the same draft', () => {
+  const b = fixture();
+  const V = buildDraftValues(b);
+  const run = (seed) => {
+    const rand = rng(seed);
+    const picks = [];
+    for (let i = 0; i < 30; i++) {
+      const rid = ownerAt(currentPick(picks, b.order), b.order, b.slotToRoster).rid;
+      picks.push(practicePick(b, V, picks, botPick(b, V, picks, rid, rand)));
+    }
+    return picks.map((p) => p.pid).join();
+  };
+  assert.equal(run(3), run(3));
+});
+
+test("next season's league is found through previous_league_id", () => {
+  const leagues = [
+    { league_id: 'L27', previous_league_id: 'L26' },
+    { league_id: 'X27', previous_league_id: 'X26' },
+    { league_id: 'L28', previous_league_id: 'L27' },
+  ];
+  assert.deepEqual(DL.renewedFrom(leagues, 'L26').map((l) => l.league_id), ['L27', 'L28']);
+});
+
+test('practice draft settings: format from the id, bench fills the rounds', async () => {
+  const d = await DL.practiceDraft('practice-12-16-2qb').catch((e) => e);
+  // /state/nfl is unreachable in tests, so the season falls back to the clock; the rest is fixed
+  assert.equal(d.settings.teams, 12);
+  assert.equal(d.settings.slots_super_flex, 1);
+  assert.equal(DL.rosterSlots(d, null).length, 16);
+  assert.equal(DL.adpKeys(d, null)[0], 'adp_2qb');
+});
