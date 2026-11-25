@@ -44,7 +44,7 @@ function sourcesCard() {
 function scanRow(M, r) {
   const p = r.p;
   return `<div class="tier-row">
-    <div><span class="chip ${VERDICT_CLS[r.verdict]}">${esc(VERDICT_LABEL[r.verdict])}</span><div class="score" title="0–100 blend: lineup gain 30, news 25, usage 20, trend 15, Sleeper adds 10; health scales it">${r.score}</div></div>
+    <div><span class="chip ${VERDICT_CLS[r.verdict]}">${esc(VERDICT_LABEL[r.verdict])}</span><div class="score" title="Scanner score, 0–100: gain 30 (this week's lineup gain or rest-of-season value gain, the larger), news 25, usage 20, trend 15, Sleeper adds 10; health scales it. Not the player value.">${r.score}</div><div class="dim" style="font-size:11px">scanner</div></div>
     <div>
       <div>${playerName(M, r.id)} <span class="chip chip-tier${r.tier}">T${r.tier}</span> <span class="chip conf-${r.confidence}" title="How many of stats, news, market and lineup gain agree">${r.confidence} confidence</span></div>
       ${signalLines(r)}
@@ -52,7 +52,7 @@ function scanRow(M, r) {
       <div class="why"><span class="dim">${esc(r.trigger)}</span></div>
       ${r.drop ? `<div class="drop">${r.drop.none ? '✓ ' : '↳ '}${esc(r.drop.text)}</div>` : ''}
     </div>
-    <div class="stats"><b>${n1(p.proj)}</b> proj<br />${p.avail === 'bye' ? 'BYE' : p.game ? `${p.game.home ? 'vs' : '@'} ${esc(p.game.opp)}` : '–'}<br />next: ${p.projNext != null ? n1(p.projNext) : '–'}</div>
+    <div class="stats">value <b>${n1(r.value)}</b><br /><b>${n1(p.proj)}</b> proj<br />${p.avail === 'bye' ? 'BYE' : p.game ? `${p.game.home ? 'vs' : '@'} ${esc(p.game.opp)}` : '–'}<br />next: ${p.projNext != null ? n1(p.projNext) : '–'}</div>
   </div>`;
 }
 
@@ -80,9 +80,9 @@ function candRow(M, c, w, I) {
       <div class="why">${usage.join(' · ')}</div>
       ${r && (r.tier !== c.tier || r.news.length || r.vacancy) ? `<div class="why">Scanner: <b>${esc(VERDICT_LABEL[r.verdict])}</b>${r.tier !== c.tier ? ` (moved from T${c.tier})` : ''}${(r.vacancy || r.risks[0] || r.reasons[0]) ? ' — ' + esc(r.vacancy ? r.reasons[0].text : (r.risks[0] || r.reasons[0]).text) : ''}</div>` : ''}
       <div class="why">Fills: ${c.impact >= 0.5 ? `your lineup this week (${signed(c.impact)} pts)` : c.impactNext >= 0.5 ? `Week ${M.W + 1} (${signed(c.impactNext)} pts)` : 'depth — no lineup spot right now'}. <span class="dim">${revisit}</span></div>
-      <div class="drop">${c.drop.none ? '✓ ' : '↳ '}${esc(c.drop.text)}</div>
+      <div class="drop">${c.drop.none ? '✓ ' : '↳ '}${esc(c.drop.text)}${c.value != null ? ` <span class="dim" title="Rest-of-season player value (Values page), after the drop">· value ${signed(c.net)} net</span>` : ''}${c.tier === 3 && c.impact >= 1 && c.net < 0 ? ' <span class="chip chip-amber" title="Helps this week but is worth less than the player he replaces for the rest of the season">not worth priority</span>' : ''}</div>
     </div>
-    <div class="stats"><b>${n1(p.proj)}</b> proj<br />${esc(opp)}<br />next: ${nextTxt}</div>
+    <div class="stats"><b>${n1(p.proj)}</b> proj<br />${esc(opp)}<br />next: ${nextTxt}${c.value != null ? `<br />value <b>${n1(c.value)}</b>` : ''}</div>
   </div>`;
 }
 
@@ -153,7 +153,7 @@ export function render(M, ctx) {
       </div>
       ${sourcesCard()}
       ${card('Recent drops by rivals', drops, { cls: 'flush', sub: 'Last 7 days — worth a no-cost claim if still unclaimed' })}
-      ${card('How the tiers work', Object.keys(tierName).map((k) => `<p style="margin-bottom:6px"><span class="chip chip-tier${k}">T${k} · ${tierName[k]}</span> <span class="muted">${tierHelp[k]}</span></p>`).join('') + `<p class="note">Tier is set from how much the player would raise your best legal lineup this week. Within a tier, candidates are ranked by this week's projection, which beat the old signal-based order in a replay of this league's 2025-26 seasons (about 9 lineup points per claim over three weeks vs 2). On synthetic 2022-25 leagues, tier 1 claims gained 25.6 points, tier 2 15.0 and tier 3 8.9. Injured stashes are free-agency adds, not claims. Always check the news before a claim is final.</p>`)}
+      ${card('How the tiers work', Object.keys(tierName).map((k) => `<p style="margin-bottom:6px"><span class="chip chip-tier${k}">T${k} · ${tierName[k]}</span> <span class="muted">${tierHelp[k]}</span></p>`).join('') + `<p class="note">Tier is set from how much the player would raise your best legal lineup this week; a Tier 2 add worth less for the rest of the season than the player he replaces drops to Tier 3 (not worth priority). Value is the same rest-of-season number as the Values page. Within a tier, candidates are ranked by this week's projection, which beat the old signal-based order in a replay of this league's 2025-26 seasons (about 9 lineup points per claim over three weeks vs 2). On synthetic 2022-25 leagues, tier 1 claims gained 25.6 points, tier 2 15.0 and tier 3 8.9. Injured stashes are free-agency adds, not claims. Always check the news before a claim is final.</p>`)}
     </div>`;
 }
 const me_count = (M) => M.me.players.length;

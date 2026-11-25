@@ -218,3 +218,13 @@ export function rosPoints(pos, ecr) {
 // held on 2026 (E20). keepKDef: never suggest dropping your last K or DEF. Protecting two only
 // moved the loss onto WR drops (E20).
 export const WAIVER = { topProjected: 5, tier1Impact: 3, keepKDef: 1 };
+
+// One value for every page (player value plan, 2026-11-25). Not yet backtested: run
+// `npm run backtest` on a machine that can reach Sleeper and compare E20's "drop beat the add"
+// rate before and after. Set either to false to return to the old rule.
+// dropByValue: rank drop candidates by rest-of-season value (values.js), this week's projection
+// only as the tiebreak. Before, a bench player's best of this-week projection or season average.
+// netValueGate: a Tier 2 claim whose value is below the player it would drop falls to Tier 3
+// (free agency): rolling priority should buy rest-of-season value, not one week. Tier 1 is
+// left alone because its order is the backtested one.
+export const VALUE_RULES = { dropByValue: true, netValueGate: true };

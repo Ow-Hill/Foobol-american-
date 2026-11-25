@@ -161,7 +161,11 @@ export function scanCandidate(M, c, byPid, { claimPos = new Set(), openIr = 0 } 
   const vac = vacancies(M, c.id, byPid);
   const topVac = vac[0] || null;
   const opp = topVac ? clamp(topVac.w * clamp(topVac.ppg / 14) * (topVac.nextUp ? 1 : 0.5)) : 0;
-  const gain = clamp(Math.max(c.impact || 0, 0.6 * (c.impactNext || 0)) / 5);
+  // Gain: this week's lineup gain, or the rest-of-season value he adds over the player he would
+  // replace (values.js; 20 value points = full marks), whichever is larger.
+  const value = c.value ?? M.valueOf?.(c.id) ?? 0;
+  const net = c.net ?? value;
+  const gain = Math.max(clamp(Math.max(c.impact || 0, 0.6 * (c.impactNext || 0)) / 5), clamp(net / 20));
   const addRank = p.trend?.add?.rank ?? null;
   const market = addRank ? (41 - addRank) / 40 : p.trend?.drop ? -0.2 : 0;
   const health = p.effSev >= 3 ? 0.35 : p.effSev === 2 ? 0.85 : 1;
@@ -197,6 +201,8 @@ export function scanCandidate(M, c, byPid, { claimPos = new Set(), openIr = 0 } 
   else if (xpGap != null && xpGap <= -XP_GAP) reasons.push({ kind: 'efficiency', text: `Volume is worth ≈${n1(adv.m.xp.v)} pts/g, ${n1(-xpGap)} more than he has scored — due to catch up`, sign: 1 });
   if (c.impact >= 0.5) reasons.push({ kind: 'lineup', text: `+${n1(c.impact)} pts to your best lineup this week`, sign: 1 });
   else if (c.impactNext >= 0.5) reasons.push({ kind: 'lineup', text: `+${n1(c.impactNext)} pts to your lineup in Week ${M.W + 1}`, sign: 1 });
+  if (net >= 3) reasons.push({ kind: 'value', text: `Rest-of-season value ${n1(value)}, +${n1(net)} over ${c.drop?.pid ? 'the player he replaces' : 'an empty spot'}`, sign: 1 });
+  else if (c.drop?.pid && net <= -3) risks.push({ kind: 'value', text: `Rest-of-season value ${n1(value)}, ${n1(net)} below the player he would replace`, sign: -1 });
   if (addRank && addRank <= 25) reasons.push({ kind: 'market', text: `#${addRank} add on Sleeper in the last 24h`, sign: 1 });
   if (p.effSev >= 2) risks.push({ kind: 'injury', text: `Carries a ${p.eff} tag`, sign: -1 });
   if (u.gp < 3 && !topVac) risks.push({ kind: 'sample', text: `Only ${u.gp} game${u.gp === 1 ? '' : 's'} of stats`, sign: 0 });
@@ -210,7 +216,7 @@ export function scanCandidate(M, c, byPid, { claimPos = new Set(), openIr = 0 } 
     news: opp >= 0.4 || (news.net >= 0.3 && !news.onlySpeculative),
     opening: takeover,
     market: addRank != null && addRank <= 20,
-    lineup: (c.impact || 0) >= 1 || (c.impactNext || 0) >= 1.5,
+    lineup: (c.impact || 0) >= 1 || (c.impactNext || 0) >= 1.5 || net >= 10,
   };
   const agree = Object.values(lenses).filter(Boolean).length;
   const conflict = news.net <= -0.3 || trend <= -0.3 || p.effSev >= 3;
@@ -239,8 +245,8 @@ export function scanCandidate(M, c, byPid, { claimPos = new Set(), openIr = 0 } 
         : 'Revisit after two more games of usage data.';
 
   return {
-    id: c.id, p, c, score, tier, verdict, confidence, takeover,
-    parts: { gain, usage, trend, newsPart, opp, market, health, newsNet: news.net },
+    id: c.id, p, c, score, value, net, tier, verdict, confidence, takeover,
+    parts: { gain, net, usage, trend, newsPart, opp, market, health, newsNet: news.net },
     usage: u, adv, bench, news: news.list, vacancy: topVac, reasons, risks, trigger, lenses,
   };
 }

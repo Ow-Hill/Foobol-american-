@@ -203,7 +203,7 @@ export function buildDecisions(M, news = null) {
       kind: 'waiver',
       priority: 'watch',
       title: `Claim ${c.p.n} (${c.p.pos})`,
-      verdict: `Projects +${n1(c.impact)} points this week; +${n1(c.impactNext)} next week.`,
+      verdict: `Projects +${n1(c.impact)} points this week; +${n1(c.impactNext)} next week.${c.value != null ? ` Rest-of-season value ${n1(c.value)}${c.drop?.pid ? `, ${c.net >= 0 ? '+' : ''}${n1(c.net)} after dropping ${M.P(c.drop.pid).n}` : ''}.` : ''}`,
       because: [`Tier 1 add on the wire${r.confidence ? ` (${r.confidence} confidence)` : ''}.`, ...r.reasons.slice(0, 2).map((x) => x.text + '.'), c.p.own == null ? 'Unrostered.' : 'Currently rostered.'],
       evidence: evidenceFor(byPid, c.id),
       risk: 'Bench points are free in this league only if he cracks the lineup; a stash can cost priority.',

@@ -3,7 +3,7 @@
 // league IR rules, rolling waivers, Week-11 deadline, advice only.
 import { avg, sum, quantile, clamp, fmtKick, setTz } from './util.js';
 import { buildValues } from './values.js';
-import { BANDS, gapGroup, gapWinRate, IMPLIED_GAP_MIN, playChance, playingHurt, WIN, NEXT_MAN_BY_WORK, rangeFor, POSTURE_TIEBREAK, FIRST_BACK, CONSENSUS, consensusPoints, WAIVER } from './fitted.js';
+import { BANDS, gapGroup, gapWinRate, IMPLIED_GAP_MIN, playChance, playingHurt, WIN, NEXT_MAN_BY_WORK, rangeFor, POSTURE_TIEBREAK, FIRST_BACK, CONSENSUS, consensusPoints, WAIVER, VALUE_RULES } from './fitted.js';
 
 const SEV = { IR: 5, PUP: 5, Sus: 5, NA: 4, DNR: 4, COV: 4, Out: 4, Doubtful: 3, Questionable: 2, Probable: 1 };
 // Practice participation as FP / LP / DNP, whatever the source calls it.
@@ -304,6 +304,15 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       reasons.push({ step: 'Kickoff', pick, why: 'later game keeps late-swap flexibility' });
       return { pick, reasons };
     }
+    // 5. rest-of-season value: neither choice changes this week's expectation, so keep the player
+    // the season-long numbers like better in the lineup habit (a consistency step, not a fitted one)
+    const va = valueOf(a);
+    const vb = valueOf(B.id);
+    if (Math.abs(va - vb) >= 5) {
+      const pick = va > vb ? 'start' : 'bench';
+      reasons.push({ step: 'Rest-of-season value', pick, why: `${(pick === 'start' ? A : B).n.split(' ').slice(-1)[0]} rates higher for the rest of the season (${Math.max(va, vb).toFixed(1)} vs ${Math.min(va, vb).toFixed(1)})` });
+      return { pick, reasons };
+    }
     return { pick: 'start', reasons: [{ step: 'No tiebreak separates them', pick: 'start', why: 'keep the higher projection' }] };
   }
   const outPlayer = (id) => P(id);
@@ -470,6 +479,20 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
   }
 
   // ---------- injuries ----------
+  // Best healthy, unrostered player by value (for hold-or-cut calls).
+  let _bestFa;
+  function bestFreeAgent() {
+    if (_bestFa !== undefined) return _bestFa;
+    _bestFa = null;
+    try {
+      const r = M.V.rows.find((x) => snap.players[x.pid]?.own == null && !P(x.pid).eff && x.value > 0);
+      if (r) _bestFa = { pid: r.pid, value: r.value };
+    } catch {
+      // values unavailable
+    }
+    return _bestFa;
+  }
+
   function injuryRows() {
     const l = lineup(me);
     const rows = [];
@@ -482,6 +505,11 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       const fb = where === 'starter' ? fallbackFor(slot) : null;
       const verdict = p.avail === 'bye' ? 'Bye week' : p.eff === 'IR' || p.eff === 'PUP' || p.eff === 'Sus' ? 'Multi-week' : p.effSev >= 3 ? 'Out this week' : p.effSev === 2 ? 'Game-time decision' : 'Playing';
       const starterLevel = l.opt.slots.some((s) => s.pid === pid) || (p.ppg || 0) >= 10;
+      // Hold or cut on one number: his rest-of-season value (games left x return rate x points
+      // above replacement) against the best free agent's.
+      const value = valueOf(pid);
+      const fa = bestFreeAgent();
+      const cutFor = fa && value < fa.value && !l.opt.slots.some((s) => s.pid === pid) ? fa : null;
       let action;
       if (where === 'ir') {
         action = irAllowed(p.sl) ? (starterLevel ? { t: 'Hold on IR', d: 'Starter-level — hold however long the absence.' } : { t: 'Hold on IR', d: 'Cut only if out 4+ weeks and you need the IR slot.' }) : { t: 'Move off IR now', d: 'Tag is no longer IR-eligible; this locks adds and claims.', bad: true };
@@ -496,6 +524,10 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       } else {
         action = { t: 'Hold, monitor', d: 'Bench stash — no lineup impact this week.' };
       }
+      // Only a bench spot costs anything: IR is free, so IR moves and holds stay as they are.
+      if (cutFor && where === 'bench' && action.t === 'Hold, monitor') {
+        action = { t: 'Cut candidate', d: `Value ${value.toFixed(1)} for the rest of the season; ${P(cutFor.pid).n} (free agent) is ${cutFor.value.toFixed(1)}. Swap him when you need the roster spot.` };
+      }
       const checks = [];
       if (where === 'ir') {
         checks.push(`${waiverDayName()} before waivers — an upgrade off IR would lock your claims`);
@@ -505,7 +537,7 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
         if (['Mon', 'Tue', 'Wed', 'Thu'].includes(wd)) checks.push('Thursday and Friday practice reports');
         checks.push(`Inactives ~90 min before kickoff (${new Intl.DateTimeFormat('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: snap.meta.tz, timeZoneName: 'short' }).format(new Date(kickMs - 90 * 60000))})`);
       }
-      rows.push({ pid, p, where, slot, verdict, action, checks, next: nextManUp(pid), startsNow: where === 'starter' });
+      rows.push({ pid, p, where, slot, verdict, action, checks, value, next: nextManUp(pid), startsNow: where === 'starter' });
     }
     const w = { starter: 0, bench: 1, ir: 2 };
     return rows.sort((a, b) => w[a.where] - w[b.where] || b.p.effSev - a.p.effSev);
@@ -808,6 +840,19 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     return _pStarters;
   }
 
+  // The shared rest-of-season player value (values.js, 0-100). 0 when values cannot be built
+  // (a partial snapshot), so callers fall back to their own tiebreaks.
+  let _vOk = true;
+  function valueOf(pid) {
+    if (!_vOk || !pid) return 0;
+    try {
+      return M.V.value(pid);
+    } catch {
+      _vOk = false;
+      return 0;
+    }
+  }
+
   function dropFor(cand) {
     const l = lineup(me);
     const openSpots = maxRoster - me.players.length;
@@ -823,11 +868,13 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       .filter((id) => !(P(id).pos === 'TE' && tes.length <= 2))
       .filter((id) => !(['K', 'DEF'].includes(P(id).pos) && count(P(id).pos) <= WAIVER.keepKDef))
       .filter((id) => id !== cand.id)
-      .sort((a, b) => Math.max(val(a), P(a).ppg || 0) - Math.max(val(b), P(b).ppg || 0));
+      .sort((a, b) => (VALUE_RULES.dropByValue ? valueOf(a) - valueOf(b) : 0) || Math.max(val(a), P(a).ppg || 0) - Math.max(val(b), P(b).ppg || 0));
     // Keep anyone who starts in a fantasy-playoff week's best lineup, unless nobody else can go.
     const pStarters = playoffStarters();
     const d = pool.find((id) => !pStarters.has(id)) || pool[0];
-    return d ? { pid: d, text: `Drop ${P(d).n}` } : { none: true, text: 'No safe drop — roster is full of needed pieces' };
+    if (!d) return { none: true, text: 'No safe drop — roster is full of needed pieces' };
+    const v = valueOf(d);
+    return { pid: d, value: v, text: `Drop ${P(d).n}${v > 0 ? ` (value ${v.toFixed(1)})` : ''}` };
   }
 
   const dropsRecent = {};
@@ -896,7 +943,12 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       cards.push({ id: raw.id, p, impact, impactNext, rec: dropsRecent[raw.id] || null });
     }
     const used = new Set();
-    const mk = (c, group, extra = {}) => ({ ...c, group, drop: dropFor(c), ...extra });
+    const mk = (c, group, extra = {}) => {
+      const drop = dropFor(c);
+      const value = valueOf(c.id);
+      // rest-of-season value gained after the drop (no drop needed: the whole value)
+      return { ...c, group, drop, value, net: value - (drop.pid ? drop.value ?? valueOf(drop.pid) : 0), ...extra };
+    };
 
     // handcuffs
     const cuffs = [];
@@ -997,7 +1049,7 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     if (c.impact >= WAIVER.tier1Impact) return 1;
     // Lottery tickets were the top pick in 120 of 156 replayed weeks and gained 0.9 points on
     // average (E20): a young player alone is no longer a reason to spend a claim.
-    if (c.impact >= 1) return 2;
+    if (c.impact >= 1) return VALUE_RULES.netValueGate && c.drop?.pid && c.net < 0 ? 3 : 2;
     return 3;
   }
 
@@ -1143,7 +1195,7 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     P, val, solve, lineup, canStartNow, slotEligible,
     posture, margin, myOpt, oppOpt,
     swaps, startSit, tiebreakFor: tiebreak, qCall, problems, injuryRows, fallbackFor, nextManUp, irAllowed,
-    addImpact, sim, runSim, tradeOdds, winProb, profiles, odds, waiverPlan, dropFor, tierFor, lookahead, marketFor, evalTrade, tradeLog, picksOwned,
+    addImpact, valueOf, bestFreeAgent, sim, runSim, tradeOdds, winProb, profiles, odds, waiverPlan, dropFor, tierFor, lookahead, marketFor, evalTrade, tradeLog, picksOwned,
     reviewWeek, efficiency, wireItems, optimalPast,
     deadlineAt, acceptBy, deadlinePassed, deadlineWeek: dl, nextWaiverRun, waiverDayName,
     ownerName, chipOwner, lastName, gameFor, isBye, weekScores, posMedian, profile, dayLabel, kick,
