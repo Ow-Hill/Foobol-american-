@@ -457,7 +457,7 @@ test('wire feed describes adds and drops in plain words', () => {
   assert.equal(item.text, 'owen added Ray Romeo and dropped Fy Fox');
 });
 
-test('wire feed names traded draft picks by season and round', { todo: 'model.js:937 reads pk.season but snapshot picks use pk.s' }, () => {
+test('wire feed names traded draft picks by season and round', () => {
   const M = model((s) => {
     s.transactions.push({
       type: 'trade', created: 5, rids: [1, 2], adds: { 2002: 1, 1006: 2 }, drops: { 2002: 2, 1006: 1 },
