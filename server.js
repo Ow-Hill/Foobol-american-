@@ -10,6 +10,7 @@ const { playerNews: fetchPlayerNews } = require('./lib/playernews');
 const { checkAlerts, kickoffSoon } = require('./lib/alerts');
 const { recordCalls } = require('./lib/calls');
 const { makeAuth } = require('./lib/auth');
+const draftLive = require('./lib/draftlive');
 const auth = makeAuth();
 
 const PUBLIC = path.join(__dirname, 'public');
@@ -158,6 +159,10 @@ const server = http.createServer(async (req, res) => {
         .slice(0, 8)
         .map((p) => ({ id: p.id, n: p.n, pos: p.pos, team: p.team }));
       return send(req, res, 200, JSON.stringify({ players }), MIME['.json']);
+    }
+    if (url.pathname.startsWith('/api/draft/')) {
+      const r = await draftLive.handle(url, cfg);
+      return send(req, res, r.status, JSON.stringify(r.body), MIME['.json']);
     }
     if (url.pathname === '/api/health') return send(req, res, 200, JSON.stringify({ ok: true, snapshotAgeMs: snap ? Date.now() - snapAt : null }), MIME['.json']);
 
