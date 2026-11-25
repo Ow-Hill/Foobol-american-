@@ -46,8 +46,17 @@ change. Speculative items can raise a flag but never flip a start/sit.
    term or one of the player’s team aliases. This drops lifestyle and other-sport stories that
    Google returns because the name is famous.
 
-Known limit: same-name collisions are not resolved by team or position yet (for example
-`Josh Allen` QB vs edge rusher). Treat that as a ranking caveat, not a confirmed report.
+7. A hyphenated compound ending in the surname is not the player (`Josh Hines-Allen` is not
+   `Josh Allen`) unless the hyphen is in the player's own name (`Smith-Njigba`).
+8. Same-name players (`COLLISIONS` in `lib/playernews.js`: Josh Allen, Lamar Jackson, Michael
+   Carter, …) get one extra team-qualified query (`"Josh Allen" Bills when:7d`) and a filter that
+   drops a headline only on positive evidence for the namesake: a position cue from the other
+   side of the ball (`records two sacks` for a QB) with none for the player's own group, or
+   another NFL team named with no own-position cue. Opponents (`vs Jaguars`, `beat Jets`) do not
+   count. Neutral headlines are kept. Pass `{ collision: true }` to force the filter for a name
+   that is not on the list.
+
+Known limit: surname-only headlines (`Bengals' Chase sees 14 targets`) are still dropped.
 
 ### Window and cache
 
@@ -130,7 +139,9 @@ rather than merging two different players’ similar injury reports.
 
 ## Acceptance checks
 
-- `npm test` passes `test/news-search.test.js` (matcher, parser, queries, story clustering).
+- `npm test` passes `test/news-search.test.js` (matcher, parser, queries, story clustering,
+  same-name disambiguation) and `test/news-eval.test.js` (golden set: precision@10 ≥ 0.8,
+  coverage ≥ 80%; the numbers print with and without disambiguation).
 - A player with an apostrophe in the first name returns headlines.
 - `Chicago Bears` returns defensive headlines.
 - Two players mentioned in one story produce one League/Wire row, not two.

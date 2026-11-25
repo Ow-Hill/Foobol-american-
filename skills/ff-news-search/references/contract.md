@@ -9,6 +9,7 @@ Source of truth: `lib/playernews.js` (transport), `public/js/playernews.js` (cla
 | --- | --- |
 | Skill player | `"<full name>" NFL when:7d` |
 | Team defense | exact name, `"<nickname> defense" NFL when:7d`, `"<nickname> D/ST" NFL when:7d` |
+| Same-name player (`COLLISIONS`) | exact name, `"<full name>" <Nickname> when:7d` |
 
 Google News RSS URL shape:
 
@@ -45,6 +46,16 @@ After the name match, `relevant(title, player)` requires an NFL/fantasy/status c
 one of the player’s team aliases (`MIA` → `miami`, `dolphins`). Name-only lifestyle stories are
 dropped.
 
+Same-name players (`isCollision`): after the name match, `otherPlayerSignal(title, { pos, team })`
+rejects the headline when it has a cue for the other side of the ball and none for the player's
+position group, or names another NFL team (opponent phrases like `vs X` / `beat X` stripped) with
+no own-position cue. Hyphenated compounds ending in the surname (`Hines-Allen`) are fused into one
+token before matching unless the prefix is part of the player's own name.
+
+Golden set: `test/fixtures/news-golden.json` (12 players, hand-labelled headlines),
+scored by `test/news-eval.test.js` through `filterItems`. Baseline on 2026-11-25:
+precision@10 0.863 → 0.957 with disambiguation, recall 0.863, coverage 1.0.
+
 Test table (also in `test/news-search.test.js`):
 
 | Name | Title | Result |
@@ -60,6 +71,10 @@ Test table (also in `test/news-search.test.js`):
 | `Chicago Bears` DEF | `Bears defense dominates` | true |
 | `Chicago Bears` DEF | `CHI D/ST forces turnovers` | true |
 | `Chicago Bears` DEF | `Chicago Bears offense struggles` | false |
+| `Josh Allen` QB BUF | `Jaguars' Josh Allen records two sacks in win` | false |
+| `Josh Allen` QB BUF | `Josh Allen fantasy outlook vs Jaguars: QB1 again` | true |
+| `Josh Allen` LB JAX | `Josh Allen throws three TDs as Bills beat Jets` | false |
+| `Josh Allen` | `Josh Hines-Allen named to Pro Bowl` | false |
 
 ## 3. Cache states
 
