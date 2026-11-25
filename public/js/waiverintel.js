@@ -146,7 +146,7 @@ export function vacancies(M, pid, byPid) {
 
 // ---------------------------------------------------------------- one candidate
 
-export function scanCandidate(M, c, byPid, { claimPos = new Set(), openIr = 0 } = {}) {
+export function scanCandidate(M, c, byPid, { claimPos = new Set(), openIr = 0, dropValue = 0 } = {}) {
   const p = c.p;
   const u = usageOf(p);
   // position-specific volume (dropbacks, shares, red zone, WOPR, routes) against benchmark players,
@@ -164,7 +164,8 @@ export function scanCandidate(M, c, byPid, { claimPos = new Set(), openIr = 0 } 
   // Gain: this week's lineup gain, or the rest-of-season value he adds over the player he would
   // replace (values.js; 20 value points = full marks), whichever is larger.
   const value = c.value ?? M.valueOf?.(c.id) ?? 0;
-  const net = c.net ?? value;
+  // cards outside waiverPlan's groups have no named drop: charge the roster's usual drop
+  const net = c.net ?? value - dropValue;
   const gain = Math.max(clamp(Math.max(c.impact || 0, 0.6 * (c.impactNext || 0)) / 5), clamp(net / 20));
   const addRank = p.trend?.add?.rank ?? null;
   const market = addRank ? (41 - addRank) / 40 : p.trend?.drop ? -0.2 : 0;
@@ -261,7 +262,14 @@ export function waiverIntel(M, plan = M.waiverPlan(), news = playerNewsFor(M)) {
   const byPid = news.byPid;
   const claimPos = new Set();
   for (const n of plan.needs) if (n.claim) for (const pos of needPositions(n)) claimPos.add(pos);
-  const opts = { claimPos, openIr: plan.openIr ?? 0 };
+  // value of the player a typical add would replace (0 with an open roster spot)
+  let dropValue = 0;
+  try {
+    dropValue = M.dropFor({ id: null }).value || 0;
+  } catch {
+    // partial snapshot: no drop charge
+  }
+  const opts = { claimPos, openIr: plan.openIr ?? 0, dropValue };
 
   // carry the group (riser / cuff / lottery) and base tier from waiverPlan where it exists
   const grouped = new Map([...plan.groups.risers, ...plan.groups.cuffs, ...plan.groups.lottery].map((c) => [c.id, c]));
