@@ -123,3 +123,30 @@ test('season sim: injuries on a roster lower that team\'s odds in later weeks', 
   }), 1, NOW).sim().res;
   assert.ok(hurt[2].wins < healthy[2].wins - 0.3, `rival wins ${healthy[2].wins.toFixed(2)} -> ${hurt[2].wins.toFixed(2)}`);
 });
+
+test('season sim: in the playoffs, finished rounds use the real scores', () => {
+  // Six teams, Week 16. Seeds by record: 1..6 = rosters 1..6. Round 1 (Week 15): 3 v 6 and 4 v 5.
+  // Roster 6 really beat roster 3, and roster 5 beat roster 4.
+  const s = league((s) => {
+    seasonLeague(s);
+    s.meta.week = 16;
+    s.league.settings.playoff_teams = 6;
+    for (const [id, team] of [[5, 'GGG'], [6, 'HHH']]) {
+      const pid = `${id}001`;
+      s.players[pid] = pl(pid, `Q ${id}`, 'QB', team, 15, { own: id });
+      s.teams.push({ ...s.teams[2], id, owner: 'team' + id, name: 'team' + id, players: [pid], starters: [pid, '0', '0', '0', '0', '0'], reserve: [], taxi: [] });
+    }
+    s.teams.forEach((t, i) => ((t.w = 12 - i), (t.l = 2 + i), (t.pf = 1500 - 10 * i)));
+    for (let wk = 1; wk <= 14; wk++) s.matchups[wk] = [1, 2, 3, 4, 5, 6].map((rid) => ({ rid, mid: Math.ceil(rid / 2), pts: 100 }));
+    s.matchups[15] = [
+      { rid: 3, mid: 1, pts: 80 }, { rid: 6, mid: 1, pts: 120 },
+      { rid: 4, mid: 2, pts: 90 }, { rid: 5, mid: 2, pts: 95 },
+      { rid: 1, mid: null, pts: 0 }, { rid: 2, mid: null, pts: 0 },
+    ];
+    s.matchups[16] = [{ rid: 1, mid: 1, pts: 0 }, { rid: 5, mid: 1, pts: 0 }, { rid: 2, mid: 2, pts: 0 }, { rid: 6, mid: 2, pts: 0 }];
+  });
+  const r = buildModel(s, 1, NOW).sim().res;
+  assert.equal(r[3].title, 0, 'roster 3 lost in Week 15');
+  assert.equal(r[4].title, 0, 'roster 4 lost in Week 15');
+  assert.ok(r[6].title > 0 && r[5].title > 0, 'the real round-1 winners can still win it');
+});

@@ -394,8 +394,9 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     return { pid, fb, chance, ev, canWait, swapNow, inactivesAt };
   }
   function fallbackFor(slot, exclude = []) {
+    // a bench player whose game has started cannot be moved in (Sleeper locks him)
     return lineup(me).bench
-      .filter((id) => !exclude.includes(id) && canStartNow(id) && slotEligible(slot, P(id).pos))
+      .filter((id) => !exclude.includes(id) && canStartNow(id) && !P(id).locked && slotEligible(slot, P(id).pos))
       .sort((a, b) => fbScore(b) - fbScore(a))[0];
   }
 
@@ -732,7 +733,9 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       const [s1, s2, s3, s4, s5, s6] = order;
       const game = (a, b, round) => {
         const wk = lastReg + round;
-        const wa = sampleWk(a, wk) > sampleWk(b, wk) ? a : b;
+        // A playoff week already finished is decided by its real scores, not a fresh sample.
+        const done = wk < W ? playedWinner(wk, a, b) : null;
+        const wa = done ?? (sampleWk(a, wk) > sampleWk(b, wk) ? a : b);
         if (path && (a === track || b === track)) {
           const opp = a === track ? b : a;
           path.opp[round][opp] = (path.opp[round][opp] || 0) + 1;
@@ -762,6 +765,14 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       res[id].seed = res[id].seedSum / n;
     }
     return { res, prof, n, path };
+  }
+  // Winner of a finished week's game from the real scores (null when either score is missing).
+  function playedWinner(wk, a, b) {
+    const pts = (id) => (snap.matchups[wk] || []).find((m) => m.rid === id)?.pts;
+    const pa = pts(a);
+    const pb = pts(b);
+    if (!(pa > 0) || !(pb > 0)) return null;
+    return pa >= pb ? a : b;
   }
   function sim() {
     return (simCache ||= runSim({}));
@@ -886,7 +897,12 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
       .sort((a, b) => (VALUE_RULES.dropByValue ? valueOf(a) - valueOf(b) : 0) || Math.max(val(a), P(a).ppg || 0) - Math.max(val(b), P(b).ppg || 0));
     // Keep anyone who starts in a fantasy-playoff week's best lineup, unless nobody else can go.
     const pStarters = playoffStarters();
-    const d = pool.find((id) => !pStarters.has(id)) || pool[0];
+    // A kicker or defense replaces the one you have: drop the weakest at that position, starter or not.
+    const candPos = cand?.id ? P(cand.id).pos : null;
+    const same = ['K', 'DEF'].includes(candPos)
+      ? l.active.filter((id) => id !== cand.id && P(id).pos === candPos).sort((a, b) => valueOf(a) - valueOf(b) || Math.max(val(a), P(a).ppg || 0) - Math.max(val(b), P(b).ppg || 0))[0]
+      : null;
+    const d = same || pool.find((id) => !pStarters.has(id)) || pool[0];
     if (!d) return { none: true, text: 'No safe drop — roster is full of needed pieces' };
     const v = valueOf(d);
     return { pid: d, value: v, text: `Drop ${P(d).n}${v > 0 ? ` (value ${v.toFixed(1)})` : ''}` };
@@ -906,13 +922,13 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     const needs = [];
     l.starters.forEach((pid, i) => {
       if (!pid) {
-        const hasFix = l.bench.some((id) => canStartNow(id) && slotEligible(slotNames[i], P(id).pos));
+        const hasFix = l.bench.some((id) => canStartNow(id) && !P(id).locked && slotEligible(slotNames[i], P(id).pos));
         needs.push({ pri: 1, label: `Empty ${slotNames[i]} slot`, pos: slotNames[i], detail: hasFix ? 'A bench player can fill it — fix the lineup, no claim needed.' : 'Nobody on your roster fits.', claim: !hasFix });
       }
     });
     l.starters.filter(Boolean).forEach((pid) => {
       const p = P(pid);
-      if (p.avail === 'out') needs.push({ pri: 2, label: `${p.n} is ${p.eff}`, pos: p.pos, detail: 'Starter out this week.', claim: !l.bench.some((id) => canStartNow(id) && slotEligible(slotNames[l.starters.indexOf(pid)], P(id).pos)) });
+      if (p.avail === 'out') needs.push({ pri: 2, label: `${p.n} is ${p.eff}`, pos: p.pos, detail: 'Starter out this week.', claim: !l.bench.some((id) => canStartNow(id) && !P(id).locked && slotEligible(slotNames[l.starters.indexOf(pid)], P(id).pos)) });
       if (p.avail === 'bye') needs.push({ pri: 3, label: `${p.n} is on bye`, pos: p.pos, detail: 'Starter on bye this week.', claim: true });
     });
     const look = lookahead();
