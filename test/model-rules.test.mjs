@@ -478,3 +478,59 @@ test('wire feed names traded draft picks by season and round', () => {
   const [item] = M.wireItems();
   assert.match(item.text, /rival gets .*2027 R1/);
 });
+
+// ---------------------------------------------------------------- locked bench players
+// Fy Fox (bench WR, CCC) has already played: Sleeper will not let him into the lineup.
+const foxPlayed = (s) => (s.schedule[10].games[1].state = 'post');
+
+test('an Out starter is not told to swap in a bench player whose game has already started', () => {
+  const M = model((s) => {
+    foxPlayed(s);
+    s.players['1005'].inj = 'Out';
+  });
+  assert.equal(M.P('1006').locked, true);
+  const [p] = byTitle(M.problems(), /Ed Echo is listed Out/);
+  assert.ok(p, 'the Out starter is still flagged');
+  assert.doesNotMatch(p.body, /Fy Fox/);
+  const row = M.injuryRows().find((r) => r.pid === '1005');
+  assert.doesNotMatch(row.action.d, /Fy Fox/);
+});
+
+test('a Questionable starter gets no fallback whose game has already started', () => {
+  const M = model((s) => {
+    foxPlayed(s);
+    s.players['1005'].inj = 'Questionable';
+  });
+  assert.equal(M.fallbackFor('WR', ['1005']), undefined);
+  assert.equal(M.qCall('1005', 'WR').fb, undefined);
+});
+
+test('a bench player whose game has not started is still a fallback', () => {
+  const M = model((s) => (s.players['1005'].inj = 'Out'));
+  assert.equal(M.fallbackFor('WR', ['1005']), '1006');
+});
+
+// ---------------------------------------------------------------- K/DEF drops
+// Full roster (12 = 10 slots + 2 IR) with one defense: adding a defense drops the old one.
+const fullWithDef = (s) => {
+  const add = (id, n, pos, team, proj) => (s.players[id] = { id, n, pos, team, inj: null, proj: { pts: proj }, next: { pts: proj }, hist: [], own: 1, depth: null, exp: 4 });
+  add('1009', 'Old Defense', 'DEF', 'CCC', 5);
+  add('1010', 'Ike Ida', 'WR', 'BBB', 6);
+  add('1011', 'Jay Jet', 'RB', 'BBB', 6);
+  add('1012', 'Kit Kay', 'WR', 'AAA', 6);
+  s.teams[0].players.push('1009', '1010', '1011', '1012');
+  s.players['5009'] = { id: '5009', n: 'New Defense', pos: 'DEF', team: 'EEE', inj: null, proj: { pts: 9 }, next: { pts: 9 }, hist: [], own: null, depth: null, exp: 4 };
+};
+
+test('adding a defense with a full roster drops your current defense, not a skill player', () => {
+  const M = model(fullWithDef);
+  assert.equal(M.me.players.length, M.maxRoster);
+  const d = M.dropFor({ id: '5009', p: M.P('5009') });
+  assert.equal(d.pid, '1009');
+});
+
+test('adding a skill player still never drops your only defense', () => {
+  const M = model(fullWithDef);
+  const d = M.dropFor({ id: '5001', p: M.P('5001') });
+  assert.ok(d.pid && d.pid !== '1009', `dropped ${d.pid}`);
+});
