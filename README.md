@@ -95,9 +95,12 @@ speculation and teammate estimates are never sent.
 **Lineup locks soon.** About 100 minutes before kickoff, a starter in that game who is Out, Doubtful
 or Questionable gets an alert naming the healthy bench player to swap in. Games on a day other than
 Thursday, Sunday or Monday (Saturday games in Weeks 15–17, Christmas) also get one heads-up naming
-your starters in them. These go out during quiet hours too. With alerts on, the server rebuilds every
-5 minutes around kickoffs, so they arrive even when nobody has the site open (the computer still has
-to be on). The Season page's calendar file adds a reminder two hours before each of those game days.
+your starters in them. An empty starting slot or a starter on a bye gets an alert before that
+day's first kickoff, naming the bench player to start. These go out during quiet hours too. With alerts on, the server rebuilds every
+5 minutes around kickoffs and every 30 minutes the rest of the time (`"everyMin": 30` in the
+`alerts` block; `0` = kickoffs only), so lock alerts and status changes arrive even when nobody has
+the site open (the computer still has to be on). Changes found during quiet hours are sent when
+they end. The Season page's calendar file adds a reminder two hours before each of those game days.
 
 ## How good is the advice? (Track record)
 

@@ -549,6 +549,7 @@ function mySoWhat(M, p, spot, c, byPid) {
   if (c.practice === 'DNP') return { text: `DNP. One report alone can't flip the start/sit — ${recheck.toLowerCase()}.`, link: 'injuries' };
   if (c.cats.includes('trade')) {
     const d = M.acceptBy ? Math.round((M.acceptBy - M.now) / 86400000) : null;
+    if (M.deadlinePassed) return { text: 'League trades are closed until the offseason — a real NFL trade still moves his role.', link: 'news' };
     return { text: d != null && d >= 0 ? `League deadline in ${d}d — check the sell window.` : 'Check the trade ledger.', link: 'finder' };
   }
   if (c.cats.includes('depth')) {
@@ -597,7 +598,8 @@ function scoreItems(M, items, byPid, ripple) {
   const hours = {};
   const winpct = {};
   for (const t of M.snap.teams) winpct[t.id] = (t.w || 0) > 0 || (t.l || 0) > 0 ? t.w / ((t.w || 0) + (t.l || 0) || 1) : 0.35;
-  const daysToDeadline = M.acceptBy ? (M.acceptBy - M.now) / 86400000 : 99;
+  // after the deadline trade chatter can't be acted on, so it gets no urgency (it went negative before)
+  const daysToDeadline = M.acceptBy && !M.deadlinePassed ? (M.acceptBy - M.now) / 86400000 : 99;
   const oppId = M.opp ? M.opp.id : null;
   const starters = {};
   const startsFor = (own) => (starters[own] ||= new Set(M.teamBy[own] ? M.lineup(M.teamBy[own]).starters.filter(Boolean) : []));

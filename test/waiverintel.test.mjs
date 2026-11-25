@@ -73,23 +73,23 @@ test('a free agent with a growing role outranks an identical one whose role is f
 
 // ---------------------------------------------------------------- news + stats together
 
-test('a teammate on IR turns the next-man-up into a Tier 1 claim with the reason named', () => {
+test('a teammate on IR makes the next man up a takeover, capped at Tier 2 (E22), with the reason named', () => {
   const { I } = scan((s) => {
     s.players['1003'].inj = 'IR';
     s.players['1003'].hist = hist([[15], [16], [14]]);
   });
   const r = row(I, '5002');
   assert.equal(r.takeover, true);
-  assert.equal(r.tier, 1);
-  assert.equal(r.verdict, 'claim');
+  assert.equal(r.tier, 2);
+  assert.notEqual(r.verdict, 'claim', 'a takeover alone does not spend waiver priority');
   assert.match(r.reasons[0].text, /Cy Cook .* is listed IR — Sam Sierra is next up/);
-  assert.equal(I.claims[0].id, '5002');
+  assert.ok(!I.claims.some((x) => x.id === '5002'));
 });
 
 test('a headline can open the role before the injury tag catches up', () => {
   const { I } = scan((s) => (s.players['1003'].hist = hist([[15], [16], [14]])), [headline('1003', 'Cy Cook placed on injured reserve with ankle sprain')]);
   const r = row(I, '5002');
-  assert.equal(r.verdict, 'claim');
+  assert.equal(r.takeover, true);
   assert.match(r.reasons[0].text, /reported IR .*ESPN, 6h ago/);
 });
 
@@ -142,7 +142,7 @@ test('board is ordered by verdict then score and every board row names a drop', 
   const rank = { claim: 0, 'claim-if-need': 1, watch: 2, 'free-agency': 3, pass: 4, avoid: 5 };
   for (let i = 1; i < I.board.length; i++) {
     const a = I.board[i - 1], b = I.board[i];
-    assert.ok(rank[a.verdict] < rank[b.verdict] || (a.verdict === b.verdict && (a.takeover > b.takeover || (a.takeover === b.takeover && a.score >= b.score))));
+    assert.ok(rank[a.verdict] < rank[b.verdict] || (a.verdict === b.verdict && a.score >= b.score));
   }
   for (const r of I.board) assert.ok(r.drop && r.drop.text);
   assert.ok(I.board.every((r) => r.p.pos !== 'K' && r.p.pos !== 'DEF'), 'K/DEF stay in the stream tables');
@@ -157,5 +157,5 @@ test('the decision brief claims what the scanner claims and quotes its reason', 
   s.playerNews = { items: [], perPlayer: {} };
   const M = buildModel(s, 1, NOW);
   const d = buildDecisions(M, buildPlayerNews(M)).decisions.filter((x) => x.kind === 'waiver' && /^Claim/.test(x.title));
-  assert.ok(d.some((x) => /Sam Sierra/.test(x.title) && x.because.some((b) => /next up/.test(b))));
+  assert.ok(!d.some((x) => /Sam Sierra/.test(x.title)) && d.some((x) => /Ray Romeo/.test(x.title)), 'the capped takeover is not a claim; the Tier 1 riser is');
 });

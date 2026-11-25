@@ -2,6 +2,7 @@ import { esc, n1, signed, fmtDay, fmtDayTime, ago } from '../util.js';
 import { card, table, playerName, secondOpinionBtn, statusChip } from '../ui.js';
 import { waiverIntel, VERDICT_LABEL } from '../waiverintel.js';
 import { BENCHMARKS, SOURCES, fmtMetric } from '../advstats.js';
+import { windTxt, wxTxt } from './lineup.js';
 
 const tierName = { 1: 'Smash', 2: 'Conditional', 3: 'Free agency', 4: 'Free agency' };
 const tierHelp = {
@@ -99,7 +100,7 @@ function streamTable(M, list, pos) {
       const imp = g?.oppImp != null ? `${g.home ? 'vs' : '@'} ${esc(g.opp)} (${g.oppImp.toFixed(1)})` : g ? `${g.home ? 'vs' : '@'} ${esc(g.opp)}` : '–';
       const good = pos === 'DEF' && g?.oppImp != null && g.oppImp < 20.5;
       const nx = M.isBye(p.team, M.W + 1) ? 'bye' : p.projNext != null ? n1(p.projNext) : '–';
-      return [`<b>${esc(p.n)}</b> <span class="tm">${esc(p.team)}</span>`, `<span class="num">${n1(p.proj)}</span>`, `<span ${good ? 'style="color:var(--green)"' : ''}>${imp}${good ? ' ✓ soft' : ''}</span>`, `<span class="num">${nx}</span>`, `<span class="num ${c.impactNext > 1 ? 'pos-num' : ''}">${c.impact >= 0.5 ? 'wk ' + M.W + ' ' + signed(c.impact) : ''}${c.impactNext >= 0.5 ? (c.impact >= 0.5 ? ' · ' : '') + 'wk ' + (M.W + 1) + ' ' + signed(c.impactNext) : ''}${c.impact < 0.5 && c.impactNext < 0.5 ? '–' : ''}</span>`];
+      return [`<b>${esc(p.n)}</b> <span class="tm">${esc(p.team)}</span>`, `<span class="num">${n1(p.proj)}</span>`, `<span ${good ? 'style="color:var(--green)"' : ''}>${imp}${good ? ' ✓ soft' : ''}</span>${windTxt(p)}${wxTxt(p)}`, `<span class="num">${nx}</span>`, `<span class="num ${c.impactNext > 1 ? 'pos-num' : ''}">${c.impact >= 0.5 ? 'wk ' + M.W + ' ' + signed(c.impact) : ''}${c.impactNext >= 0.5 ? (c.impact >= 0.5 ? ' · ' : '') + 'wk ' + (M.W + 1) + ' ' + signed(c.impactNext) : ''}${c.impact < 0.5 && c.impactNext < 0.5 ? '–' : ''}</span>`];
     }),
   );
 }
@@ -109,15 +110,16 @@ export function render(M, ctx) {
   const l = M.lineup(M.me);
   const claimNeeds = w.needs.filter((n) => n.claim);
   const I = waiverIntel(M, w);
-  // The backtested Tier 1 (projected lineup gain) decides first. The scanner can add a starter
-  // takeover the projection has not caught up with yet; its other weights are not fitted.
-  const takeoverR = I.claims.find((r) => r.takeover && !w.tier1.some((c) => c.id === r.id));
-  const spend = w.tier1[0] || takeoverR?.c || null;
+  // Only the backtested Tier 1 (projected lineup gain) spends priority. A starter takeover the
+  // projection hasn't caught up with gained 4.6 points over three weeks in E22, so it is named
+  // as a free-agency add instead of a priority claim.
+  const takeoverR = I.board.find((r) => r.takeover && r.verdict !== 'avoid' && !w.tier1.some((c) => c.id === r.id));
+  const spend = w.tier1[0] || null;
   const spendR = spend ? I.byId.get(spend.id) : null;
   const why1 = spendR ? spendR.reasons[0]?.text || '' : '';
   const advice = spend
-    ? `<div class="callout good"><b>Spend priority on ${esc(spend.p.n)}</b>${why1 ? esc(why1) + '. ' : ''}${w.tier1.length > 1 ? `Best of ${w.tier1.length} Tier 1 adds (${w.tier1.slice(1).map((c) => esc(c.p.n)).join(', ')} next).` : w.tier1.length ? 'He is the only Tier 1 here.' : 'The projection has not caught up yet: the scanner sees a starter job opening for him.'} A successful claim moves you from #${w.wp} to last, so don't spend it on anything lower.</div>`
-    : `<div class="callout"><b>Hold your waiver priority (#${w.wp ?? '–'})</b>Nothing in the pool clears the Tier 1 bar (3+ lineup points this week) and no starter job has opened. A successful claim sends you to the back of the line, so keep it for a real need.${claimNeeds.length ? ` The one real need is below — and it can wait for free agency.` : ''}</div>`;
+    ? `<div class="callout good"><b>Spend priority on ${esc(spend.p.n)}</b>${why1 ? esc(why1) + '. ' : ''}${w.tier1.length > 1 ? `Best of ${w.tier1.length} Tier 1 adds (${w.tier1.slice(1).map((c) => esc(c.p.n)).join(', ')} next).` : 'He is the only Tier 1 here.'} A successful claim moves you from #${w.wp} to last, so don't spend it on anything lower.</div>`
+    : `<div class="callout"><b>Hold your waiver priority (#${w.wp ?? '–'})</b>Nothing in the pool clears the Tier 1 bar (3+ lineup points this week) and no starter job has opened. A successful claim sends you to the back of the line, so keep it for a real need.${claimNeeds.length ? ` The one real need is below — and it can wait for free agency.` : ''}${takeoverR ? ` ${esc(takeoverR.p.n)} may inherit a starter's job (${esc(takeoverR.vacancy?.n || 'starter')} ${esc(takeoverR.vacancy?.how || 'out')}); in the backtest these adds gained about 5 points over three weeks, so pick him up in free agency rather than spend priority.` : ''}</div>`;
 
   const needRows = w.needs.map((n) => [`<span class="chip">${n.pri}</span>`, `<b>${esc(n.label)}</b>`, `<span class="muted">${esc(n.detail)}</span>`, n.claim ? '<span class="chip chip-amber">Needs a claim</span>' : '<span class="chip chip-fa">Covered</span>']);
   const look = `<div class="grid g3">${w.look

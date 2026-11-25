@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { checkAlerts, lockItems, kickoffSoon } = require('../lib/alerts');
+const { checkAlerts, lockItems, kickoffSoon, refreshDue } = require('../lib/alerts');
 
 const tmp = () => path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'rm-lock-')), 'state.json');
 const SAT_KICK = Date.parse('2026-12-19T21:30:00Z'); // Saturday 4:30 PM in Toronto
@@ -90,4 +90,30 @@ test('kickoffSoon: true near a kickoff or during games, false midweek', () => {
   s.schedule[15].games[0].state = 'in';
   assert.equal(kickoffSoon(s, SAT_KICK + 3600000), true);
   assert.equal(kickoffSoon(null), true);
+});
+
+test('background refresh: every 30 minutes away from kickoffs, every tick near one, off with everyMin 0', () => {
+  const s = snap({ kick: SAT_KICK });
+  const quiet = SAT_KICK - 2 * 86400000; // Thursday, nothing kicking off
+  assert.equal(refreshDue(s, quiet - 10 * 60000, quiet), false, '10 minutes old: wait');
+  assert.equal(refreshDue(s, quiet - 30 * 60000, quiet), true, '30 minutes old: rebuild so overnight changes go out');
+  assert.equal(refreshDue(s, quiet - 30 * 60000, quiet, 0), false, 'everyMin 0 = kickoffs only');
+  assert.equal(refreshDue(s, quiet - 30 * 60000, quiet, 60), false);
+  assert.equal(refreshDue(s, SAT_KICK - 60 * 60000 - 60000, SAT_KICK - 60 * 60000), true, 'an hour before kickoff: every tick');
+  assert.equal(refreshDue(null, 0, quiet), true, 'no snapshot yet');
+});
+
+test('an empty slot or a starter on bye gets one alert per game day with the bench fix', () => {
+  const s = snap({ kick: SUN_KICK });
+  s.players.w.team = 'EEE'; // EEE has no game this week: bye
+  s.teams[0].starters = ['q', '0', 'w'];
+  const now = SUN_KICK - 60 * 60000;
+  const items = lockItems(s, {}, { now });
+  const holes = items.filter((i) => i.id.startsWith('hole|'));
+  assert.equal(holes.length, 2);
+  assert.match(holes[0].text, /Your RB spot is empty.*Start Rex Runner/);
+  assert.match(holes[1].text, /Wes Wide \(FLEX\) is on a bye/);
+  const sent = Object.fromEntries(items.map((i) => [i.id, now]));
+  assert.equal(lockItems(s, sent, { now: now + 30 * 60000 }).filter((i) => i.id.startsWith('hole|')).length, 0, 'once per day');
+  assert.equal(lockItems(s, {}, { now: SUN_KICK - 5 * 3600000 }).filter((i) => i.id.startsWith('hole|')).length, 0, 'not hours ahead');
 });

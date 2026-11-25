@@ -78,7 +78,7 @@ export function playerWeeks() {
           season: s, wk: w, split: split(s), id: p.id, n: p.n, pos, team: p.team, opp: g?.opp || null,
           proj: p.proj.pts, gp: p.hist.length, ppg: ppg(p), ppg3: ppg3(p), xp: xpAvg(p, 4),
           played: !!a?.played, actual: a?.played ? a.pts : 0, inj: p.inj || null, prac: p.prac || null,
-          imp: g?.imp ?? null, oppImp: g?.oppImp ?? null, wind: g?.wind ?? null, roof: g?.roof ?? null, home: g?.home ?? null,
+          imp: g?.imp ?? null, oppImp: g?.oppImp ?? null, wind: g?.wind ?? null, temp: g?.temp ?? null, roof: g?.roof ?? null, home: g?.home ?? null,
         });
       }
     }
@@ -642,14 +642,27 @@ export function e10() {
     const lo = x.filter((r) => r.wind < 10);
     wind.push([pos, r2(mean(lo.map((r) => r.actual - r.proj))), lo.length, r2(mean(hi.map((r) => r.actual - r.proj))), hi.length, r2(mean(hi.map((r) => r.actual - r.proj)) - mean(lo.map((r) => r.actual - r.proj)))]);
   }
-  const fit = { teamCorr: r3(teamCorr), ptsPerImpliedPoint: r2(slope), afterProjCorr: r3(afterProj), afterProjTier: r2(afterProjTier), afterAvgCorr: r3(afterAvg), wind: Object.fromEntries(wind.map((w) => [w[0], { calm: w[1], windy: w[3], diff: w[5], nWindy: w[4] }])) };
+  // Cold (added 2026-11-25 for December weather flags): outdoor kickoff at 32F or below vs 50F+.
+  // nflverse has no precipitation column, so rain and snow can't be checked this way.
+  const cold = [];
+  for (const pos of ['QB', 'WR', 'TE', 'RB', 'K']) {
+    const x = rows.filter((r) => r.pos === pos && r.temp != null && (r.roof === 'outdoors' || r.roof === 'open'));
+    const hi = x.filter((r) => r.temp <= 32);
+    const lo = x.filter((r) => r.temp >= 50);
+    cold.push([pos, r2(mean(lo.map((r) => r.actual - r.proj))), lo.length, r2(mean(hi.map((r) => r.actual - r.proj))), hi.length, r2(mean(hi.map((r) => r.actual - r.proj)) - mean(lo.map((r) => r.actual - r.proj)))]);
+  }
+  const fit = { teamCorr: r3(teamCorr), ptsPerImpliedPoint: r2(slope), afterProjCorr: r3(afterProj), afterProjTier: r2(afterProjTier), afterAvgCorr: r3(afterAvg), wind: Object.fromEntries(wind.map((w) => [w[0], { calm: w[1], windy: w[3], diff: w[5], nWindy: w[4] }])), cold: Object.fromEntries(cold.map((w) => [w[0], { mild: w[1], cold: w[3], diff: w[5], nCold: w[4] }])) };
   return {
     id: 'E10', title: 'Game environment: betting lines and wind',
-    tables: [{ caption: 'Outdoor games: actual minus projected points, calm (under 10 mph) vs windy (15+ mph).', head: ['Position', 'Calm: actual - projection', 'n', 'Windy: actual - projection', 'n', 'Difference'], rows: wind }],
+    tables: [
+      { caption: 'Outdoor games: actual minus projected points, calm (under 10 mph) vs windy (15+ mph).', head: ['Position', 'Calm: actual - projection', 'n', 'Windy: actual - projection', 'n', 'Difference'], rows: wind },
+      { caption: 'Outdoor games: actual minus projected points, 50F or warmer vs 32F or colder at kickoff.', head: ['Position', 'Mild: actual - projection', 'n', 'Cold: actual - projection', 'n', 'Difference'], rows: cold },
+    ],
     findings: [
       `A team's implied total explains its skill-position fantasy output with correlation ${r3(teamCorr)} (each implied point is worth about ${r2(slope)} team fantasy points).`,
       `After Sleeper's projection, the implied total adds ${r3(afterProj)} correlation (high-total vs low-total teams: ${r2(afterProjTier)} points per player); against a player's own average it adds ${r3(afterAvg)}.`,
       `Wind 15+ mph outdoors vs calm, relative to projection: ${wind.map((w) => `${w[0]} ${w[5]}`).join(', ')} points.`,
+      `Freezing (32F or colder) outdoors vs 50F+, relative to projection: ${cold.map((w) => `${w[0]} ${w[5]}`).join(', ')} points. Set COLD in public/js/fitted.js from this line.`,
     ],
     fit,
   };
