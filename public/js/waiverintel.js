@@ -13,6 +13,20 @@ const SKILL_POS = new Set(['QB', 'RB', 'WR', 'TE']);
 const SRC_W = { 1: 1, 2: 0.85, 3: 0.7 };
 const HALF_LIFE = 3 * DAY; // a 3-day-old headline counts half
 
+// Score weights (sum to 1), fitted by backtest E22 (backtest/experiments-b.mjs) on 2022-24 synthetic
+// leagues and checked on 2025, run 2026-11-25: top pick gained 17.3 lineup points over three weeks
+// against 16.4 for the old hand-set 0.3 / 0.2 / 0.15 / 0.25 / 0.1, helped 90% vs 83%. News fits to 0:
+// in the archive it is only injury-tag openings, which gained little (4.6 over three weeks).
+// Headline news still drives the verdict (Avoid, Watch), the tier and the reasons, just not the
+// score. Market is pinned at 0.1 because Sleeper adds are not archived. Change only from an E22 run.
+export const SCAN_WEIGHTS = { gain: 0.45, usage: 0.15, trend: 0.3, news: 0, market: 0.1 };
+
+// 0-100 score from a candidate's parts. trend is -1..1 and is mapped to 0..1; health scales the total.
+export function scoreFrom(parts, W = SCAN_WEIGHTS) {
+  const t = W.gain * parts.gain + W.usage * parts.usageEff + W.trend * (parts.trend + 1) / 2 + W.news * parts.newsPart + W.market * clamp(parts.market);
+  return Math.round(100 * parts.health * t);
+}
+
 const avg = (a) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : null);
 const clamp = (x, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, x));
 const n1 = (x) => (x == null ? '–' : (Math.round(x * 10) / 10).toFixed(1));
@@ -123,10 +137,12 @@ export function vacancies(M, pid, byPid) {
     for (const it of byPid.get(q.id) || []) {
       if (it.dupe || it.better) continue;
       const spec = it.posture === 'speculative' ? 0.5 : 1;
-      const cand = it.status ? (VACANCY_W[it.status] || 0) * spec : it.practice === 'DNP' ? 0.35 * spec : it.cats?.includes('trade') && /\btraded\b|\bdealt\b/i.test(it.title || '') ? 0.5 * spec : 0;
+      // A real trade moves the player's team in Sleeper's data, so headline trade talk never opens a
+      // role here (live check 2026-11-25: one opinion piece read as "Caleb Williams traded").
+      const cand = it.status ? (VACANCY_W[it.status] || 0) * spec : it.practice === 'DNP' ? 0.35 * spec : 0;
       if (cand > w) {
         w = cand;
-        how = it.status ? `reported ${it.status}` : it.practice === 'DNP' ? 'missed practice' : 'reported traded';
+        how = it.status ? `reported ${it.status}` : 'missed practice';
         src = `${it.src}, ${agoTxt(M.now - it.time)}`;
       }
     }
@@ -178,7 +194,7 @@ export function scanCandidate(M, c, byPid, { claimPos = new Set(), openIr = 0, d
 
   // inheriting a starter's workload is a usage signal even before the stats show it
   const usageEff = takeover ? Math.max(usage, 0.7) : usage;
-  const score = Math.round(100 * health * (0.3 * gain + 0.2 * usageEff + 0.15 * (trend + 1) / 2 + 0.25 * newsPart + 0.1 * clamp(market)));
+  const score = scoreFrom({ gain, usageEff, trend, newsPart, market, health });
 
 
   // ---- reasons and risks, each tied to a number or a dated report ----
@@ -186,7 +202,9 @@ export function scanCandidate(M, c, byPid, { claimPos = new Set(), openIr = 0, d
   const risks = [];
   if (topVac) reasons.push({ kind: 'opportunity', text: `${topVac.n} (${n1(topVac.ppg)} pts/g) is ${topVac.how}${topVac.nextUp ? ` — ${p.n} is next up` : ' — but another back-up sits ahead'} (${topVac.src})`, sign: 1 });
   for (const s of news.list) {
-    if (Math.abs(s.v) < 0.05 && s.kind !== 'trade' && s.kind !== 'camp') continue;
+    // Trade and camp news with no role direction is context, not a reason: a rumour-only trade
+    // mention is dropped (live check: a charity story about Deshaun Watson read as trade news).
+    if (Math.abs(s.v) < 0.05 && !((s.kind === 'trade' || s.kind === 'camp') && s.posture !== 'speculative')) continue;
     const head = s.title ? `“${s.title.length > 90 ? s.title.slice(0, 87) + '…' : s.title}”` : '';
     const line = { kind: s.kind, text: `${s.label}${head ? ': ' + head : ''} (${s.src}, ${agoTxt(M.now - s.at)}${s.posture === 'speculative' ? ', unconfirmed' : ''})`, sign: Math.sign(s.v) };
     (s.v < -0.05 ? risks : reasons).push(line);
@@ -247,7 +265,7 @@ export function scanCandidate(M, c, byPid, { claimPos = new Set(), openIr = 0, d
 
   return {
     id: c.id, p, c, score, value, net, tier, verdict, confidence, takeover,
-    parts: { gain, net, usage, trend, newsPart, opp, market, health, newsNet: news.net },
+    parts: { gain, net, usage, usageEff, trend, newsPart, opp, market, health, newsNet: news.net },
     usage: u, adv, bench, news: news.list, vacancy: topVac, reasons, risks, trigger, lenses,
   };
 }

@@ -627,7 +627,17 @@ import fsE19 from 'node:fs';
 let rosMapCache = null;
 function rosWeek(season, wk) {
   const dir = path.join(DIR, 'ecr');
-  rosMapCache ||= JSON.parse(fsE19.readFileSync(path.join(dir, 'fp-to-sleeper.json'), 'utf8'));
+  // the expert-consensus cache comes from a separate step (backtest/fetch-ecr.mjs); without it the
+  // experiments run on the site's own values only instead of crashing
+  if (!rosMapCache) {
+    const f = path.join(dir, 'fp-to-sleeper.json');
+    if (!fsE19.existsSync(f)) {
+      if (!rosWeek.warned) console.warn('No expert-consensus cache (data/bt/ecr): run backtest/fetch-ecr.mjs for the ROS lens. Continuing without it.');
+      rosWeek.warned = true;
+      return null;
+    }
+    rosMapCache = JSON.parse(fsE19.readFileSync(f, 'utf8'));
+  }
   for (let w = wk; w >= Math.max(1, wk - 2); w--) {
     const f = path.join(dir, `ros-${season}-${w}.json`);
     if (!fsE19.existsSync(f)) continue;
@@ -1077,6 +1087,149 @@ export function e21() {
       pick
         ? `Suggested: TRADE_CURVE { k: ${pick.k}, ppgCredit: ${pick.c} } and TRADE_BALANCE ${JSON.stringify(fit.suggest.TRADE_BALANCE)} in public/js/fitted.js. It picked the winner in this league's trades ${pct(pick.own.agree)}% of the time against ${pct(curOwn.agree)}% now.`
         : `No curve beat the current one on this league's own trades (${pct(curOwn.agree)}%): keep TRADE_CURVE as it is.`,
+    ],
+    fit,
+  };
+}
+
+// ================= E22 =================
+// Waiver scanner weights. The scanner (public/js/waiverintel.js) scores each free agent from five
+// parts: lineup/value gain, usage vs benchmark players, trend, news and Sleeper adds. Here every
+// team of a synthetic 10-team league (as in E20b), Weeks 3-14 of 2022-2025, gets the scanner run on
+// its free agents; each of the top candidates is scored by the lineup points he really added over
+// the next three weeks (add in, the scanner's usual drop out). Weights are fitted on 2022-24 and
+// judged on 2025. Blind spots: no archived headlines or trending adds, so "news" is only the
+// injury-tag openings (a starter ahead of him Out/IR) and "market" is always 0.
+import { waiverIntel, scoreFrom, SCAN_WEIGHTS } from '../public/js/waiverintel.js';
+
+const E22_TOP = 12; // candidates kept per team-week (by the current score), plus every takeover
+let e22Cache = null;
+export function scanRows() {
+  if (e22Cache) return e22Cache;
+  const rows = [];
+  const noNews = { byPid: new Map(), flags: { degraded: false, disabled: true }, items: [], players: [] };
+  for (const s of [2022, 2023, 2024, 2025]) {
+    const S = D.loadSeason(s);
+    for (let W = 3; W <= Math.min(14, S.lastWeek - 1); W++) {
+      const P0 = structuredClone(asOf(s, W));
+      if (USE_ROS) attachRosBt(P0, s, W);
+      const ids = Object.values(P0).filter((p) => p.proj && p.pos !== 'K' && p.pos !== 'DEF').sort((a, b) => (ppg(b) ?? b.proj.pts) - (ppg(a) ?? a.proj.pts)).slice(0, 150).map((p) => p.id);
+      const ks = (pos) => Object.values(P0).filter((p) => p.proj && p.pos === pos).sort((a, b) => b.proj.pts - a.proj.pts).slice(0, 10).map((p) => p.id);
+      const K = ks('K');
+      const DEF = ks('DEF');
+      const teams = Array.from({ length: 10 }, (_, i) => ({ id: i + 1, owner: 'T' + (i + 1), players: [...ids.filter((_, k) => (Math.floor(k / 10) % 2 === 0 ? k % 10 : 9 - (k % 10)) === i), K[i], DEF[i]].filter(Boolean), starters: [], reserve: [] }));
+      const { snap, now } = D.synthSnap(s, W, { teams, playersOverride: P0 });
+      for (const t of teams) {
+        let M, I;
+        try {
+          M = buildModel(snap, t.id, now);
+          I = waiverIntel(M, M.waiverPlan(), noNews);
+        } catch {
+          continue;
+        }
+        const all = [...I.byId.values()].filter((r) => r.p.avail !== 'out');
+        const keep = all.slice().sort((a, b) => b.score - a.score).slice(0, E22_TOP);
+        for (const r of all) if (r.takeover && !keep.includes(r)) keep.push(r);
+        if (!keep.length) continue;
+        rows.push({
+          season: s, wk: W, rid: t.id,
+          cards: keep.map((r) => {
+            const drop = r.drop?.pid ?? (() => { try { return M.dropFor(r.c).pid ?? null; } catch { return null; } })();
+            return { ...r.parts, takeover: r.takeover, verdict: r.verdict, pos: r.p.pos, proj: r.p.proj || 0, impact: r.c.impact || 0, gain3: moveGain(M, S, W, t.players, r.id, drop) };
+          }),
+        });
+      }
+    }
+  }
+  return (e22Cache = rows);
+}
+
+// the five weights on a grid (step 0.05, each 0-0.6, summing to 1)
+export function weightGrid(step = 0.05) {
+  const out = [];
+  const n = Math.round(1 / step);
+  const cap = Math.round(0.6 / step);
+  for (let a = 0; a <= cap; a++) for (let b = 0; b <= cap && a + b <= n; b++) for (let c = 0; c <= cap && a + b + c <= n; c++) for (let d = 0; d <= cap && a + b + c + d <= n; d++) {
+    const e = n - a - b - c - d;
+    if (e > cap) continue;
+    out.push({ gain: a * step, usage: b * step, trend: c * step, news: d * step, market: e * step });
+  }
+  return out;
+}
+
+export function scanEval(rows, W) {
+  const top = [];
+  const xs = [];
+  const ys = [];
+  for (const r of rows) {
+    let best = null;
+    let bs = -Infinity;
+    for (const c of r.cards) {
+      const sc = scoreFrom(c, W);
+      xs.push(sc);
+      ys.push(c.gain3);
+      if (sc > bs || (sc === bs && c.gain3 < best.gain3)) { // ties count against the rule
+        bs = sc;
+        best = c;
+      }
+    }
+    if (best) top.push(best.gain3);
+  }
+  return { top: mean(top), hit: mean(top.map((g) => (g > 0 ? 1 : 0))), n: top.length, rho: spearman(xs, ys) };
+}
+
+export function e22() {
+  const rows = scanRows();
+  const train = rows.filter((r) => r.season <= 2024);
+  const test = rows.filter((r) => r.season === 2025);
+  // market is blind in the archive, so it is pinned to the current value and the other four share the rest
+  const grid = weightGrid(0.05).filter((w) => Math.abs(w.market - SCAN_WEIGHTS.market) < 1e-9);
+  let best = null;
+  for (const w of grid) {
+    const e = scanEval(train, w);
+    if (!best || e.top > best.e.top) best = { w, e };
+  }
+  const rules = [
+    ['Current weights', SCAN_WEIGHTS],
+    ['Fitted on 2022-24', best.w],
+    ['Gain only', { gain: 1, usage: 0, trend: 0, news: 0, market: 0 }],
+    ['Usage only', { gain: 0, usage: 1, trend: 0, news: 0, market: 0 }],
+    ['No news part', { ...SCAN_WEIGHTS, news: 0, gain: SCAN_WEIGHTS.gain + SCAN_WEIGHTS.news }],
+  ];
+  const projTop = (rs) => mean(rs.map((r) => r.cards.slice().sort((a, b) => b.proj - a.proj)[0].gain3));
+  const table = rules.map(([k, w]) => {
+    const a = scanEval(train, w);
+    const b = scanEval(test, w);
+    return [k, Object.values(w).map((x) => r2(x)).join(' / '), r1(a.top), r1(b.top), pct(b.hit), r3(b.rho)];
+  });
+  table.push(['Best projection (no scanner)', '', r1(projTop(train)), r1(projTop(test)), '', '']);
+  // verdict check on held-out 2025: do "claim" picks really gain more?
+  const byV = {};
+  for (const r of test) for (const c of r.cards) (byV[c.verdict] ||= []).push(c.gain3);
+  const vRows = Object.entries(byV).map(([v, g]) => [v, g.length, r1(mean(g)), pct(mean(g.map((x) => (x > 0 ? 1 : 0))))]);
+  const take = test.flatMap((r) => r.cards.filter((c) => c.takeover).map((c) => c.gain3));
+  const cur = scanEval(test, SCAN_WEIGHTS);
+  const fitted = scanEval(test, best.w);
+  // adopt only when the fitted weights also win on the held-out season by a margin worth having
+  const adopt = fitted.top - cur.top >= 0.5;
+  const fit = {
+    n: rows.length, train: train.length, test: test.length,
+    current: { weights: SCAN_WEIGHTS, top: r2(cur.top), rho: r3(cur.rho) },
+    fitted: { weights: best.w, trainTop: r2(best.e.top), top: r2(fitted.top), rho: r3(fitted.rho) },
+    adopt, takeover: { n: take.length, mean: r2(mean(take)) },
+    verdicts: Object.fromEntries(vRows.map((r) => [r[0], { n: r[1], mean: r[2], hit: r[3] }])),
+  };
+  return {
+    id: 'E22', title: 'Waiver scanner weights',
+    tables: [
+      { caption: `Synthetic 10-team leagues, every team, Weeks 3-14 (${rows.length} team-weeks; top ${E22_TOP} scanner candidates each). Gain = lineup points the top-scored candidate really added over three weeks. Weights are gain / usage / trend / news / market. Fit on 2022-24, judged on 2025.`, head: ['Rule', 'Weights', 'Top pick gain 2022-24', 'Top pick gain 2025', 'Helped % 2025', 'Score vs gain (Spearman) 2025'], rows: table },
+      { caption: 'Held-out 2025: lineup points over three weeks by the scanner verdict.', head: ['Verdict', 'n', 'Avg gain', 'Helped %'], rows: vRows },
+    ],
+    findings: [
+      `Current weights: top pick gained ${r1(cur.top)} on 2025. Fitted on 2022-24 (${Object.entries(best.w).map(([k, v]) => `${k} ${r2(v)}`).join(', ')}): ${r1(fitted.top)} on 2025.`,
+      adopt ? 'The fitted weights win on the held-out season by 0.5+ points: adopt them in SCAN_WEIGHTS.' : 'The fitted weights do not beat the current ones by 0.5+ points on 2025: keep SCAN_WEIGHTS as it is.',
+      `Starter takeovers (injury-tag openings): ${take.length} on 2025, ${r1(mean(take))} points over three weeks on average.`,
+      'News is only injury-tag openings here and Sleeper adds are not archived, so those two weights are not really tested.',
     ],
     fit,
   };

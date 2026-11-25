@@ -89,10 +89,10 @@ spend or hold, and why. Never say a claim was placed.
 
 | Lens | Weight | Source |
 | --- | --- | --- |
-| Lineup gain this week / next | 30 | `waiverPlan().pool` (`addImpact`) |
-| News | 25 | typed headlines/notes from `playernews.js`: injury, practice, role up/down, trade, camp, suspension; plus **openings** when a teammate ahead of him is on IR/Out or reported so |
-| Usage | 20 | snap %, touches/g (RB) or targets/g (WR/TE), last 3 games |
-| Trend | 15 | last 3 vs the 5 before: snaps, volume, points |
+| Lineup gain this week / next | 45 | `waiverPlan().pool` (`addImpact`) |
+| News | 0 in the score (E22); drives verdict, tier, reasons | typed headlines/notes from `playernews.js`: injury, practice, role up/down, trade, camp, suspension; plus **openings** when a teammate ahead of him is on IR/Out or reported so |
+| Usage | 15 | snap %, touches/g (RB) or targets/g (WR/TE), last 3 games |
+| Trend | 30 | last 3 vs the 5 before: snaps, volume, points |
 | Market | 10 | Sleeper trending-add rank |
 
 Health tags scale the score down. News is weighted by source tier, a 3-day half-life and halved
@@ -111,3 +111,12 @@ TE McBride (targets, target share, est. routes, red-zone targets). Expected poin
 actual flags players running hot (likely to cool) or cold (due to catch up). Routes, YPRR, TPRR and
 WOPR are estimates (≈); inside-10 touches, slot/wide splits and completed QB air yards are not in
 Sleeper's feed. The Waivers page lists each metric's source in "Stats behind the scanner".
+
+### Checking and tuning the scanner
+
+- `npm run check-scanner` (own computer; Sleeper is blocked in the cloud) builds a live snapshot,
+  writes `docs/backtest/scanner-check.md`: which advanced stat fields Sleeper actually sent, and
+  the board with reasons.
+- Backtest E22 (`npm run backtest`) fits `SCAN_WEIGHTS` in `public/js/waiverintel.js` on 2022-24
+  synthetic leagues and judges them on 2025. Adopt fitted weights only when E22 says so (0.5+
+  points better on 2025). News and Sleeper adds are blind in the archive.

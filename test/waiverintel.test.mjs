@@ -122,15 +122,15 @@ test('bad news on the candidate himself overrides good stats: the tier-1 riser b
   assert.ok(!I.claims.some((x) => x.id === '5001'));
 });
 
-test('role news lifts a player and a rumour-only story is flagged unconfirmed', () => {
-  const plain = scan();
-  const up = scan(null, [headline('5003', 'Tom Tango named the starter, expected to see expanded role')]);
-  assert.ok(row(up.I, '5003').score > row(plain.I, '5003').score);
+test('role news is a reason and a news lens, and a rumour-only story is flagged unconfirmed', () => {
+  // E22 fitted the score's news weight to 0, so a headline moves the reasons, lenses and verdict, not the score
+  const up = scan(null, [headline('5003', 'Tom Tango named the starter and takes over the slot role')]);
   assert.ok(row(up.I, '5003').reasons.some((x) => x.kind === 'role'));
+  assert.equal(row(up.I, '5003').lenses.news, true);
   const rumour = scan(null, [headline('5003', 'Tom Tango linked to trade talks, per a source', 6, 'Some Blog')]);
   const r = row(rumour.I, '5003');
   assert.ok(r.risks.some((x) => x.kind === 'speculative'));
-  assert.ok(r.reasons.some((x) => x.kind === 'trade' && /unconfirmed/.test(x.text)));
+  assert.ok(!r.reasons.some((x) => x.kind === 'trade'), 'rumour-only trade talk is not a reason');
   assert.equal(r.confidence, 'low');
 });
 
@@ -158,4 +158,11 @@ test('the decision brief claims what the scanner claims and quotes its reason', 
   const M = buildModel(s, 1, NOW);
   const d = buildDecisions(M, buildPlayerNews(M)).decisions.filter((x) => x.kind === 'waiver' && /^Claim/.test(x.title));
   assert.ok(d.some((x) => /Sam Sierra/.test(x.title) && x.because.some((b) => /next up/.test(b))));
+});
+
+test('trade talk about a teammate never opens a role; only injury reports do', () => {
+  const { I } = scan((s) => (s.players['1003'].hist = hist([[15], [16], [14]])), [headline('1003', 'Cy Cook traded? Why the Bears should have dealt him')]);
+  const r = row(I, '5002');
+  assert.equal(r.vacancy, null);
+  assert.ok(!r.reasons.some((x) => x.kind === 'opportunity'));
 });
