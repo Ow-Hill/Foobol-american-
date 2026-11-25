@@ -124,7 +124,7 @@ export function render(M, ctx) {
   const prodTbl = prod.length ? table(['Season', ...['1–2', '3–4', '5–8', '9+'].map((r) => 'Rounds ' + r)], prod.map((p) => [p.season, ...['1–2', '3–4', '5–8', '9+'].map((r) => `<span class="num">${p.byRound[r] ? n0(avg(p.byRound[r])) : '–'}</span>`)])) : '<p class="empty">No completed draft to learn from yet.</p>';
   const mixTbl = table(['Season', 'Rounds', 'QB', 'RB', 'WR', 'TE', 'K', 'DEF'], mix.map((m) => [m.season, m.label, ...['QB', 'RB', 'WR', 'TE', 'K', 'DEF'].map((p) => `<span class="num">${m.c[p] || 0}</span>`)]));
 
-  return `<div class="page-h"><div><h1>Draft plan</h1><p>Plan your next draft with this league's own history: where players actually went, which rounds paid off, who undervalues what — plus your keeper options and pick slots.</p></div></div>
+  return `<div class="page-h"><div><h1>Draft plan</h1><p>Plan your next draft with this league's own history: where players actually went, which rounds paid off, who undervalues what — plus your keeper options and pick slots.</p></div><a class="btn" href="/draft.html" title="Follow a Sleeper draft live and get a recommendation for every pick">Live draft guide ↗</a></div>
   <div class="stack">
     ${card('Your plan', `<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:10px">${plan.map((x) => `<li>${x}</li>`).join('')}</ul>`, { cls: 'hero', sub: `${cur.draft ? `${season} draft: ${cur.draft.type} · ${cur.draft.rounds} rounds · ${n} teams` : ''}` })}
     <div class="grid g2">

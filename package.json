@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "test": "node --test",
-    "backtest": "NODE_USE_ENV_PROXY=1 NODE_NO_WARNINGS=1 node backtest/run.mjs current --fetch"
+    "backtest": "NODE_USE_ENV_PROXY=1 NODE_NO_WARNINGS=1 node backtest/run.mjs current --fetch",
+    "check-draft": "NODE_NO_WARNINGS=1 node scripts/check-draft.mjs"
   },
   "engines": {
     "node": ">=18"

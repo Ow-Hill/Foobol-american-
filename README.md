@@ -220,6 +220,53 @@ collects trades from Sleeper leagues shaped like this one (free API, non-commerc
 calls a minute), then `npm run backtest` fits the curve and only suggests it if it picks winners in
 this league's own trades better than today's 47%.
 
+## Live draft guide
+
+Open `/draft.html` (or **Live draft guide** on the Draft plan page) and paste a Sleeper draft link,
+draft ID, league ID or username. It works for any Sleeper draft, including other leagues and mock
+drafts, and finds your own league's draft with no typing. Pick your team once and it follows the
+draft live, checking Sleeper every 3 seconds.
+
+* **Take now / Plan for pick #N:** the top six players for your next pick, each with reasons: value,
+  which starting spot he fills, the chance he is still there at your next pick, how much you lose by
+  waiting at his position (value over the best one likely left), last in his tier, falling past ADP,
+  camp news, injury, new team, and last season's volume against his scoring.
+* **Alerts:** position runs, how many teams picking before you still need each position, tiers about
+  to run dry, and players you can safely wait on.
+* **Best available:** every player on the site's 0-100 value in this draft's own scoring, lineup and
+  team count, with tier, ADP, points per game and "there at your pick" odds. Auctions get $ values.
+* **Camp and preseason research:** Google News headlines from the last three weeks for the top ~70
+  players, read with the news engine's classifier: first-team reps, named starter, standout, holdout,
+  demotion, surgery, PUP. Each moves points per game by at most −15% to +8%.
+* **On the clock:** the tab title changes, and with alerts on you get a tone and a notification.
+* **Finished drafts:** results by value drafted, steals, and a replay slider showing what the guide
+  would have said before any pick.
+
+Value per player: Sleeper's season projection (60%), last season's volume through the waiver
+scanner's volume model (25%) and last season's results (15%); a player on a new team leans more on
+the projection. That × games × preseason health, above replacement for this draft. Before Sleeper
+posts next season's projections, values fall back to last season and ADP. Logic is in
+`public/js/draftguide.js`, Sleeper calls in `lib/draftlive.js`, camp news in `lib/draftnews.js`.
+The blend weights, camp nudges, ADP spread and need weights are judgment, not backtested.
+
+* **Next season and practice drafts:** the draft list finds next year's league draft on its own
+  (Sleeper gives the renewed league a new ID; the guide follows `previous_league_id` back to the
+  league in `config.json`), your Sleeper mock drafts, and other leagues. Before Sleeper sets the
+  draft order you can plan from the slot you expect; it switches to your real team once the order
+  is set. **Practice draft** runs a draft on the site against bots (ADP with noise, filling their
+  lineups, kickers and defenses last), in any format or as a copy of the draft you're following.
+* **Player detail:** click any name for how his points per game were built, last season's usage
+  (targets, shares, air yards, red zone, routes, expected points), camp and preseason headlines with
+  links, Sleeper's injury note, depth chart, adds across Sleeper in the last 24 hours, and the odds
+  he lasts to each of your next picks.
+* **Live with Sleeper:** checks every 3 seconds (1.5 when you're up within two picks), shows the pick
+  clock, links to the draft room, and researches news for the best players still on the board as
+  the draft moves. Sleeper's API is read-only, so you still make the pick in Sleeper.
+
+Check it against real Sleeper data on your computer: `npm run check-draft` (or
+`npm run check-draft -- <draft link>`) writes `docs/draft-check.md` with the fields Sleeper sent
+and a replay of your picks. A mock draft on Sleeper is the quickest live test.
+
 ## How the trade finder decides
 
 * **Points per game** is half results (projection and recent scoring, small samples shrunk) and half what the player's volume normally produces (targets, air yards on catches, carries, red-zone work). That mix predicted the rest of the season better than results alone at every position.
