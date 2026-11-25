@@ -9,7 +9,7 @@ A live roster-management dashboard for the Sleeper league **James Cook Lovers**.
 ```bash
 cd Foobol-american-
 node server.js        # Node 18+, no dependencies
-npm test              # 148 tests
+npm test              # 162 tests
 # open http://localhost:4321
 ```
 
@@ -52,6 +52,7 @@ requests for whoever calls it. Ten wrong passwords lock that visitor out for 10 
 | --- | --- | --- |
 | Briefing | command-center | Ranked decision brief (act / this week / watch) with evidence, hard problems, this week's matchup, clocks, roster news, league wire |
 | Lineup | lineup-call | Best legal lineup, Clear / Lean / Toss-up calls, tiebreak order, conditional calls |
+| Live | lineup-call | Game-day scoreboard: live points, what's still to come from each starter (projection × share of his game left), a win chance that moves with the games, starters ruled out before their game locks with who to swap in, and every league matchup with who to root for. Refreshes every minute while games are on |
 | Injuries | injury-triage | Sleeper vs ESPN labels with times, most-severe-wins rule, league IR rules, IR lock, next man up |
 | Waivers | waiver-plan | Needs in priority order, bye look-ahead, tiered candidates with a named drop, K/DEF streams |
 | Trades | trade-lab | Deadline window, sell/buy market, two-team lineup math, three pitches + walk-away line |
@@ -64,7 +65,7 @@ requests for whoever calls it. Ten wrong passwords lock that visitor out for 10 
 | --- | --- |
 | Values & start/sit | League-adjusted player values (your scoring, slots and replacement level), rankings, side-by-side compare, head-to-head start/sit |
 | Trade finder | Searches deals of **up to 3 players per side** (goals: win-win, upgrade a position, consolidate depth, sell one for more). Target or shop a player, protect untouchables, pick a value horizon (win now / balanced / future). Ranks by value balance, typical-lineup gain, bye-aware rest-of-season points, and **playoff/title odds change for both teams**; handles roster-limit drops and gives an acceptance estimate. Analyzer for any 3-for-3 deal |
-| Playoff path | Seed odds, bracket odds, likely opponents per round, win chance in every game left, what-if scenarios |
+| Playoff path | Seed odds, bracket odds, likely opponents per round, win chance in every game left, what-if scenarios. **Who to root for**: every other team's game left, by how much each result moves your playoff odds, plus how often points for decides your spot. **Scout your playoff opponent**: the teams you most likely meet first, their weak spots, and free agents that would help them most (grab one with a spare spot) |
 | Weekly report | Matchup previews, personalised recap, awards, power rankings — copy, share or print |
 | League historian | Ask questions across every season; rule-based, answers only from recorded games, lineups, drafts and trades |
 | Video recaps | Animated weekly recap (16:9 or 9:16) you can play and download as .webm |
@@ -90,6 +91,13 @@ or a webhook: `{ "webhook": "<url>", "format": "discord" }` (`slack` and `json` 
 batched message per refresh, each change sent once, nothing older than 12 hours, nothing while the
 site is serving saved data. `"scope": "starters"` limits it to your starters. Headlines,
 speculation and teammate estimates are never sent.
+
+**Lineup locks soon.** About 100 minutes before kickoff, a starter in that game who is Out, Doubtful
+or Questionable gets an alert naming the healthy bench player to swap in. Games on a day other than
+Thursday, Sunday or Monday (Saturday games in Weeks 15–17, Christmas) also get one heads-up naming
+your starters in them. These go out during quiet hours too. With alerts on, the server rebuilds every
+5 minutes around kickoffs, so they arrive even when nobody has the site open (the computer still has
+to be on). The Season page's calendar file adds a reminder two hours before each of those game days.
 
 ## How good is the advice? (Track record)
 
