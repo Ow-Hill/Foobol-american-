@@ -13,6 +13,16 @@ const SKILL_POS = new Set(['QB', 'RB', 'WR', 'TE']);
 const SRC_W = { 1: 1, 2: 0.85, 3: 0.7 };
 const HALF_LIFE = 3 * DAY; // a 3-day-old headline counts half
 
+// Score weights (sum to 1). Hand-set on 2026-11-25; backtest E22 (backtest/experiments-b.mjs) fits
+// them on 2022-24 synthetic leagues and checks them on 2025. Change them only from an E22 result.
+export const SCAN_WEIGHTS = { gain: 0.3, usage: 0.2, trend: 0.15, news: 0.25, market: 0.1 };
+
+// 0-100 score from a candidate's parts. trend is -1..1 and is mapped to 0..1; health scales the total.
+export function scoreFrom(parts, W = SCAN_WEIGHTS) {
+  const t = W.gain * parts.gain + W.usage * parts.usageEff + W.trend * (parts.trend + 1) / 2 + W.news * parts.newsPart + W.market * clamp(parts.market);
+  return Math.round(100 * parts.health * t);
+}
+
 const avg = (a) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : null);
 const clamp = (x, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, x));
 const n1 = (x) => (x == null ? '–' : (Math.round(x * 10) / 10).toFixed(1));
@@ -178,7 +188,7 @@ export function scanCandidate(M, c, byPid, { claimPos = new Set(), openIr = 0, d
 
   // inheriting a starter's workload is a usage signal even before the stats show it
   const usageEff = takeover ? Math.max(usage, 0.7) : usage;
-  const score = Math.round(100 * health * (0.3 * gain + 0.2 * usageEff + 0.15 * (trend + 1) / 2 + 0.25 * newsPart + 0.1 * clamp(market)));
+  const score = scoreFrom({ gain, usageEff, trend, newsPart, market, health });
 
 
   // ---- reasons and risks, each tied to a number or a dated report ----
@@ -247,7 +257,7 @@ export function scanCandidate(M, c, byPid, { claimPos = new Set(), openIr = 0, d
 
   return {
     id: c.id, p, c, score, value, net, tier, verdict, confidence, takeover,
-    parts: { gain, net, usage, trend, newsPart, opp, market, health, newsNet: news.net },
+    parts: { gain, net, usage, usageEff, trend, newsPart, opp, market, health, newsNet: news.net },
     usage: u, adv, bench, news: news.list, vacancy: topVac, reasons, risks, trigger, lenses,
   };
 }

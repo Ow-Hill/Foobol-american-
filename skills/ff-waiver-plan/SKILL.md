@@ -111,3 +111,12 @@ TE McBride (targets, target share, est. routes, red-zone targets). Expected poin
 actual flags players running hot (likely to cool) or cold (due to catch up). Routes, YPRR, TPRR and
 WOPR are estimates (≈); inside-10 touches, slot/wide splits and completed QB air yards are not in
 Sleeper's feed. The Waivers page lists each metric's source in "Stats behind the scanner".
+
+### Checking and tuning the scanner
+
+- `npm run check-scanner` (own computer; Sleeper is blocked in the cloud) builds a live snapshot,
+  writes `docs/backtest/scanner-check.md`: which advanced stat fields Sleeper actually sent, and
+  the board with reasons.
+- Backtest E22 (`npm run backtest`) fits `SCAN_WEIGHTS` in `public/js/waiverintel.js` on 2022-24
+  synthetic leagues and judges them on 2025. Adopt fitted weights only when E22 says so (0.5+
+  points better on 2025). News and Sleeper adds are blind in the archive.

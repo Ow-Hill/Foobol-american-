@@ -196,6 +196,32 @@ function gamesAll() {
 
 // ---------- one season ----------
 const seasonCache = {};
+// Team shares and estimated routes for one week, the same way lib/snapshot.js builds them for the
+// live site (keep the two in step): target, rush and air-yard share of the team's total, and
+// routes = offensive snaps x the team's dropback rate (routes are not in Sleeper's feed).
+export function addTeamShares(rows) {
+  const tm = {};
+  for (const r of rows.values()) {
+    if (!r.played || !r.team) continue;
+    const s = r.stats || {};
+    const a = (tm[r.team] ||= { tgt: 0, att: 0, air: 0, db: 0 });
+    a.tgt += s.rec_tgt || 0;
+    a.att += s.rush_att || 0;
+    a.air += Math.max(0, s.rec_air_yd || 0);
+    a.db += (s.pass_att || 0) + (s.pass_sack || 0);
+  }
+  const share = (x, tot) => (tot > 0 ? Math.round((x / tot) * 1000) / 1000 : null);
+  for (const r of rows.values()) {
+    if (!r.played || !r.team || !tm[r.team]) continue;
+    const s = r.stats || {};
+    const T = tm[r.team];
+    r.tgtSh = share(s.rec_tgt || 0, T.tgt);
+    r.attSh = share(s.rush_att || 0, T.att);
+    r.airSh = share(Math.max(0, s.rec_air_yd || 0), T.air);
+    r.routesEst = s.off_snp && s.tm_off_snp ? Math.round(s.off_snp * Math.min(1, T.db / s.tm_off_snp)) : null;
+  }
+}
+
 export function loadSeason(season) {
   if (seasonCache[season]) return seasonCache[season];
   const weeks = {};
@@ -230,11 +256,17 @@ export function loadSeason(season) {
         rushYd: s.rush_yd || 0,
         td: (s.rec_td || 0) + (s.rush_td || 0),
         passTd: s.pass_td || 0,
+        rushTd: s.rush_td || 0,
+        recTd: s.rec_td || 0,
+        sack: s.pass_sack || 0,
+        passRz: s.pass_rz_att || 0,
+        passRtg: s.pass_rtg ?? null,
         stats: s,
       });
       rows.set(r.id, cur);
     }
     if (!any) break; // week not played yet
+    addTeamShares(rows);
     weeks[wk] = rows;
     lastWeek = wk;
   }
@@ -311,7 +343,10 @@ export function asOf(season, W) {
       if (!r.played) continue;
       const p = (players[r.id] ||= { id: r.id, n: r.n, pos: r.pos, team: r.team, hist: [], inj: null, proj: null, own: null, trend: null, age: db[r.id]?.age ? db[r.id].age - (SEASONS[SEASONS.length - 1] - season) : null });
       p.team = r.team || p.team;
-      p.hist.push({ w: wk, pts: r.pts, snp: r.snp, att: r.att, tgt: r.tgt, rec: r.rec, air: r.air, rzTgt: r.rzTgt, rzAtt: r.rzAtt, passAtt: r.passAtt, recYd: r.recYd, rushYd: r.rushYd, td: r.td, passTd: r.passTd, team: r.team, opp: r.opp });
+      const h = { w: wk, pts: r.pts, snp: r.snp, att: r.att, tgt: r.tgt, rec: r.rec, air: r.air, rzTgt: r.rzTgt, rzAtt: r.rzAtt, passAtt: r.passAtt, recYd: r.recYd, rushYd: r.rushYd, td: r.td, passTd: r.passTd, team: r.team, opp: r.opp,
+        rushTd: r.rushTd, recTd: r.recTd, sack: r.sack, passRz: r.passRz, passRtg: r.passRtg, tgtSh: r.tgtSh, attSh: r.attSh, airSh: r.airSh, routesEst: r.routesEst };
+      for (const k in h) if (h[k] == null) delete h[k]; // missing = not sent, as on the live site
+      p.hist.push(h);
     }
   }
   const cur = S.weeks[W];
