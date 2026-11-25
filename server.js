@@ -7,7 +7,7 @@ const S = require('./lib/sources');
 const { buildSnapshot } = require('./lib/snapshot');
 const { buildHistory } = require('./lib/history');
 const { playerNews: fetchPlayerNews } = require('./lib/playernews');
-const { checkAlerts, kickoffSoon } = require('./lib/alerts');
+const { checkAlerts, refreshDue } = require('./lib/alerts');
 const { recordCalls } = require('./lib/calls');
 const { makeAuth } = require('./lib/auth');
 const draftLive = require('./lib/draftlive');
@@ -183,11 +183,12 @@ const port = process.env.PORT || cfg.port;
 server.listen(port, () => {
   console.log(`Roster monitor running at http://localhost:${port}${auth.enabled ? " (password on)" : ""}`);
   getSnapshot().then((s) => console.log(`Warm snapshot ready in ${s.meta.buildMs}ms`)).catch((e) => console.error('Warm-up failed:', e.message));
-  // With alerts on, rebuild every 5 minutes around kickoffs even when nobody has the site open,
-  // so "lineup locks soon" alerts (Saturday and Christmas games, inactive starters) still go out.
+  // With alerts on, rebuild even when nobody has the site open: every 5 minutes around kickoffs
+  // ("lineup locks soon": Saturday and Christmas games, inactive starters) and every 30 minutes
+  // otherwise (alerts.everyMin), so injury and depth-chart changes reach your phone overnight.
   if (cfg.alerts && (cfg.alerts.ntfy || cfg.alerts.webhook)) {
     setInterval(() => {
-      if (kickoffSoon(snap)) getSnapshot().catch(() => {});
+      if (refreshDue(snap, snapAt, Date.now(), cfg.alerts.everyMin ?? undefined)) getSnapshot().catch(() => {});
     }, 5 * 60000).unref();
   }
   buildHistory().then((h) => ((hist = h), (histAt = Date.now()), console.log(`History ready: ${h.seasons.map((s) => s.season).join(', ')}`))).catch((e) => console.error('History failed:', e.message));

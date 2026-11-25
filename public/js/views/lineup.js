@@ -14,7 +14,7 @@ export function oppCell(p, M = null) {
   const muTxt = mu && mu.tier !== 'neutral' && p.pos === 'QB'
     ? `<div class="dim" style="font-size:11.5px" title="Average ${mu.avg.toFixed(1)} pts/g allowed to ${esc(p.pos)} over the last ${mu.games} games. Information only: the projection already accounts for most of it.">${esc(mu.label)}</div>`
     : '';
-  return `<span>${g.home ? 'vs' : '@'} ${esc(g.opp)}</span>${imp}${muTxt}${windTxt(p)}`;
+  return `<span>${g.home ? 'vs' : '@'} ${esc(g.opp)}</span>${imp}${muTxt}${windTxt(p)}${wxTxt(p)}`;
 }
 // Wind flag: outdoor games forecast at 15+ mph (backtest E10). Information only; projections
 // are not changed.
@@ -23,6 +23,14 @@ export function windTxt(p) {
   if (!w || w.mph < WIND.mph || WIND[p.pos] == null) return '';
   const eff = WIND[p.pos];
   return `<div style="font-size:11.5px;color:var(--amber)" title="Forecast at kickoff. In 2022-2026, outdoor games at ${WIND.mph}+ mph cost ${esc(p.pos)}s about ${Math.abs(eff)} points against their projection. The projection does not include it.">wind ${w.mph} mph${w.gust > w.mph + 5 ? ` (gusts ${w.gust})` : ''} · ${eff} pts typical</div>`;
+}
+// Snow, rain and cold flags (lib/weather.js). Information only: no backtested points number yet
+// (nflverse has no precipitation history; E10's cold table fills in once the backtest runs).
+export function wxTxt(p) {
+  const w = p.game?.wx;
+  if (!w || !(w.snow || w.rain || w.cold) || p.game?.indoor) return '';
+  const what = [w.snow ? `snow${w.snowIn ? ` ~${w.snowIn} in` : ''}` : w.rain ? 'rain' : '', w.cold && w.tempF != null ? `${w.tempF}°F` : ''].filter(Boolean).join(', ');
+  return `<div style="font-size:11.5px;color:var(--amber)" title="Forecast for the first three hours of the game (Open-Meteo). Not part of the projection, and not backtested here: no points estimate.">${esc(what)} forecast</div>`;
 }
 // Where the projection averages Sleeper with the expert consensus (QB, WR, K), show both, and
 // flag a big disagreement: on WRs the experts were right 55% of the time when they disagreed.

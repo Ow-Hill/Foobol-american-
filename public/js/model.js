@@ -69,8 +69,8 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     gameIdx[wk] = {};
     byeIdx[wk] = new Set(snap.schedule[wk].byes);
     for (const g of snap.schedule[wk].games) {
-      gameIdx[wk][g.home.t] = { opp: g.away.t, home: true, date: g.date, state: g.state, completed: g.completed, detail: g.detail, period: g.period ?? null, clock: g.clock ?? null, imp: g.home.imp, oppImp: g.away.imp, spread: g.spread, score: g.home.score, oppScore: g.away.score, wind: g.wind || null, indoor: g.venue?.indoor ?? null, tbd: !!g.tbd || !(new Date(g.date).getFullYear() >= 2000) };
-      gameIdx[wk][g.away.t] = { opp: g.home.t, home: false, date: g.date, state: g.state, completed: g.completed, detail: g.detail, period: g.period ?? null, clock: g.clock ?? null, imp: g.away.imp, oppImp: g.home.imp, spread: g.spread, score: g.away.score, oppScore: g.home.score, wind: g.wind || null, indoor: g.venue?.indoor ?? null, tbd: !!g.tbd || !(new Date(g.date).getFullYear() >= 2000) };
+      gameIdx[wk][g.home.t] = { opp: g.away.t, home: true, date: g.date, state: g.state, completed: g.completed, detail: g.detail, period: g.period ?? null, clock: g.clock ?? null, imp: g.home.imp, oppImp: g.away.imp, spread: g.spread, score: g.home.score, oppScore: g.away.score, wind: g.wind || null, wx: g.wx || null, indoor: g.venue?.indoor ?? null, tbd: !!g.tbd || !(new Date(g.date).getFullYear() >= 2000) };
+      gameIdx[wk][g.away.t] = { opp: g.home.t, home: false, date: g.date, state: g.state, completed: g.completed, detail: g.detail, period: g.period ?? null, clock: g.clock ?? null, imp: g.away.imp, oppImp: g.home.imp, spread: g.spread, score: g.away.score, oppScore: g.home.score, wind: g.wind || null, wx: g.wx || null, indoor: g.venue?.indoor ?? null, tbd: !!g.tbd || !(new Date(g.date).getFullYear() >= 2000) };
     }
   }
   const gameFor = (team, wk = W) => (team && gameIdx[wk] ? gameIdx[wk][team] || null : null);
@@ -1164,8 +1164,12 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
   function picksOwned(rid) {
     const maxRound = cfgLeague.draft_rounds || 3;
     const out = { own: [], acquired: [], sold: [] };
-    const seasons = [...new Set((snap.picks || []).map((p) => Number(p.season)))].filter((s) => s > Number(snap.meta.season)).sort();
-    for (const s of seasons.length ? seasons : [Number(snap.meta.season) + 1]) {
+    // Every future season from next year through the latest one with a traded pick: Sleeper only
+    // lists traded picks, so a lone 2028 trade used to hide all of next year's own picks.
+    const next = Number(snap.meta.season) + 1;
+    const last = Math.max(next, ...(snap.picks || []).map((p) => Number(p.season)).filter(Number.isFinite));
+    const seasons = Array.from({ length: last - next + 1 }, (_, i) => next + i);
+    for (const s of seasons) {
       for (let r = 1; r <= maxRound; r++) {
         const traded = (snap.picks || []).find((p) => Number(p.season) === s && p.round === r && p.roster_id === rid);
         if (!traded || traded.owner_id === rid) out.own.push({ season: s, round: r });

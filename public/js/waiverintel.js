@@ -243,7 +243,10 @@ export function scanCandidate(M, c, byPid, { claimPos = new Set(), openIr = 0, d
 
   // ---- tier, verdict and when to look again ----
   let tier = c.tier ?? M.tierFor(c, openIr);
-  if (takeover) tier = p.pos === 'RB' ? 1 : Math.min(tier, 2);
+  // A starter takeover lifts a pickup to Tier 2 at most. Backtest E22 (2026-11-25): takeovers
+  // gained 4.6 lineup points over three weeks, below the Tier 1 bar's 8+, so only projected lineup
+  // gain (waiverPlan's Tier 1) spends waiver priority.
+  if (takeover) tier = Math.min(tier, 2);
   if (news.net <= -0.5 && !takeover && tier < 3) tier = 3;
   let verdict;
   if (news.net <= -0.5 && !(p.avail === 'out' && (p.ppg || 0) >= 10 && openIr > 0)) verdict = 'avoid';
@@ -297,8 +300,8 @@ export function waiverIntel(M, plan = M.waiverPlan(), news = playerNewsFor(M)) {
     const g = grouped.get(c.id);
     rows.push(scanCandidate(M, g || c, byPid, opts));
   }
-  // a starter takeover outranks a stats-only riser inside the same verdict (skill: Tier 1 order)
-  rows.sort((a, b) => VERDICT_RANK[a.verdict] - VERDICT_RANK[b.verdict] || b.takeover - a.takeover || b.score - a.score);
+  // inside a verdict, score decides; a takeover only breaks a tie (it no longer jumps the queue, E22)
+  rows.sort((a, b) => VERDICT_RANK[a.verdict] - VERDICT_RANK[b.verdict] || b.score - a.score || b.takeover - a.takeover);
   const byId = new Map(rows.map((r) => [r.id, r]));
   const board = rows.filter((r) => r.verdict !== 'pass').slice(0, 10);
   for (const r of board) r.drop = r.c.drop || M.dropFor(r.c);

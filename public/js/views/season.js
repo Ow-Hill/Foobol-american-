@@ -148,6 +148,7 @@ function icsFor(M) {
   const dlUntil = M.deadlineAt ? (() => { const d = new Date(M.deadlineAt); return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T000000Z`; })() : until;
   const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Roster Monitor//EN', 'CALSCALE:GREGORIAN'];
   items.forEach(([title, day, h, m, desc, deadlineBound], i) => {
+    if (deadlineBound && M.deadlinePassed) return; // no trade reminders once trades are closed
     const d = new Date(base);
     const add = (dayIdx[day] - d.getDay() + 7) % 7;
     d.setDate(d.getDate() + add);
@@ -178,6 +179,14 @@ export function render(M, ctx) {
 
   const lastReg = M.L.settings.playoff_week_start - 1;
   const weeksLeft = lastReg - M.W + 1;
+  // After the deadline the card turns into the regular-season finish: trades are closed, so the
+  // levers left are lineups, waivers and knowing which other results help.
+  const pushList = [
+    `<b>Odds check:</b> ${esc(v[1].toLowerCase())}. ${esc(v[2])}`,
+    `<b>Your games:</b> ${weeksLeft > 0 ? `${weeksLeft} regular-season game${weeksLeft > 1 ? 's' : ''} left (through Week ${lastReg}). The <a href="#/path">Playoff path</a> page shows your odds if you win or lose each one.` : 'the regular season is over.'}`,
+    `<b>Other games:</b> the <a href="#/path">Playoff path</a> page lists every other league game by how much each result moves your odds, and whether points for is likely to break a tie.`,
+    `<b>Roster moves:</b> trades are closed, so waivers and free agency are the only way to add. Spend waiver priority only on a Tier 1 add (<a href="#/waivers">Waivers</a>).`,
+  ];
   const deadlineList = [
     `<b>Odds check:</b> ${esc(v[1].toLowerCase())}. ${esc(v[2])}`,
     `<b>Schedule check:</b> see the playoff slate below — sell bad Weeks 15–17 slates, buy good ones.`,
@@ -202,12 +211,12 @@ export function render(M, ctx) {
       ...earlySlates(M).map((ev) => [`${ev.label} games`, `${fmtDayTime(ev.first - 2 * 3600000)} (Week ${ev.wk})`, `Open Lineup — ${ev.games} game${ev.games > 1 ? 's' : ''} lock before Sunday`]),
       ['Injury watch', 'Sunday ~11:45', 'Open Injuries — check starters before the 1 PM games'],
       ['Weekly recap', 'Tuesday morning', 'Open Season — weekly review + lineup-efficiency audit'],
-      ['Trade ideas', 'Wednesday evening, until the deadline', 'Open Trades — run it for your weakest starting spot'],
+      ...(M.deadlinePassed ? [] : [['Trade ideas', 'Wednesday evening, until the deadline', 'Open Trades — run it for your weakest starting spot']]),
     ],
   );
 
   return `
-    <div class="page-h"><div><h1>Season</h1><p>Zoom out: where you stand, how last week went, and what to do before the Week ${M.deadlineWeek} deadline and the Week ${M.L.settings.playoff_week_start} playoffs.</p></div></div>
+    <div class="page-h"><div><h1>Season</h1><p>Zoom out: where you stand, how last week went, and what to do before ${M.deadlinePassed ? '' : `the Week ${M.deadlineWeek} deadline and `}the Week ${M.L.settings.playoff_week_start} playoffs.</p></div></div>
     <div class="grid g2" style="margin-bottom:14px">
       <div class="callout ${v[0]}"><b>${esc(v[1])}</b>${esc(v[2])}<div class="dim" style="margin-top:6px">${pct(o.playoff)} to make the playoffs · ${pct(o.bye)} for a bye · ${pct(o.title)} to win it all · ${weeksLeft} regular-season games left</div></div>
       <div class="callout"><b>${me.w}-${me.l}, ${ord([...M.teams].sort((a, b) => b.w - a.w || b.pf - a.pf).findIndex((t) => t.id === me.id) + 1)} of ${M.teams.length} — ${ord([...M.teams].sort((a, b) => b.pf - a.pf).findIndex((t) => t.id === me.id) + 1)} in points scored</b>${n0(me.pp - me.pf)} points were left on the bench (${n1((me.pf / me.pp) * 100)}% lineup efficiency). ${me.pf > me.pa ? 'You have scored more than your opponents have — the record is running behind the points.' : ''}</div>
@@ -219,7 +228,9 @@ export function render(M, ctx) {
         ${card('Your lineup efficiency, week by week', effChart(M), { sub: 'Best possible lineup vs what you started — uses actual points, so it grades decisions only by results; a worse outcome alone isn\u2019t a bad decision' })}
       </div>
       <div class="grid g2">
-        ${card(`Trade-deadline push (through Week ${M.deadlineWeek})`, `<ol style="margin:0 0 0 18px;padding:0;display:flex;flex-direction:column;gap:8px">${deadlineList.map((x) => `<li>${x}</li>`).join('')}</ol>`)}
+        ${M.deadlinePassed
+          ? card(`Playoff push (through Week ${lastReg})`, `<ol style="margin:0 0 0 18px;padding:0;display:flex;flex-direction:column;gap:8px">${pushList.map((x) => `<li>${x}</li>`).join('')}</ol>`, { sub: `The Week ${M.deadlineWeek} trade deadline has passed` })
+          : card(`Trade-deadline push (through Week ${M.deadlineWeek})`, `<ol style="margin:0 0 0 18px;padding:0;display:flex;flex-direction:column;gap:8px">${deadlineList.map((x) => `<li>${x}</li>`).join('')}</ol>`)}
         ${card('Playoff prep (Weeks 12–17)', `<ol style="margin:0 0 0 18px;padding:0;display:flex;flex-direction:column;gap:8px">${prepList.map((x) => `<li>${x}</li>`).join('')}</ol>`)}
       </div>
       ${card('Your playoff lineup', playoffSlate(M), { cls: 'flush', sub: `Weeks ${M.snap.meta.playoffWeeks.join(', ')}: best lineup each week, projected points, opponents and byes` })}
