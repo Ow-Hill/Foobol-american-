@@ -9,6 +9,9 @@ const {
   queryFor,
   attachStories,
   relevant,
+  filterItems,
+  isCollision,
+  queriesFor,
 } = require('../lib/playernews');
 
 test('name tokens normalise apostrophes, hyphens and suffixes', () => {
@@ -102,4 +105,45 @@ test('generic words alone no longer pass the NFL filter', () => {
   const qb = { n: 'Josh Allen', pos: 'QB', team: 'BUF' };
   assert.equal(relevant('Josh Allen and Hailee Steinfeld out at the Grammys', qb), false);
   assert.equal(relevant('Josh Allen returns after the bye', qb), true);
+});
+
+test('same-name players: QB and edge-rusher Josh Allen get only their own headlines', () => {
+  const qb = { n: 'Josh Allen', pos: 'QB', team: 'BUF' };
+  const edge = { n: 'Josh Allen', pos: 'LB', team: 'JAX' };
+  const now = Date.UTC(2026, 10, 25);
+  const raw = [
+    'Josh Allen throws three TDs as Bills beat Jets',
+    "Jaguars' Josh Allen records two sacks in win",
+    'Josh Allen sacked five times by Jets',
+    'Jaguars pass rusher Josh Allen fined for hit',
+    "Bills' Josh Allen ruled out with shoulder injury",
+    'Josh Allen fantasy outlook vs Jaguars: QB1 again',
+  ].map((title, i) => ({ title, src: 'Fixture', time: now - i * 3600e3 }));
+  const titles = (p) => filterItems(p, raw, now).map((it) => it.title).sort();
+  assert.deepEqual(titles(qb), [
+    "Bills' Josh Allen ruled out with shoulder injury",
+    'Josh Allen fantasy outlook vs Jaguars: QB1 again',
+    'Josh Allen sacked five times by Jets',
+    'Josh Allen throws three TDs as Bills beat Jets',
+  ]);
+  assert.deepEqual(titles(edge), ['Jaguars pass rusher Josh Allen fined for hit', "Jaguars' Josh Allen records two sacks in win"]);
+});
+
+test('a hyphenated surname is not read as the shorter name', () => {
+  assert.equal(headlineHit('Josh Allen', 'Josh Hines-Allen named to Pro Bowl'), false);
+  assert.equal(headlineHit('Jaxon Smith-Njigba', 'Jaxon Smith-Njigba sets receiving record'), true);
+  assert.equal(headlineHit('Josh Allen', 'Josh Allen-led Bills roll again'), true);
+});
+
+test('names off the collision list are never team-filtered', () => {
+  const p = { pos: 'WR', team: 'CIN' };
+  assert.equal(isCollision("Ja'Marr Chase", p), false);
+  assert.equal(headlineHit("Ja'Marr Chase", "Steelers' secondary has no answer for Ja'Marr Chase", p), true);
+});
+
+test('collision names add one team-qualified query', () => {
+  const qs = queriesFor({ n: 'Josh Allen', pos: 'QB', team: 'BUF' }).map(decodeURIComponent);
+  assert.equal(qs.length, 2);
+  assert.match(qs[1], /"Josh Allen" Bills when:7d/);
+  assert.equal(queriesFor({ n: "Ja'Marr Chase", pos: 'WR', team: 'CIN' }).length, 1);
 });

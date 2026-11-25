@@ -1,0 +1,539 @@
+{
+ "note": "Hand-written headlines modelled on Google News RSS titles. Labels say whether the headline is about this exact player. Not scraped; extend with real misses as they turn up.",
+ "players": [
+  {
+   "n": "Ja'Marr Chase",
+   "pos": "WR",
+   "team": "CIN",
+   "kind": "apostrophe",
+   "headlines": [
+    {
+     "title": "Ja'Marr Chase explodes for 147 yards in Bengals win",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 2
+    },
+    {
+     "title": "Ja'Marr Chase limited in Wednesday practice with hip issue",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 8
+    },
+    {
+     "title": "Fantasy WR rankings Week 13: Ja'Marr Chase stays No. 1",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 14
+    },
+    {
+     "title": "JaMarr Chase, Joe Burrow connection back on track",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 20
+    },
+    {
+     "title": "Bengals' Chase sees 14 targets in loss",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 26
+    },
+    {
+     "title": "Ja'Marr Chase launches new sneaker line",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 32
+    },
+    {
+     "title": "Ja'Marr Chase fined for unsportsmanlike conduct",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 38
+    }
+   ]
+  },
+  {
+   "n": "Amon-Ra St. Brown",
+   "pos": "WR",
+   "team": "DET",
+   "kind": "hyphen",
+   "headlines": [
+    {
+     "title": "Amon-Ra St. Brown practices in full, set to face Packers",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 2
+    },
+    {
+     "title": "Amon Ra St Brown catches two touchdowns as Lions roll",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 8
+    },
+    {
+     "title": "Lions' St. Brown questionable with ankle injury",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 14
+    },
+    {
+     "title": "Equanimeous St. Brown signs with practice squad",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 20
+    },
+    {
+     "title": "Amon-Ra St. Brown fantasy outlook for Week 13",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 26
+    },
+    {
+     "title": "Amon-Ra St. Brown hosts youth camp in Detroit",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 32
+    }
+   ]
+  },
+  {
+   "n": "T.J. Hockenson",
+   "pos": "TE",
+   "team": "MIN",
+   "kind": "initials",
+   "headlines": [
+    {
+     "title": "T.J. Hockenson limited in practice with knee soreness",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 2
+    },
+    {
+     "title": "TJ Hockenson sees season-high 11 targets",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 8
+    },
+    {
+     "title": "T. Hockenson start/sit: Week 13 tight end rankings",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 14
+    },
+    {
+     "title": "Vikings' Hockenson listed as questionable",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 20
+    },
+    {
+     "title": "Chris Hockenson named head coach at Iowa high school",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 26
+    },
+    {
+     "title": "T.J. Hockenson trade rumors heat up before deadline",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 32
+    }
+   ]
+  },
+  {
+   "n": "Marvin Harrison Jr.",
+   "pos": "WR",
+   "team": "ARI",
+   "kind": "suffix",
+   "headlines": [
+    {
+     "title": "Marvin Harrison Jr. scores twice in Cardinals comeback",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 2
+    },
+    {
+     "title": "Marvin Harrison expected to play Sunday",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 8
+    },
+    {
+     "title": "Marvin Harrison Sr. inducted into Colts Ring of Honor ceremony",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 14
+    },
+    {
+     "title": "Marvin Harrison Jr. fantasy outlook: buy low now",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 20
+    },
+    {
+     "title": "Marvin Harrison Jr. drops two passes in loss",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 26
+    },
+    {
+     "title": "Marvin Harrison Jr. spotted at fashion week",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 32
+    }
+   ]
+  },
+  {
+   "n": "Chicago Bears",
+   "pos": "DEF",
+   "team": "CHI",
+   "kind": "defense",
+   "headlines": [
+    {
+     "title": "Bears defense dominates in shutout of Giants",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 2
+    },
+    {
+     "title": "CHI D/ST forces four turnovers",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 8
+    },
+    {
+     "title": "Chicago Bears offense struggles again",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 14
+    },
+    {
+     "title": "Week 13 defense streamers: Bears D/ST tops list",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 20
+    },
+    {
+     "title": "Bears defensive unit ranks top five in takeaways",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 26
+    },
+    {
+     "title": "Chicago Bears announce stadium plans",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 32
+    }
+   ]
+  },
+  {
+   "n": "James Cook",
+   "pos": "RB",
+   "team": "BUF",
+   "kind": "surname-collision",
+   "headlines": [
+    {
+     "title": "James Cook rushes for two touchdowns as Bills roll",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 2
+    },
+    {
+     "title": "Dalvin Cook signs with the Bills practice squad",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 8
+    },
+    {
+     "title": "James Cook fantasy outlook vs 49ers",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 14
+    },
+    {
+     "title": "Bills RB James Cook limited in practice",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 20
+    },
+    {
+     "title": "Cook out with illness, Bills say",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 26
+    },
+    {
+     "title": "Chef James Cook opens restaurant in Buffalo",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 32
+    }
+   ]
+  },
+  {
+   "n": "Jaxon Smith-Njigba",
+   "pos": "WR",
+   "team": "SEA",
+   "kind": "hyphenated-surname",
+   "headlines": [
+    {
+     "title": "Jaxon Smith-Njigba sets Seahawks receiving record",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 2
+    },
+    {
+     "title": "Jaxon Smith Njigba catches 12 passes in win",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 8
+    },
+    {
+     "title": "Smith-Njigba questionable with hamstring injury",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 14
+    },
+    {
+     "title": "Jaxon Smith-Njigba fantasy rankings Week 13",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 20
+    },
+    {
+     "title": "Jaxon Smith hired as Seahawks scout",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 26
+    }
+   ]
+  },
+  {
+   "n": "De'Von Achane",
+   "pos": "RB",
+   "team": "MIA",
+   "kind": "apostrophe",
+   "headlines": [
+    {
+     "title": "De'Von Achane expected to play Sunday",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 2
+    },
+    {
+     "title": "DeVon Achane rushes for 120 yards",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 8
+    },
+    {
+     "title": "Dolphins' Achane breaks long TD run",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 14
+    },
+    {
+     "title": "De'Von Achane injury update: ankle sprain",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 20
+    },
+    {
+     "title": "Devon Achane cousin commits to Texas A&M track",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 26
+    }
+   ]
+  },
+  {
+   "n": "Tyreek Hill",
+   "pos": "WR",
+   "team": "MIA",
+   "kind": "lifestyle",
+   "headlines": [
+    {
+     "title": "Tyreek Hill trade update: Dolphins listening",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 2
+    },
+    {
+     "title": "Tyreek Hill paid $6.9 million for his mansion",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 8
+    },
+    {
+     "title": "Dolphins expect Tyreek Hill back at practice",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 14
+    },
+    {
+     "title": "Tyreek Hill catches 8 passes for 110 yards",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 20
+    },
+    {
+     "title": "Tyreek Hill launches podcast episode with celebrity guest",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 26
+    },
+    {
+     "title": "Tyreek Hill fantasy outlook rest of season",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 32
+    }
+   ]
+  },
+  {
+   "n": "Josh Allen",
+   "pos": "QB",
+   "team": "BUF",
+   "kind": "collision",
+   "headlines": [
+    {
+     "title": "Josh Allen throws three TDs as Bills beat Jets",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 2
+    },
+    {
+     "title": "Jaguars' Josh Allen records two sacks in win",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 8
+    },
+    {
+     "title": "Josh Allen limited in practice with shoulder soreness",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 14
+    },
+    {
+     "title": "Josh Allen fantasy outlook vs Jaguars: QB1 again",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 20
+    },
+    {
+     "title": "Josh Allen records 2.5 sacks, forces fumble",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 26
+    },
+    {
+     "title": "Jaguars pass rusher Josh Allen fined for hit",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 32
+    },
+    {
+     "title": "Bills' Josh Allen named AFC Offensive Player of the Week",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 38
+    },
+    {
+     "title": "Josh Hines-Allen named to Pro Bowl",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 44
+    },
+    {
+     "title": "Josh Allen MVP odds shorten after big night",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 50
+    }
+   ]
+  },
+  {
+   "n": "Lamar Jackson",
+   "pos": "QB",
+   "team": "BAL",
+   "kind": "collision",
+   "headlines": [
+    {
+     "title": "Lamar Jackson passes for 300 yards in Ravens win",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 2
+    },
+    {
+     "title": "Lamar Jackson questionable with knee injury",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 8
+    },
+    {
+     "title": "Cornerback Lamar Jackson signs with Eagles",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 14
+    },
+    {
+     "title": "Lamar Jackson rushes for two scores",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 20
+    },
+    {
+     "title": "Panthers CB Lamar Jackson intercepts pass in preseason",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 26
+    },
+    {
+     "title": "Lamar Jackson fantasy outlook Week 13",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 32
+    }
+   ]
+  },
+  {
+   "n": "Michael Carter",
+   "pos": "RB",
+   "team": "NYJ",
+   "kind": "collision",
+   "headlines": [
+    {
+     "title": "Michael Carter rushes for 80 yards in Jets loss",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 2
+    },
+    {
+     "title": "Michael Carter II records eight tackles, pick-six",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 8
+    },
+    {
+     "title": "Jets RB Michael Carter limited in practice",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 14
+    },
+    {
+     "title": "Michael Carter fantasy waiver pickup for Week 13",
+     "relevant": true,
+     "src": "Fixture",
+     "hoursAgo": 20
+    },
+    {
+     "title": "Safety Michael Carter forced fumble seals win",
+     "relevant": false,
+     "src": "Fixture",
+     "hoursAgo": 26
+    }
+   ]
+  }
+ ]
+}
