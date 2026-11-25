@@ -106,6 +106,27 @@ function stashPlan(M) {
   return out.join('') + `<p class="note">Sleeper's week-by-week projections. Lines for those weeks aren't posted yet, so they move; the ${STASH_GAIN}-point bar is a judgment, not a fitted number.</p>`;
 }
 
+// Game days other than Thursday, Sunday and Monday (plus Christmas on any day), this week on.
+export function earlySlates(M) {
+  const tz = M.snap.meta.tz || 'America/New_York';
+  const f = new Intl.DateTimeFormat('en-US', { timeZone: tz, weekday: 'short', month: 'short', day: 'numeric' });
+  const days = {};
+  for (const [wk, w] of Object.entries(M.snap.schedule || {})) {
+    if (Number(wk) < M.W) continue;
+    for (const g of w.games || []) {
+      const t = Date.parse(g.date);
+      if (!Number.isFinite(t) || t < M.now || g.tbd) continue;
+      const parts = Object.fromEntries(f.formatToParts(new Date(t)).map((x) => [x.type, x.value]));
+      const md = `${parts.month} ${parts.day}`;
+      if (['Thu', 'Sun', 'Mon'].includes(parts.weekday) && md !== 'Dec 25') continue;
+      const d = (days[md] ||= { wk: Number(wk), first: t, games: 0, label: md === 'Dec 25' ? 'Christmas' : { Sat: 'Saturday', Fri: 'Friday', Tue: 'Tuesday', Wed: 'Wednesday' }[parts.weekday] || parts.weekday });
+      d.first = Math.min(d.first, t);
+      d.games++;
+    }
+  }
+  return Object.values(days).sort((a, b) => a.first - b.first);
+}
+
 function icsFor(M) {
   const base = new Date(M.now);
   const dayIdx = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
@@ -132,6 +153,12 @@ function icsFor(M) {
     d.setDate(d.getDate() + add);
     lines.push('BEGIN:VEVENT', `UID:rm-${i}-${M.snap.meta.leagueId}@roster-monitor`, `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`, `DTSTART:${fmt(d)}T${pad(h)}${pad(m)}00`, `DTEND:${fmt(d)}T${pad(h)}${pad(m + 15 > 59 ? 59 : m + 15)}00`, `RRULE:FREQ=WEEKLY;UNTIL=${deadlineBound ? dlUntil.replace(/Z$/, '') : until}`, `SUMMARY:${title}`, `DESCRIPTION:${desc} ${location.origin}`, 'END:VEVENT');
   });
+  // one-off reminders for unusual game days (Saturday games in Weeks 15-17, Christmas, Fridays):
+  // two hours before the first kickoff that day
+  for (const ev of earlySlates(M)) {
+    const z = (ms) => new Date(ms).toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z';
+    lines.push('BEGIN:VEVENT', `UID:rm-slate-${ev.first}-${M.snap.meta.leagueId}@roster-monitor`, `DTSTAMP:${z(Date.now())}`, `DTSTART:${z(ev.first - 2 * 3600000)}`, `DTEND:${z(ev.first - 2 * 3600000 + 15 * 60000)}`, `SUMMARY:Roster Monitor: ${ev.label} games (Week ${ev.wk})`, `DESCRIPTION:${ev.games} game${ev.games > 1 ? 's' : ''} lock before Sunday. Open the Lineup tab. ${location.origin}`, 'END:VEVENT');
+  }
   lines.push('END:VCALENDAR');
   return lines.join('\r\n');
 }
@@ -172,6 +199,7 @@ export function render(M, ctx) {
     [
       ['Waiver preview', `${M.waiverDayName()} evening`, 'Open Waivers — decide what to claim before waivers process'],
       ['Lineup check', 'Thursday before TNF · Sunday ~11:00', 'Open Lineup — only change what needs changing'],
+      ...earlySlates(M).map((ev) => [`${ev.label} games`, `${fmtDayTime(ev.first - 2 * 3600000)} (Week ${ev.wk})`, `Open Lineup — ${ev.games} game${ev.games > 1 ? 's' : ''} lock before Sunday`]),
       ['Injury watch', 'Sunday ~11:45', 'Open Injuries — check starters before the 1 PM games'],
       ['Weekly recap', 'Tuesday morning', 'Open Season — weekly review + lineup-efficiency audit'],
       ['Trade ideas', 'Wednesday evening, until the deadline', 'Open Trades — run it for your weakest starting spot'],
