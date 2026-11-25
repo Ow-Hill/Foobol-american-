@@ -69,8 +69,8 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     gameIdx[wk] = {};
     byeIdx[wk] = new Set(snap.schedule[wk].byes);
     for (const g of snap.schedule[wk].games) {
-      gameIdx[wk][g.home.t] = { opp: g.away.t, home: true, date: g.date, state: g.state, completed: g.completed, detail: g.detail, imp: g.home.imp, oppImp: g.away.imp, spread: g.spread, score: g.home.score, oppScore: g.away.score, wind: g.wind || null, indoor: g.venue?.indoor ?? null, tbd: !!g.tbd || !(new Date(g.date).getFullYear() >= 2000) };
-      gameIdx[wk][g.away.t] = { opp: g.home.t, home: false, date: g.date, state: g.state, completed: g.completed, detail: g.detail, imp: g.away.imp, oppImp: g.home.imp, spread: g.spread, score: g.away.score, oppScore: g.home.score, wind: g.wind || null, indoor: g.venue?.indoor ?? null, tbd: !!g.tbd || !(new Date(g.date).getFullYear() >= 2000) };
+      gameIdx[wk][g.home.t] = { opp: g.away.t, home: true, date: g.date, state: g.state, completed: g.completed, detail: g.detail, period: g.period ?? null, clock: g.clock ?? null, imp: g.home.imp, oppImp: g.away.imp, spread: g.spread, score: g.home.score, oppScore: g.away.score, wind: g.wind || null, indoor: g.venue?.indoor ?? null, tbd: !!g.tbd || !(new Date(g.date).getFullYear() >= 2000) };
+      gameIdx[wk][g.away.t] = { opp: g.home.t, home: false, date: g.date, state: g.state, completed: g.completed, detail: g.detail, period: g.period ?? null, clock: g.clock ?? null, imp: g.away.imp, oppImp: g.home.imp, spread: g.spread, score: g.away.score, oppScore: g.home.score, wind: g.wind || null, indoor: g.venue?.indoor ?? null, tbd: !!g.tbd || !(new Date(g.date).getFullYear() >= 2000) };
     }
   }
   const gameFor = (team, wk = W) => (team && gameIdx[wk] ? gameIdx[wk][team] || null : null);
@@ -236,7 +236,8 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
   // ---------- opponent / posture ----------
   const mus = snap.matchups[W] || [];
   const myMu = mus.find((m) => m.rid === me.id);
-  const oppMu = myMu ? mus.find((m) => m.mid === myMu.mid && m.rid !== me.id) : null;
+  // playoff weeks: teams out of the bracket have no matchup id, so never pair two of those
+  const oppMu = myMu && myMu.mid != null ? mus.find((m) => m.mid === myMu.mid && m.rid !== me.id) : null;
   const opp = oppMu ? teamBy[oppMu.rid] : null;
   const myOpt = lineup(me).opt.total;
   const oppOpt = opp ? lineup(opp).opt.total : null;
@@ -646,7 +647,7 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     const res = {};
     teams.forEach((t) => (res[t.id] = { playoff: 0, bye: 0, title: 0, wins: 0, seedSum: 0 }));
     const path = track
-      ? { seed: Array(teams.length + 1).fill(0), r1Play: 0, r1Win: 0, r2: 0, final: 0, title: 0, opp: { 1: {}, 2: {}, 3: {} }, byWins: {} }
+      ? { seed: Array(teams.length + 1).fill(0), r1Play: 0, r1Win: 0, r2: 0, final: 0, title: 0, opp: { 1: {}, 2: {}, 3: {} }, byWins: {}, games: {}, tie: { n: 0, made: 0 } }
       : null;
     // meanAdj[id] is a weekly shift: one number for every week, or { week: points } (trades, byes)
     const adj = (id, wk) => {
@@ -686,6 +687,7 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
     for (let i = 0; i < n; i++) {
       const w = {};
       const pf = {};
+      const winners = path ? [] : null;
       teams.forEach((t) => ((w[t.id] = t.w + t.t * 0.5), (pf[t.id] = t.pf)));
       for (const wkRow of sched)
         for (const [a, b] of wkRow.games) {
@@ -700,6 +702,7 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
           pf[b] += sb;
           if (sa > sb) w[a]++;
           else w[b]++;
+          if (winners && a !== track && b !== track) winners.push([wkRow.wk, a, b, sa > sb]);
         }
       const order = seedOrder(w, pf, pcount);
       order.forEach((id, idx) => {
@@ -714,6 +717,18 @@ export function buildModel(snap, rosterId, now = Date.now(), hist = null) {
         const k = String(w[track]);
         (path.byWins[k] ||= { n: 0, made: 0 }).n++;
         if (idx < pcount) path.byWins[k].made++;
+        // rooting guide: my playoff result under each outcome of every other game
+        for (const [wk, a, b, aWon] of winners) {
+          const g = (path.games[`${wk}:${a}:${b}`] ||= { wk, a, b, aWin: 0, madeA: 0, madeB: 0 });
+          if (aWon) { g.aWin++; if (idx < pcount) g.madeA++; }
+          else if (idx < pcount) g.madeB++;
+        }
+        // points-for tiebreak: tied in wins with a team on the other side of the playoff line
+        const inside = idx < pcount;
+        if (order.some((id, j) => id !== track && w[id] === w[track] && (j < pcount) !== inside)) {
+          path.tie.n++;
+          if (inside) path.tie.made++;
+        }
       }
       const [s1, s2, s3, s4, s5, s6] = order;
       const game = (a, b, round) => {

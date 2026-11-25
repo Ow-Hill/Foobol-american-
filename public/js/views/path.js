@@ -1,5 +1,6 @@
 import { esc, n1, pct, sum, signed } from '../util.js';
 import { card, table, bar } from '../ui.js';
+import { rooting, scout, BLOCK_MIN } from '../playoffs.js';
 
 function compute(M) {
   if (M._path) return M._path;
@@ -27,11 +28,11 @@ function compute(M) {
     mk(`Win out (${remaining.length} games)`, remaining.map((r) => ({ rid: me, wk: r.wk, win: true })));
     mk(`Lose out (${remaining.length} games)`, remaining.map((r) => ({ rid: me, wk: r.wk, win: false })));
   }
-  return (M._path = { base, remaining, scen });
+  return (M._path = { base, remaining, scen, root: rooting(M, base), sc: scout(M, base) });
 }
 
 export function render(M, ctx) {
-  const { base, remaining, scen } = compute(M);
+  const { base, remaining, scen, root, sc } = compute(M);
   const me = M.me;
   const r = base.res[me.id];
   const p = base.path;
@@ -70,10 +71,66 @@ export function render(M, ctx) {
   const cur = r;
   const scenTbl = table(['Scenario', 'Playoffs', 'Bye', 'Title'], [['<span class="muted">Right now</span>', pct(cur.playoff), pct(cur.bye), pct(cur.title)], ...scen.map((s) => [`<b>${esc(s.label)}</b>`, `<span class="num">${pct(s.playoff)} <span class="${s.playoff >= cur.playoff ? 'pos-num' : 'neg-num'}" style="font-size:12px">${signed((s.playoff - cur.playoff) * 100)}</span></span>`, `<span class="num">${pct(s.bye)}</span>`, `<span class="num">${pct(s.title)}</span>`])]);
 
+  const rootCard = rootingCard(M, root);
+  const scoutCard = scoutingCard(M, sc);
+
   return `<div class="page-h"><div><h1>Playoff path</h1><p>${esc(me.name.trim())}: ${pct(r.playoff)} to make it, ${pct(p.title / n)} to win it all. Seeds, likely opponents, and your win chance in every game left.</p></div></div>
   <div class="kpis" style="margin-bottom:14px"><div class="kpi"><small>Make playoffs</small><b>${pct(r.playoff)}</b><span>${me.w}-${me.l} · avg final ${n1(r.wins)} wins</span></div><div class="kpi"><small>First-round bye</small><b>${pct(r.bye)}</b><span>top 2 seeds</span></div><div class="kpi"><small>Reach the final</small><b>${pct(p.final / n)}</b><span>Week ${rounds + 2}</span></div><div class="kpi"><small>Title odds</small><b>${pct(p.title / n)}</b><span>${exp ? `${n1(exp)} expected wins from ${remaining.length} games` : ''}</span></div></div>
   <div class="stack"><div class="grid g2">${card('Where you finish', seedRows + `<div class="fullbar" style="display:grid;grid-template-columns:90px 1fr 52px;gap:10px;align-items:center;margin-top:8px"><span class="muted">Miss</span>${bar(missPct, 'red')}<span class="num">${pct(missPct)}</span></div>`, { sub: 'Final seed after the regular season' })}${card('Bracket odds', bracket, { cls: 'flush' })}</div>
   <div class="grid g2">${card('Likely opponents', oppTables || '<p class="empty">No bracket paths in the simulation.</p>', { sub: 'Who you meet, given you get that far' })}${card('Games left', sched + `<p class="note">Win chance is the normal-curve odds from each team's scoring average and spread; this week uses your projected lineups instead.</p>`, { cls: 'flush' })}</div>
-  <div class="grid g2">${card('What you need', needTbl, { cls: 'flush', sub: 'Playoff chance by final regular-season win total' })}${card('What-if scenarios', scenTbl, { cls: 'flush', sub: 'Odds if you pin the result of upcoming games' })}</div></div>
+  <div class="grid g2">${card('What you need', needTbl, { cls: 'flush', sub: 'Playoff chance by final regular-season win total' })}${card('What-if scenarios', scenTbl, { cls: 'flush', sub: 'Odds if you pin the result of upcoming games' })}</div>
+  ${rootCard}
+  ${scoutCard}</div>
   <details class="how"><summary>How this is calculated</summary><ul><li>${base.n.toLocaleString()} simulated seasons of the real remaining schedule; each team's score blends its season scoring with its current roster's projected best lineup for that week (injuries, byes and pickups count). No future roster moves are assumed.</li><li>Bracket assumption: 6 teams, seeds 1–2 on a bye; 3v6 and 4v5 in the wild card; seed 1 plays the 4/5 winner and seed 2 the 3/6 winner. Every division winner makes the playoffs (Sleeper's rule); seeds follow wins, then points.</li><li>Pinning a result keeps the scoring noise but flips the winner if the draw disagrees — an approximation of the conditional odds.</li></ul></details>`;
+}
+
+// exported for the Live page
+export function pathFor(M) {
+  return compute(M);
+}
+
+function rootingCard(M, root) {
+  if (M.W >= M.L.settings.playoff_week_start) return '';
+  const rows = root.games.map((g) => [
+    `<span class="num">${g.wk}</span>`,
+    `<b>${esc(M.teamBy[g.want].owner)}</b> <span class="dim">over ${esc(M.teamBy[g.other].owner)}</span>`,
+    `<span class="num">${pct(g.ifWant)}</span> <span class="dim">vs ${pct(g.ifOther)}</span>`,
+    `<span class="num pos-num"><b>${signed(g.swing * 100)}</b></span> ${bar(Math.min(1, g.swing * 4))}`,
+    `<span class="num muted">${pct(g.wantChance)}</span>`,
+  ]);
+  const ord = (n) => n + (n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th');
+  const tie = root.tie.share >= 0.01
+    ? `In ${pct(root.tie.share)} of simulated seasons you finish tied in wins with a team on the other side of the playoff line, and points for decides it. You come out ahead ${pct(root.tie.won)} of those times; you're ${ord(root.pfRank)} in points for.`
+    : `Points for rarely decides your spot (under 1% of simulated seasons); you're ${ord(root.pfRank)} in points for.`;
+  const body = rows.length
+    ? table(['Week', 'Root for', 'Your playoff odds if they win', 'Swing', 'Their chance'], rows)
+    : '<p class="empty">No other game moves your playoff odds by a point or more.</p>';
+  return card('Who to root for', `${body}<p class="note"><b>Tiebreak:</b> ${tie} Your own games are in What-if scenarios above.</p>`, { cls: 'flush', sub: 'Other teams’ games left, by how much each result moves your playoff odds' });
+}
+
+function scoutingCard(M, sc) {
+  if (!sc || !sc.opps.length) return '';
+  const rname = { 1: 'wild-card round', 2: 'semifinal', 3: 'championship' }[sc.round] || 'playoff game';
+  const name = (id) => `${esc(M.P(id).n)} <span class="tm">${esc(M.P(id).pos)} ${esc(M.P(id).team || '')}</span>`;
+  const blocks = sc.opps.map((o) => {
+    const head = `<h3 style="margin:10px 0 6px">${esc(o.t.owner)} <span class="dim" style="font-weight:400">${sc.opps.length > 1 || o.share < 1 ? `· ${pct(o.share)} of the time` : ''} · best lineup ${n1(o.total)} vs your ${n1(sc.myTotal)}</span></h3>`;
+    const weak = o.weak.length
+      ? `<p style="margin:4px 0">Weak spots: ${o.weak.map((w) => `<b>${esc(w.slot)}</b> ${w.pid ? esc(M.P(w.pid).n) : 'empty'} (${n1(w.v)} vs league ${n1(w.avg)})`).join(' · ')}</p>`
+      : '<p class="muted" style="margin:4px 0">No starting spot more than 20% below the league average.</p>';
+    const rows = o.blocks.map((b) => {
+      const d = M.dropFor({ id: b.id, p: M.P(b.id) });
+      return [name(b.id), `<span class="num"><b>+${n1(b.gain)}</b></span>`, `<span class="num">${b.mine > 0.05 ? '+' + n1(b.mine) : '—'}</span>`, `<span class="muted">${esc(d.text)}</span>`];
+    });
+    const tbl = rows.length
+      ? table(['Free agent', 'Adds to their lineup', 'Adds to yours', 'Your roster spot'], rows)
+      : `<p class="empty">No free agent adds ${BLOCK_MIN}+ points to their Week ${sc.wk} lineup.</p>`;
+    const cuffs = o.cuffs.length
+      ? `<p class="note">Their backs' backups still on waivers: ${o.cuffs.map((c) => `<b>${esc(M.P(c.id).n)}</b> (behind ${esc(M.P(c.of).n)})`).join(', ')}. Only worth a spare spot; they score only if the starter goes down.</p>`
+      : '';
+    return head + weak + tbl + cuffs;
+  }).join('');
+  const sub = M.W >= M.L.settings.playoff_week_start
+    ? `Your Week ${sc.wk} opponent`
+    : `Who you most likely meet in the ${rname} (Week ${sc.wk}), if you get there`;
+  return card('Scout your playoff opponent', `${blocks}<p class="note">Their best lineup and the pickups use each player's points per game for Week ${sc.wk} (kickers and defenses: Sleeper's projection for that week). A block only pays if you have a spare spot: it never replaces a player you start. Waivers here roll in priority order, so after they clear it's first come, first served.</p>`, { sub });
 }
